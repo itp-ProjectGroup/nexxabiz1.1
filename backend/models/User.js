@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-// Define the User schema
+// Newwwwww
 const userSchema = new mongoose.Schema({
     u_businessname: { type: String, required: true },
     u_email: { type: String, required: true, unique: true },
