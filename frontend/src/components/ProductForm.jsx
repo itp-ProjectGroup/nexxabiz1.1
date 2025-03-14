@@ -5,7 +5,8 @@ const ProductForm = () => {
   const [product, setProduct] = useState({
     manufacturingID: '',
     productName: '',
-    price: ''
+    price: '',
+    lowStockLevel: '',
   });
   const [message, setMessage] = useState('');
 
@@ -23,7 +24,7 @@ const ProductForm = () => {
     try {
       const response = await axios.post('http://localhost:5000/api/products', product);
       setMessage(response.data.message);
-      setProduct({ manufacturingID: '', productName: '', price: '' }); // Clear form
+      setProduct({ manufacturingID: '', productName: '', price: '',lowStockLevel: '', }); // Clear form
     } catch (error) {
       //setMessage('Error adding product!');
       console.error('Error adding product:', error.response ? error.response.data : error.message);
@@ -66,6 +67,17 @@ const ProductForm = () => {
             id="price"
             name="price"
             value={product.price}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="lowStockLevel">Low Stock Level:</label>
+          <input
+            type="number"
+            id="lowStockLevel"
+            name="lowStockLevel"
+            value={product.lowStockLevel}
             onChange={handleChange}
             required
           />
