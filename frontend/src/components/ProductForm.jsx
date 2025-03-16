@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import './ProductForm.css';
 
 const ProductForm = () => {
   const [product, setProduct] = useState({
@@ -34,11 +35,11 @@ const ProductForm = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-yellow rounded-lg shadow-lg">
-      <h2 className="text-2xl font-semibold mb-4">Add New Product</h2>
-      {message && <p className="text-red-500 mb-4">{message}</p>}
-      <form onSubmit={handleSubmit}>
-        <div>
+    <div className='product-form-container'>
+      <h1 className="form-title">Add New Product</h1>
+      {message && <p className="message">{message}</p>}
+      <form onSubmit={handleSubmit}  className="product-form">
+        <div className="form-group">
           <label htmlFor="manufacturingID">Manufacturing ID:</label>
           <input
             type="text"
@@ -49,7 +50,7 @@ const ProductForm = () => {
             required
           />
         </div>
-        <div>
+        <div className="form-group">
           <label htmlFor="productName">Product Name:</label>
           <input
             type="text"
@@ -60,7 +61,7 @@ const ProductForm = () => {
             required
           />
         </div>
-        <div>
+        <div className="form-group">
           <label htmlFor="price">Price:</label>
           <input
             type="number"
@@ -71,7 +72,7 @@ const ProductForm = () => {
             required
           />
         </div>
-        <div>
+        <div className="form-group">
           <label htmlFor="lowStockLevel">Low Stock Level:</label>
           <input
             type="number"
@@ -82,7 +83,7 @@ const ProductForm = () => {
             required
           />
         </div>
-        <button type="submit">Add Product</button>
+        <button className='submit-button' type="submit">Add Product</button>
       </form>
     </div>
   );
