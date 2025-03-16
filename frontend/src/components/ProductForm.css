@@ -17,9 +17,15 @@
 }
 .message{
     text-align: center;
-    color: green;
     font-weight: bold;
 }
+.success{
+    color: green;
+}
+.error{
+    color:red;
+}
+
 
 .product-form .form-group{
     margin-bottom: 15px;

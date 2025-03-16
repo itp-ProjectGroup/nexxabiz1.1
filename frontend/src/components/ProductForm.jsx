@@ -24,20 +24,27 @@ const ProductForm = () => {
     console.log('Sending product data:', product);  // Add this line to log the product details
     try {
       const response = await axios.post('http://localhost:5000/api/products', product);
-      setMessage(response.data.message);
+      setMessage({ text: response.data.message, type: "success" });
       setProduct({ manufacturingID: '', productName: '', price: '',lowStockLevel: '', }); // Clear form
     } catch (error) {
-      //setMessage('Error adding product!');
-      console.error('Error adding product:', error.response ? error.response.data : error.message);
-      //setMessage(`Error adding product! ${error.response ? error.response.data.message : error.message}`);
-      setMessage(`Error adding product! ${error.response?.data?.message || 'Unknown error'}`);
+
+      //console.error('Error adding product:', error.response ? error.response.data : error.message);
+
+      setMessage({ text:error.response?.data?.message || "failed to add product",
+        type: "error"
+      });
     }
   };
 
   return (
     <div className='product-form-container'>
       <h1 className="form-title">Add New Product</h1>
-      {message && <p className="message">{message}</p>}
+      {message.text && (
+        <p className={`message ${message.type === "success" ? "success" : "error"}`}>
+          {message.text}
+        </p>
+        )
+      }
       <form onSubmit={handleSubmit}  className="product-form">
         <div className="form-group">
           <label htmlFor="manufacturingID">Manufacturing ID:</label>
