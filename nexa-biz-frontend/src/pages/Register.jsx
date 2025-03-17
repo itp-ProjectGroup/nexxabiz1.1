@@ -86,7 +86,7 @@ const Register = () => {
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-900 text-white font-roboto">
       <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-4xl flex">
-        <div className="w-1/2 flex items-center justify-center">
+        <div className="w-1/2 flex items-center justify-center pr-6">
           <img
             src="/admin.png"
             alt="Registration"
