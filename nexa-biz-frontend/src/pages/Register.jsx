@@ -52,7 +52,7 @@ const Register = ({ onClose }) => {
   // Function to handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(formData); // Log form data to the console
+    console.log("Form submitted!", formData); // Log form data to the console
   };
 
   // Function to handle form cancellation
