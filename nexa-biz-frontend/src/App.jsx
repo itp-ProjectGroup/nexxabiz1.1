@@ -1,13 +1,15 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home"; // Ensure correct import
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import Register from "./pages/Register";
 
 const App = () => {
     return (
-        <BrowserRouter>
+        <Router>
             <Routes>
-                <Route path="/" element={<Home />} />  {/* Fixed Home Page Path */}
+                <Route path="/" element={<Home />} />
+                <Route path="/register" element={<Register />} />
             </Routes>
-        </BrowserRouter>
+        </Router>
     );
 };
 
