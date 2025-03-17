@@ -67,7 +67,7 @@ export const registerUser = async (req, res) => {
       u_cCountry,
       u_cZip,
       username,
-      password: hashedPassword, // Save the hashed password
+      password, // Save the hashed password
       securityQuestion,
       securityAnswer,
     });

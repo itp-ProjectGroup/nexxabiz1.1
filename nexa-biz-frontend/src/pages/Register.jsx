@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import axios from 'axios';
+
 
 // Register component that handles a multi-step registration form
 const Register = ({ onClose }) => {
@@ -50,10 +52,42 @@ const Register = ({ onClose }) => {
   };
 
   // Function to handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted!", formData); // Log form data to the console
-  };
+    try {
+        const response = await axios.post("http://localhost:5000/api/users/register", formData);
+        alert(response.data.message); // Show success message
+        setFormData({ 
+          u_fullName: "",
+          u_pEmail: "",
+          u_pPhone: "",
+          u_p1stLine: "",
+          u_p2ndLine: "",
+          u_pCity: "",
+          u_pCountry: "",
+          u_pZip: "",
+          u_dob: "",
+          u_gender: "",
+          u_companyName: "",
+          u_businessRegNumber: "",
+          u_cEmail: "",
+          u_cPhone: "",
+          u_c1stLine: "",
+          u_c2ndLine: "",
+          u_cCity: "",
+          u_cCountry: "",
+          u_cZip: "",
+          username: "",
+          password: "",
+          confirmPassword: "",
+          securityQuestion: "",
+          securityAnswer: "",
+        }); // Reset form
+    } catch (error) {
+        alert("Registration failed! Check console for details.");
+        console.error(error);
+    }
+};
 
   // Function to handle form cancellation
   const handleCancel = () => {
