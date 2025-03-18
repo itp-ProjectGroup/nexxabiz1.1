@@ -118,7 +118,7 @@ const Register = ({ onClose }) => {
       securityQuestion: "",
       securityAnswer: "",
     });
-    setStep(1); // Go back to step 1
+     
   };
 
   return (

@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import bcrypt from 'bcryptjs';
 
 // Register user
 export const registerUser = async (req, res) => {
@@ -30,6 +31,10 @@ export const registerUser = async (req, res) => {
             securityAnswer,
         } = req.body;
 
+        if (!u_fullName || !u_pEmail || !u_pPhone || !password || !username) {
+          return res.status(400).json({ message: "Required fields are missing" });
+        }
+        
 
         // Check if password and confirmPassword match
         if (password !== confirmPassword) {
@@ -67,7 +72,8 @@ export const registerUser = async (req, res) => {
       u_cCountry,
       u_cZip,
       username,
-      password, // Save the hashed password
+      password: hashedPassword,
+      confirmPassword: hashedPassword,
       securityQuestion,
       securityAnswer,
     });
@@ -77,6 +83,12 @@ export const registerUser = async (req, res) => {
 
     res.status(201).json({ message: 'User registered successfully', user: newUser });
   } catch (error) {
-    res.status(500).json({ message: 'Something went wrong', error: error.message });
+    console.error("🔥 ERROR REGISTERING USER:", error);
+    res.status(500).json({ 
+      message: "Internal Server Error", 
+      error: error.message,
+      stack: error.stack  
+    });
   }
+  
 };
