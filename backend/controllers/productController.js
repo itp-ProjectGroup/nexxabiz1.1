@@ -17,11 +17,11 @@ const upload = multer({ storage: storage });
 
 //add a new product
 const addProduct = async (req,res) => {
-    const{manufacturingID, productName, price, lowStockLevel} = req.body;
+    const{manufacturingID, productName, ManufacturingCost, sellingPrice, lowStockLevel} = req.body;
     const images = req.files ? req.files.map(file => file.path) : [];
 
     try{
-        const newProduct = new Product({manufacturingID,productName,price,lowStockLevel,images});
+        const newProduct = new Product({manufacturingID,productName,ManufacturingCost,sellingPrice,lowStockLevel,images});
         await newProduct.save();
         res.status(201).json({ message: 'Product added successfully', product: newProduct });
     }

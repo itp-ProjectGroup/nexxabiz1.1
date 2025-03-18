@@ -6,7 +6,7 @@ const ProductForm = () => {
   const [product, setProduct] = useState({
     manufacturingID: '',
     productName: '',
-    price: '',
+    ManufacturingCost: '',
     lowStockLevel: '',
     images: [],
   });
@@ -34,9 +34,9 @@ const ProductForm = () => {
 
     // Create FormData for file upload
     const formData = new FormData();
-    formData.append('manufacturingID', product.manufacturingID);
     formData.append('productName', product.productName);
-    formData.append('price', product.price);
+    formData.append('ManufacturingCost', product.ManufacturingCost);
+    formData.append('sellingPrice', product.sellingPrice);
     formData.append('lowStockLevel', product.lowStockLevel);
 
     product.images.forEach((image) => {
@@ -50,7 +50,7 @@ const ProductForm = () => {
         }
       });
       setMessage({ text: response.data.message, type: "success" });
-      setProduct({ manufacturingID: '', productName: '', price: '',lowStockLevel: '', image: '', }); // Clear form
+      setProduct({ manufacturingID: '', productName: '', ManufacturingCost: '',sellingPrice: '', lowStockLevel: '', image: '', }); // Clear form
     } catch (error) {
 
       //console.error('Error adding product:', error.response ? error.response.data : error.message);
@@ -94,12 +94,23 @@ const ProductForm = () => {
           />
         </div>
         <div className="form-group">
-          <label htmlFor="price">Price:</label>
+          <label htmlFor="ManufacturingCost">Manufacturing Cost:</label>
           <input
             type="number"
-            id="price"
-            name="price"
-            value={product.price}
+            id="ManufacturingCost"
+            name="ManufacturingCost"
+            value={product.ManufacturingCost}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="sellingPrice">Selling Price:</label>
+          <input
+            type="number"
+            id="sellingPrice"
+            name="sellingPrice"
+            value={product.sellingPrice}
             onChange={handleChange}
             required
           />
