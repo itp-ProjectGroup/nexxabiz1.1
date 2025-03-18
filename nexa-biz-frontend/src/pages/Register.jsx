@@ -84,9 +84,13 @@ const Register = ({ onClose }) => {
           securityAnswer: "",
         }); // Reset form
     } catch (error) {
-        alert("Registration failed! Check console for details.");
-        console.error(error);
-    }
+      if (error.response && error.response.data && error.response.data.message) {
+          alert(error.response.data.message); // Show specific error message from backend
+      } else {
+          alert("Registration failed! Please try again.");
+      }
+      console.error(error);
+  }
 };
 
   // Function to handle form cancellation
