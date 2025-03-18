@@ -130,7 +130,7 @@ const Register = ({ onClose }) => {
       <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-4xl flex">
         {/* Image Section */}
         <div className="w-1/2 flex items-center justify-center pr-6">
-          <img src="/admin.png" alt="Registration" className="rounded-lg" />
+          <img src="/admin2.png" alt="Registration" className="rounded-lg" />
         </div>
 
         {/* Form Section */}
