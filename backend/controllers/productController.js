@@ -1,11 +1,27 @@
 const Product = require('../models/Product');
+const multer = require('multer');
+const path = require('path');
+
+// Set up multer storage
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/');  // Store images in 'uploads' folder
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname)); // Unique filename
+    }
+});
+
+const upload = multer({ storage: storage });
+
 
 //add a new product
 const addProduct = async (req,res) => {
     const{manufacturingID, productName, price, lowStockLevel} = req.body;
+    const images = req.files ? req.files.map(file => file.path) : [];
 
     try{
-        const newProduct = new Product({manufacturingID,productName,price,lowStockLevel});
+        const newProduct = new Product({manufacturingID,productName,price,lowStockLevel,images});
         await newProduct.save();
         res.status(201).json({ message: 'Product added successfully', product: newProduct });
     }
@@ -23,6 +39,8 @@ const addProduct = async (req,res) => {
         res.status(500).json({message: errorMessage });
     }
 };
+
+module.exports = {addProduct, upload}
 
 //get all products
 const getProduct = async (req,res) => {

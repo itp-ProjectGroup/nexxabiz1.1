@@ -1,6 +1,6 @@
 .product-form-container{
     max-width: 700px;
-    max-height: 500px;
+    max-height: 600px;
     margin: auto;
     margin-top: 100px;
     padding: 20px;
@@ -28,7 +28,7 @@
 
 
 .product-form .form-group{
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 .product-form label {
     display: block;

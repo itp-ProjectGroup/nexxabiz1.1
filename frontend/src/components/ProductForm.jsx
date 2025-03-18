@@ -8,6 +8,7 @@ const ProductForm = () => {
     productName: '',
     price: '',
     lowStockLevel: '',
+    images: [],
   });
   const [message, setMessage] = useState('');
 
@@ -19,13 +20,37 @@ const ProductForm = () => {
     }));
   };
 
+  const handleImageChange = (e) => {
+    setProduct((prev) => ({
+      ...prev,
+      images: Array.from(e.target.files)  // Store multiple selected files
+    }));
+  };
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Sending product data:', product);  // Add this line to log the product details
+
+    // Create FormData for file upload
+    const formData = new FormData();
+    formData.append('manufacturingID', product.manufacturingID);
+    formData.append('productName', product.productName);
+    formData.append('price', product.price);
+    formData.append('lowStockLevel', product.lowStockLevel);
+
+    product.images.forEach((image) => {
+      formData.append('images', image);  // Append each image to FormData
+    });
+
     try {
-      const response = await axios.post('http://localhost:5000/api/products', product);
+      const response = await axios.post('http://localhost:5000/api/products', formData,{
+        headers: {
+          'content-type':'multipart/form-data'
+        }
+      });
       setMessage({ text: response.data.message, type: "success" });
-      setProduct({ manufacturingID: '', productName: '', price: '',lowStockLevel: '', }); // Clear form
+      setProduct({ manufacturingID: '', productName: '', price: '',lowStockLevel: '', image: '', }); // Clear form
     } catch (error) {
 
       //console.error('Error adding product:', error.response ? error.response.data : error.message);
@@ -89,6 +114,10 @@ const ProductForm = () => {
             onChange={handleChange}
             required
           />
+        </div>
+        <div className="form-group">
+          <label htmlFor="images">Upload Images:</label>
+          <input type="file" id="images" name="images" multiple accept="image/*" onChange={handleImageChange} required />
         </div>
         <button className='submit-button' type="submit">Add Product</button>
       </form>
