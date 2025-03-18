@@ -14,6 +14,12 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// Function to generate a unique Manufacturing ID
+const generateManufacturingID = () => {
+    const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');  // Format: YYYYMMDD
+    const randomPart = Math.floor(1000 + Math.random() * 9000);  // Random 4-digit number
+    return `MF-${datePart}-${randomPart}`;
+};
 
 //add a new product
 const addProduct = async (req,res) => {
@@ -21,6 +27,7 @@ const addProduct = async (req,res) => {
     const images = req.files ? req.files.map(file => file.path) : [];
 
     try{
+        const manufacturingID = generateManufacturingID(); //generate unique id
         const newProduct = new Product({manufacturingID,productName,ManufacturingCost,sellingPrice,lowStockLevel,images});
         await newProduct.save();
         res.status(201).json({ message: 'Product added successfully', product: newProduct });

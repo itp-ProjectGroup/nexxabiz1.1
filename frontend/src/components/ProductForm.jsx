@@ -50,7 +50,7 @@ const ProductForm = () => {
         }
       });
       setMessage({ text: response.data.message, type: "success" });
-      setProduct({ manufacturingID: '', productName: '', ManufacturingCost: '',sellingPrice: '', lowStockLevel: '', image: '', }); // Clear form
+      setProduct({  productName: '', ManufacturingCost: '',sellingPrice: '', lowStockLevel: '', image: '', }); // Clear form
     } catch (error) {
 
       //console.error('Error adding product:', error.response ? error.response.data : error.message);
@@ -71,17 +71,6 @@ const ProductForm = () => {
         )
       }
       <form onSubmit={handleSubmit}  className="product-form">
-        <div className="form-group">
-          <label htmlFor="manufacturingID">Manufacturing ID:</label>
-          <input
-            type="text"
-            id="manufacturingID"
-            name="manufacturingID"
-            value={product.manufacturingID}
-            onChange={handleChange}
-            required
-          />
-        </div>
         <div className="form-group">
           <label htmlFor="productName">Product Name:</label>
           <input
