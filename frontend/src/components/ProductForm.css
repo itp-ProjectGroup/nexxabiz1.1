@@ -1,20 +1,4 @@
-.product-form-container{
-    max-width: 700px;
-    max-height: 650px;
-    margin: auto;
-    margin-top: 20px;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(41, 83, 122, 0.1);
-    background-color: hsla(221, 72%, 73%, 0.726);
-}
-.form-title{
-    text-align: center;
-    color: hsla(0, 0%, 6%, 0.993);
-    font-weight: 400;
-    margin-bottom: 20px;
-}
+
 .message{
     text-align: center;
     font-weight: bold;
@@ -25,33 +9,3 @@
 .error{
     color:red;
 }
-
-
-.product-form .form-group{
-    margin-bottom: 20px;
-}
-.product-form label {
-    display: block;
-    font-weight: bold;
-}
-.product-form input {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid hsl(245, 15%, 47%);
-    border-radius: 4px;
-    font-size: 16px;
-  }
-  .submit-button {
-    width: 100%;
-    padding: 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-  }
-
-  .submit-button:hover {
-    background-color: #0056b3;
-  }
