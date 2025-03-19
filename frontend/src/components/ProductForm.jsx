@@ -28,6 +28,8 @@ const ProductForm = () => {
   };
 
 
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Sending product data:', product);  // Add this line to log the product details
@@ -134,20 +136,38 @@ const ProductForm = () => {
         </div>
         <div>
           <label className="block text-sm font-medium text-white" htmlFor="images">Upload Images:</label>
-          <div className='"space-y-1 text-center"'>
+          <div className='space-y-1 text-center border-2 border-dashed border-gray-300 p-4 rounded-lg'>
               <svg className="mx-auto h-12 w-12 text-white" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
-              <div className='flex text-sm text-gray-600'>
+              <div className='flex text-sm text-gray-600 '>
                   <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
                     <span className="">Upload a file</span>
-                      <input className='sr-only' type="file" id="images" name="images" multiple accept="image/*" onChange={handleImageChange} required />
+                    <input
+                          id="file-upload"
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="hidden"
+                    />
                   </label>
                   <p className="pl-1 text-white">or drag and drop</p>
               </div>
               <p className="text-xs text-white">
-                    PNG, JPG, GIF up to 10MB
+                    (PNG, JPG, GIF up to 10MB)
               </p>
+              {product.images.length > 0 && (
+              <div className="mt-2 p-2 bg-gray-700 rounded-md">
+                <h3 className="text-white text-sm font-semibold">Selected Files:</h3>
+                <ul className="text-gray-300 text-xs">
+                  {product.images.map((file, index) => (
+                    <li key={index} className="truncate">{file.name}</li>
+                  ))}
+                </ul>
+              </div>
+              )}
           </div>
 
         </div>
