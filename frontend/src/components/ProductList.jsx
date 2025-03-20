@@ -28,37 +28,41 @@ const ProductList = () => {
         return <div>Loading...</div>;
     }
 
-    // Display error message
+
     if (error) {
         return <div>Error: {error}</div>;
     }
 
     // Display product list
     return (
-        <div>
-            <h1>Product List</h1>
+        <div className="p-6">
+            <h1 className="text-2xl font-bold mb-4">Product List</h1>
             {products.length === 0 ? (
-                <p>No products found.</p>
+                <p  className="text-gray-600">No products found.</p>
             ) : (
-                <ul>
+                <ul className="w-full">
                     {products.map((product) => (
-                        <li key={product._id}>
-                            <h2>{product.productName}</h2>
-                            <p><strong>Manufacturing ID:</strong> {product.manufacturingID}</p>
-                            <p><strong>Manufacturing Cost:</strong> ${product.ManufacturingCost}</p>
-                            <p><strong>Selling Price:</strong> ${product.sellingPrice}</p>
-                            <p><strong>Low Stock Level:</strong> {product.lowStockLevel}</p>
+                        <li key={product._id} className="bg-white shadow-md rounded-lg p-6 mb-6">
+                            <h2 className="text-xl font-semibold mb-2">{product.productName}</h2>
+                            <div  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <p ><strong className="font-medium">Manufacturing ID:</strong> {product.manufacturingID}</p>
+                                <p><strong className="font-medium">Manufacturing Cost:</strong> ${product.ManufacturingCost}</p>
+                                <p><strong className="font-medium">Selling Price:</strong> ${product.sellingPrice}</p>
+                                <p><strong className="font-medium">Low Stock Level:</strong> {product.lowStockLevel}</p>
+                            </div>
                             {product.images && product.images.length > 0 && (
-                                <div>
-                                    <strong>Images:</strong>
+                                <div className="mt-4">
+                                    <strong className="font-medium">Images:</strong>
+                                    <div className="flex flex-wrap gap-2 mt-2">
                                     {product.images.map((image, index) => (
                                         <img
                                             key={index}
                                             src={`http://localhost:5000/${image}`} // Replace with your backend URL
                                             alt={`Product ${index + 1}`}
-                                            style={{ width: '100px', margin: '5px' }}
+                                            className="w-24 h-24 object-cover rounded-md border"
                                         />
                                     ))}
+                                    </div>
                                 </div>
                             )}
                         </li>

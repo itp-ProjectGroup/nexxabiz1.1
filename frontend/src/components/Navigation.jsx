@@ -4,8 +4,9 @@ function Navigation() {
     return (
         <nav>
             <Link to="/">Home</Link>
-            <Link to="/all">View Products</Link>
             <Link to="/add">add product</Link>
+            <Link to="/all">View Products</Link>
+
         </nav>
     );
 }
