@@ -58,17 +58,22 @@ const CustomerProfile = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // Handle form submission
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            await axios.put(`http://localhost:5000/api/users/${id}`, formData);
-            alert("Profile updated successfully!");
-        } catch (error) {
-            console.error("Error updating customer:", error);
-            alert("Failed to update profile.");
-        }
-    };
+      e.preventDefault();
+      try {
+          const response = await axios.put(`http://localhost:5000/api/users/${id}`, formData);
+          if (response.status === 200) {
+              alert("Profile updated successfully!");
+              // Optionally, you can fetch the updated data again to reflect changes immediately
+              const updatedResponse = await axios.get(`http://localhost:5000/api/users/${id}`);
+              setCustomer(updatedResponse.data);
+              setFormData(updatedResponse.data);
+          }
+      } catch (error) {
+          console.error("Error updating customer:", error);
+          alert("Failed to update profile. Please try again.");
+      }
+  };
 
     if (loading) return <p className="text-center text-gray-500">Loading...</p>;
     if (!customer) return <p className="text-center text-red-500">Customer not found</p>;
