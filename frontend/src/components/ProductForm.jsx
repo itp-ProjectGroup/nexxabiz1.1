@@ -51,8 +51,11 @@ const ProductForm = () => {
           'content-type':'multipart/form-data'
         }
       });
+
+      console.log('Response:', response.data);
       setMessage({ text: response.data.message, type: "success" });
-      setProduct({  productName: '', ManufacturingCost: '',sellingPrice: '', lowStockLevel: '', image: '', }); // Clear form
+      setProduct({  productName: '', ManufacturingCost: '',sellingPrice: '', lowStockLevel: '', images: '', });// Clear form
+      setTimeout(() => setMessage(null), 3000); // auto hide msg after 3 sec
     } catch (error) {
 
       //console.error('Error adding product:', error.response ? error.response.data : error.message);
@@ -60,6 +63,7 @@ const ProductForm = () => {
       setMessage({ text:error.response?.data?.message || "failed to add product",
         type: "error"
       });
+      setTimeout(() => setMessage(null), 3000);
     }
   };
 
@@ -67,7 +71,7 @@ const ProductForm = () => {
     <div className='max-w-4xl p-6 mx-auto bg-indigo-600 rounded-md shadow-md dark:bg-gray-800 mt-20'>
       <h1 className="text-xl font-bold text-white capitalize dark:text-white">Add New Product</h1>
       {message.text && (
-        <p className={`message ${message.type === "success" ? "success" : "error"}`}>
+        <p className={` mt-2 p-2 text-center text-white ${message.type === "success" ? "bg-green-500" : "bg-red-500"}`}>
           {message.text}
         </p>
         )
