@@ -41,9 +41,9 @@ const CustomerList = () => {
                                 <td className="py-3 px-4 text-gray-300">{customer.u_companyName || "N/A"}</td>
                                 <td className="py-3 px-4 text-gray-300">{customer.u_fullName || "N/A"}</td>
                                 <td className="py-3 px-4">
-                                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${customer.u_status === "Active" ? "bg-green-600 text-white" : "bg-red-600 text-white"}`}>
-                                        {customer.u_status}
-                                    </span>
+                                <span className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${customer.u_status === "Active" ? "bg-green-600 text-white" : "bg-red-600 text-white"}`}>
+                                    {customer.u_status}
+                                </span>
                                 </td>
                                 <td className="py-3 px-4">
                                     <Link to={`/customer/${customer.userID}`} className="text-blue-400 hover:underline">View</Link>

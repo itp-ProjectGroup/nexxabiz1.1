@@ -394,6 +394,56 @@ const CustomerProfile = () => {
                     />
                   </div>
                 </div>
+
+
+
+                {/* rates */}
+                
+                <div className="flex space-x-4 mb-2">
+                  <div className="w-full">
+                  <label htmlFor="u_c1stLine" className="block text-gray-500">
+                    Pricing rate
+                  </label>
+                    <input
+                      type="text"
+                      name="u_pricingRate"
+                      id="u_pricingRate"
+                      placeholder="100%"
+                      value={formData.u_pricingRate}
+                      onChange={handleChange}
+                      className="w-full p-2 rounded bg-gray-700 text-white"
+                      required
+                    />
+                  </div>
+                  <div className="w-full">
+                  <label htmlFor="u_c1stLine" className="block text-gray-500">
+                    Discount rate
+                  </label>
+                    <input
+                      type="text"
+                      name="u_discountRate"
+                      id="u_discountRate"
+                      placeholder="100%"
+                      value={formData.u_discountRate}
+                      onChange={handleChange}
+                      className="w-full p-2 rounded bg-gray-700 text-white"
+                    />
+                  </div>
+                  <div className="w-full">
+                  <label htmlFor="u_c1stLine" className="block text-gray-500">
+                    Advanced rate
+                  </label>
+                    <input
+                      type="number"
+                      name="u_advanceRate"
+                      id="u_advanceRate"
+                      placeholder="100%"
+                      value={formData.u_advanceRate}
+                      onChange={handleChange}
+                      className="w-full p-2 rounded bg-gray-700 text-white"
+                    />
+                  </div>
+                </div>
             </>
                     )}
 
@@ -415,8 +465,9 @@ const CustomerProfile = () => {
                   />
                 </div>
 
-                {/* Security Answer Input */}
-                <div className="mb-4">
+                {/*password and status*/}
+                <div className="flex space-x-4 mb-2">
+                <div className="w-full">
                   <label htmlFor="password" className="block text-gray-500">
                     Password
                   </label>
@@ -425,10 +476,27 @@ const CustomerProfile = () => {
                     name="password"
                     id="password"
                     placeholder="******"
-                    value={formData.password}
                     onChange={handleChange}
                     className="w-full p-2 rounded bg-gray-700 text-white"
                   />
+                </div>
+                <div className="w-full">
+                  <label htmlFor="securityQuestion" className="block text-gray-500">
+                    Security Question
+                  </label>
+                  <select
+                    name="u_status"
+                    id="u_status"
+                    value={formData.u_status}
+                    onChange={handleChange}
+                    className="w-full p-2 rounded bg-gray-700 text-white"
+                    required
+                  >
+                    <option value="inactive">inactive</option>
+                    <option value="Active">Active</option>
+                   
+                  </select>
+                </div>
                 </div>
 
                 {/* Security Question Input */}
