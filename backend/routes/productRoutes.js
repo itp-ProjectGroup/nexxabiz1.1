@@ -25,6 +25,6 @@ router.post('/', upload.array('images',5),(req,res, next)=>{
 },addProduct);
 
 //get all products
-router.get('/',getProduct);
+router.get('/all',getProduct);
 
 module.exports = router;
