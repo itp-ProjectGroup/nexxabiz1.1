@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"; 
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate  } from "react-router-dom";
+
 import axios from "axios";
 
 const CustomerProfile = () => {
@@ -33,6 +34,9 @@ const CustomerProfile = () => {
           securityQuestion: "",
           securityAnswer: "",
     });
+
+    // Initialize useNavigate
+    const navigate = useNavigate();
 
     useEffect(() => {
         axios.get(`http://localhost:5000/api/users/${id}`)
@@ -74,6 +78,23 @@ const CustomerProfile = () => {
           alert("Failed to update profile. Please try again.");
       }
   };
+
+  const handleDelete = async () => {
+    if (window.confirm("Are you sure you want to delete this user?")) {
+        try {
+            await axios.delete(`http://localhost:5000/api/users/${id}`);
+            alert("User deleted successfully");
+
+            // Direct navigation after the alert
+            navigate("/customers");
+
+        } catch (error) {
+            console.error("Error deleting user:", error);
+            alert("Failed to delete user");
+        }
+    }
+};
+
 
     if (loading) return <p className="text-center text-gray-500">Loading...</p>;
     if (!customer) return <p className="text-center text-red-500">Customer not found</p>;
@@ -539,7 +560,8 @@ const CustomerProfile = () => {
                 </div>
                  </>
                     )}
-                    <div className="flex justify-end mt-5">
+                    <div className="flex justify-end mt-5 space-x-4">
+                    <button type="button" onClick={handleDelete} className="bg-red-500 hover:bg-red-700 text-white px-8 py-2 rounded">Delete</button>
                     <button type="submit" className="bg-blue-500 text-white px-8 py-2 rounded hover:bg-blue-700">Update</button>
                     </div>
                     
