@@ -35,41 +35,63 @@ const ProductList = () => {
 
     // Display product list
     return (
-        <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">Product List</h1>
+       <div className='p-6 dark:bg-gray-800 min-h-screen'>
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold text-white">Product List</h1>
+                <input
+                    type="text"
+                    placeholder="Search by Manufacturing ID"
+                    className="p-2 rounded-lg dark:bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onChange={(e) => handleSearch(e.target.value)}
+                />
+            </div>
             {products.length === 0 ? (
-                <p  className="text-gray-600">No products found.</p>
-            ) : (
-                <ul className="w-full">
+        <p className="text-gray-400">No products found.</p>
+    ) : (
+        <div className="overflow-x-auto">
+            <table className="min-w-full dark:bg-gray-900 rounded-lg overflow-hidden">
+                <thead className="bg-blue-700">
+                    <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Manufacturing ID</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Product Name</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Manufacturing Cost</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Selling Price</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Low Stock Level</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Images</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Actions</th>
+
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-blue-700">
                     {products.map((product) => (
-                        <li key={product._id} className="bg-white shadow-md rounded-lg p-6 mb-6">
-                            <h2 className="text-xl font-semibold mb-2">{product.productName}</h2>
-                            <div  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <p ><strong className="font-medium">Manufacturing ID:</strong> {product.manufacturingID}</p>
-                                <p><strong className="font-medium">Manufacturing Cost:</strong> ${product.ManufacturingCost}</p>
-                                <p><strong className="font-medium">Selling Price:</strong> ${product.sellingPrice}</p>
-                                <p><strong className="font-medium">Low Stock Level:</strong> {product.lowStockLevel}</p>
-                            </div>
-                            {product.images && product.images.length > 0 && (
-                                <div className="mt-4">
-                                    <strong className="font-medium">Images:</strong>
-                                    <div className="flex flex-wrap gap-2 mt-2">
-                                    {product.images.map((image, index) => (
-                                        <img
-                                            key={index}
-                                            src={`http://localhost:5000/${image}`} // Replace with your backend URL
-                                            alt={`Product ${index + 1}`}
-                                            className="w-24 h-24 object-cover rounded-md border"
-                                        />
-                                    ))}
-                                    </div>
-                                </div>
-                            )}
-                        </li>
+                        <tr key={product._id} className="hover:bg-blue-750">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{product.manufacturingID}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{product.productName}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-white">${product.ManufacturingCost}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-white">${product.sellingPrice}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{product.lowStockLevel}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{product.images}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                <button
+                                    className="bg-yellow-500 text-white px-3 py-1 rounded-md mr-2 hover:bg-yellow-600"
+                                    onClick={() => handleEdit(product._id)}
+                                >
+                                    Edit
+                                </button>
+                                <button
+                                    className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600"
+                                    onClick={() => handleDelete(product._id)}
+                                >
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
                     ))}
-                </ul>
-            )}
+                </tbody>
+            </table>
         </div>
+         )}
+       </div>
     );
 };
 
