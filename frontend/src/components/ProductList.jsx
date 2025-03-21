@@ -6,6 +6,7 @@ const ProductList = () => {
     const [products, setProducts] = useState([]); // State to store products
     const [loading, setLoading] = useState(true); // State to manage loading state
     const [error, setError] = useState(null); // State to handle errors
+    const [filteredProducts, setFilteredProducts] = useState([]);
 
     // Fetch products from the backend
     useEffect(() => {
@@ -14,6 +15,7 @@ const ProductList = () => {
                 const response = await axios.get('http://localhost:5000/api/products/all'); // Replace with your backend URL
                 setProducts(response.data); // Set the fetched products to state
                 setLoading(false); // Set loading to false
+                setFilteredProducts(response.data); //// Initialize filteredProducts with the same data
             } catch (err) {
                 setError(err.message); // Set error message
                 setLoading(false); // Set loading to false
@@ -28,13 +30,21 @@ const ProductList = () => {
         return <div>Loading...</div>;
     }
 
-
     if (error) {
         return <div>Error: {error}</div>;
     }
 
+    const handleSearch = (searchTerm) => {
+        const filtered = products.filter((product) =>
+            product.manufacturingID.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setFilteredProducts(filtered);
+    };
+
+
     // Display product list
     return (
+
        <div className='p-6 dark:bg-gray-800 min-h-screen'>
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold text-white">Product List</h1>
@@ -45,7 +55,7 @@ const ProductList = () => {
                     onChange={(e) => handleSearch(e.target.value)}
                 />
             </div>
-            {products.length === 0 ? (
+            {filteredProducts.length === 0 ? (
         <p className="text-gray-400">No products found.</p>
     ) : (
         <div className="overflow-x-auto">
@@ -63,7 +73,7 @@ const ProductList = () => {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-blue-700">
-                    {products.map((product) => (
+                    {filteredProducts.map((product) => (
                         <tr key={product._id} className="hover:bg-blue-750">
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{product.manufacturingID}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{product.productName}</td>
