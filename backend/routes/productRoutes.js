@@ -1,5 +1,5 @@
 const express = require('express');
-const {addProduct, getProduct} =  require('../controllers/productController');
+const {addProduct, getProduct,updateProduct} =  require('../controllers/productController');
 const Product = require('../models/Product');
 const multer = require('multer');
 
@@ -26,5 +26,8 @@ router.post('/', upload.array('images',5),(req,res, next)=>{
 
 //get all products
 router.get('/all',getProduct);
+
+// Update a product
+router.put('/:id', updateProduct);
 
 module.exports = router;

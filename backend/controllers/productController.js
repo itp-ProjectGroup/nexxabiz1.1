@@ -60,4 +60,27 @@ const getProduct = async (req,res) => {
     }
 };
 
-module.exports = {addProduct, getProduct};
+const updateProduct = async (req, res) => {
+    const { id } = req.params;
+    const { productName, ManufacturingCost, sellingPrice, lowStockLevel } = req.body;
+
+    try {
+        // Find the product by ID and update it
+        const updatedProduct = await Product.findByIdAndUpdate(
+            id,
+            { productName, ManufacturingCost, sellingPrice, lowStockLevel },
+            { new: true } // Return the updated document
+        );
+
+        if (!updatedProduct) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+
+        res.status(200).json({ message: 'Product updated successfully', product: updatedProduct });
+    } catch (err) {
+        console.error('Error updating product:', err);
+        res.status(500).json({ message: 'Error updating product' });
+    }
+};
+
+module.exports = { addProduct, getProduct, updateProduct };
