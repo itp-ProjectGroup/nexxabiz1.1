@@ -5,6 +5,7 @@ import axios from "axios";
 const PaymentGateway = () => {
     const { orderId } = useParams(); // Get order ID from URL
     const [order, setOrder] = useState(null);
+    const [paymentId, setPaymentId] = useState(""); 
     const [paymentAmount, setPaymentAmount] = useState("");
     const [paymentMethod, setPaymentMethod] = useState("");
     const [remark, setRemark] = useState("");
@@ -13,20 +14,46 @@ const PaymentGateway = () => {
         axios.get(`http://localhost:5000/api/orders/${orderId}`)
             .then(response => setOrder(response.data))
             .catch(error => console.error("Error fetching order:", error));
+
+            generatePaymentId();
     }, [orderId]);
 
-    const handlePayment = () => {
+
+    const generatePaymentId = () => {
+        // Get the last stored PID from localStorage or start from 1
+        let lastPaymentId = localStorage.getItem("lastPaymentId") || "PID00000000";
+        
+        // Extract the numeric part, increment it, and format it back
+        let numericPart = parseInt(lastPaymentId.substring(3)) + 1;
+        let newPaymentId = `PID${numericPart.toString().padStart(8, "0")}`;
+
+        // Save the new Payment ID to state and localStorage
+        setPaymentId(newPaymentId);
+        localStorage.setItem("lastPaymentId", newPaymentId);
+    };
+
+    const handlePayment = async () => {
+        if (!paymentAmount || !paymentMethod) {
+            alert("Please enter payment amount and select a payment method.");
+            return;
+        }
+
+        if (parseFloat(paymentAmount) > order.od_Tamount) {
+            alert("Total amount exceeding. Please enter a valid amount.");
+            return;
+        }
         const paymentData = {
+            paymentId,
             orderId,
-            paymentAmount,
+            paymentAmount:parseFloat(paymentAmount),
             paymentMethod,
             remark,
         };
 
         axios.post("http://localhost:5000/api/payments", paymentData)
             .then(response => {
-                alert("Payment Successful!");
-                window.location.href = "/admin/orders"; // Redirect to order list
+                alert(`Payment Successful! Payment ID: ${paymentId}`);
+                window.location.href = "/OrderList"; // Redirect to order list
             })
             .catch(error => console.error("Payment Error:", error));
     };
@@ -56,6 +83,7 @@ const PaymentGateway = () => {
                 <option value="">Select Method</option>
                 <option value="Credit Card">Credit Card</option>
                 <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Cheque">Cheque</option>
                 <option value="Cash">Cash</option>
             </select>
 

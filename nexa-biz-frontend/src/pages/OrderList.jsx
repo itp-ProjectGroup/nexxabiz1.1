@@ -22,7 +22,7 @@ const OrderList = () => {
 
     return (
         <div className="max-w-6xl mx-auto mt-10 font-roboto bg-gray-800 text-white p-6 rounded-lg shadow-lg">
-            <h2 className="text-xl font-bold text-white mb-4">Order List</h2>
+            <h2 className="text-xl font-bold text-white mb-4">Payment Records</h2>
             <div className="overflow-x-auto p-4">
                 <table className="w-full text-left border-collapse">
                     <thead>
@@ -53,7 +53,7 @@ const OrderList = () => {
                                 <td className="py-3 px-4 text-gray-300">${order.od_Tamount.toFixed(2)}</td>
                                 <td className="py-3 px-4">
                                     {order.pay_status !== "Paid" ? (
-                                        <Link to={`/admin/payment/${order.od_Id}`} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                        <Link to={`/payment/${order.od_Id}`} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                                             Pay
                                         </Link>
                                     ) : (
