@@ -80,14 +80,23 @@ const ProductList = () => {
     };
 
     const handleDelete = async (productId) => {
+
+        const isConfirmed = window.confirm('Are you sure you want to delete this product?');
+        if (!isConfirmed) return;
+
         try {
             await axios.delete(`http://localhost:5000/api/products/${productId}`);
+
+            // Update state to remove the deleted product
             const updatedProducts = products.filter(product => product._id !== productId);
             setProducts(updatedProducts);
             setFilteredProducts(updatedProducts);
+
+            
+            alert('Product deleted successfully');
         } catch (err) {
             console.error('Error deleting product:', err);
-            setError('Failed to delete product');
+            setError(`Failed to delete product: ${err.response?.data?.message || err.message}`);
         }
     };
 
