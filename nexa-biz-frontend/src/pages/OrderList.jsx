@@ -5,6 +5,7 @@ import axios from "axios";
 const OrderList = () => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState("all"); // "all" or "paid"
 
     useEffect(() => {
         axios.get("http://localhost:5000/api/orders") // Update API URL if needed
@@ -20,9 +21,29 @@ const OrderList = () => {
 
     if (loading) return <p className="text-center text-gray-500">Loading...</p>;
 
+    // Filtered orders based on active tab
+    const filteredOrders = activeTab === "paid" ? orders.filter(order => order.pay_status === "Paid") : orders;
+
     return (
         <div className="max-w-6xl mx-auto mt-10 font-roboto bg-gray-800 text-white p-6 rounded-lg shadow-lg">
             <h2 className="text-xl font-bold text-white mb-4">Payment Records</h2>
+            
+            {/* Tabs */}
+            <div className="flex mb-4 border-b border-gray-600">
+                <button 
+                    className={`py-2 px-4 ${activeTab === "all" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-400"}`} 
+                    onClick={() => setActiveTab("all")}
+                >
+                    All Payments
+                </button>
+                <button 
+                    className={`py-2 px-4 ml-2 ${activeTab === "paid" ? "border-b-2 border-green-500 text-green-500" : "text-gray-400"}`} 
+                    onClick={() => setActiveTab("paid")}
+                >
+                    Paid Payments
+                </button>
+            </div>
+
             <div className="overflow-x-auto p-4">
                 <table className="w-full text-left border-collapse">
                     <thead>
@@ -36,7 +57,7 @@ const OrderList = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {orders.map(order => (
+                        {filteredOrders.map(order => (
                             <tr key={order.od_Id} className="border-b border-gray-700 hover:bg-gray-800 text-center">
                                 <td className="py-3 px-4 font-medium text-white">{order.od_Id}</td>
                                 <td className="py-3 px-4 text-gray-300">{order.company_name}</td>
