@@ -5,6 +5,8 @@ import CustomerList from "./pages/CustomerList";
 import CustomerProfile from "./pages/CustomerProfile";
 import OrderList from "./pages/OrderList";
 import PaymentGateway  from "./pages/paymentGateway";
+import HeroSection from "./pages/HeroSection";
+
 
 const App = () => {
     return (
@@ -16,6 +18,7 @@ const App = () => {
                 <Route path="/customer/:id" element={<CustomerProfile />} />
                 <Route path="/OrderList" element={<OrderList />} />
                 <Route path="payment/:orderId" element={<PaymentGateway />} />
+                <Route path="/HeroSection" element={<HeroSection />} />
             </Routes>
         </Router>
     );
