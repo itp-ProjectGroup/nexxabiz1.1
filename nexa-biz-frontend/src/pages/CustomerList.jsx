@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 
 const CustomerList = () => {
     const [customers, setCustomers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const location = useLocation();
+    const isAdminRoute = location.pathname.startsWith('/admin');
 
     useEffect(() => {
         axios.get("http://localhost:5000/api/users")
@@ -46,7 +48,12 @@ const CustomerList = () => {
                                 </span>
                                 </td>
                                 <td className="py-3 px-4">
-                                    <Link to={`/customer/${customer.userID}`} className="text-blue-400 hover:underline">View</Link>
+                                    <Link 
+                                        to={isAdminRoute ? `/admin/customer/${customer.userID}` : `/customer/${customer.userID}`} 
+                                        className="text-blue-400 hover:underline"
+                                    >
+                                        View
+                                    </Link>
                                 </td>
                             </tr>
                         ))}
