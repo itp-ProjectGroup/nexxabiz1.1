@@ -6,6 +6,7 @@ import CustomerProfile from "./pages/CustomerProfile";
 import OrderList from "./pages/OrderList";
 import PaymentGateway  from "./pages/paymentGateway";
 import HeroSection from "./pages/HeroSection";
+import AdminLayout from "./admin/adminLayout";
 
 
 const App = () => {
@@ -19,6 +20,14 @@ const App = () => {
                 <Route path="/OrderList" element={<OrderList />} />
                 <Route path="payment/:orderId" element={<PaymentGateway />} />
                 <Route path="/HeroSection" element={<HeroSection />} />
+                
+                {/* Admin Routes */}
+                <Route path="/admin" element={<AdminLayout />}>
+                    <Route index element={<div>Admin Dashboard</div>} />
+                    <Route path="customers" element={<CustomerList />} />
+                    <Route path="orders" element={<OrderList />} />
+                    <Route path="customer/:id" element={<CustomerProfile />} />
+                </Route>
             </Routes>
         </Router>
     );

@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import Sidebar from "../pages/Sidebar";
+import Sidebar from "./Sidebar";
 
 const AdminLayout = () => {
     return (
@@ -8,7 +8,7 @@ const AdminLayout = () => {
             <Sidebar />
 
             {/* Dynamic Content Area */}
-            <div className="flex-1 p-5">
+            <div className="flex-1 ml-64 p-6">
                 <Outlet />
             </div>
         </div>
