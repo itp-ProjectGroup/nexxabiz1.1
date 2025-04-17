@@ -1,7 +1,41 @@
 import mongoose from "mongoose";
 
+// Create a schema for tracking the last used user ID
+const counterSchema = new mongoose.Schema({
+    _id: { type: String, required: true },
+    seq: { type: Number, default: 0 }
+});
+
+const Counter = mongoose.model('Counter', counterSchema);
+
+// Function to generate a sequential user ID
+const generateSequentialUserId = async () => {
+    try {
+        // Find the counter document or create it if it doesn't exist
+        let counter = await Counter.findById('userID');
+        
+        if (!counter) {
+            // Initialize the counter if it doesn't exist
+            counter = new Counter({ _id: 'userID', seq: 0 });
+        }
+        
+        // Increment the counter
+        counter.seq += 1;
+        await counter.save();
+        
+        // Format the ID with leading zeros (6 digits)
+        const formattedId = `UID${String(counter.seq).padStart(6, '0')}`;
+        return formattedId;
+    } catch (error) {
+        console.error('Error generating sequential user ID:', error);
+        // Fallback to a random ID if there's an error
+        const randomNum = Math.floor(100000 + Math.random() * 900000);
+        return `UID${randomNum}`;
+    }
+};
 
 const userSchema = new mongoose.Schema({
+    userID: { type: String, unique: true },
     u_fullName: { type: String, required: true },
     u_pEmail: { type: String, required: true, unique: true },
     u_pPhone: { type: String, required: true },
@@ -31,10 +65,17 @@ const userSchema = new mongoose.Schema({
     u_advanceRate: { type: Number, default: null } // Advance rate
 }, { timestamps: true });
 
-// Automatically create a UserID as a primary key
+// Pre-save middleware to generate a sequential userID if not provided
+userSchema.pre('save', async function(next) {
+    if (!this.userID) {
+        this.userID = await generateSequentialUserId();
+    }
+    next();
+});
+
+// Remove the toJSON transform since we now have a dedicated userID field
 userSchema.set("toJSON", {
     transform: (doc, ret) => {
-        ret.userID = ret._id.toString();
         delete ret._id;
         delete ret.__v;
     }

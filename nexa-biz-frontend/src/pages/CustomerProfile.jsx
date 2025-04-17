@@ -101,8 +101,18 @@ const CustomerProfile = () => {
 
     return (
         <div className="min-h-screen flex justify-center items-center text-white font-roboto">
-            <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-4xl">
-                <h2 className="text-2xl font-bold mb-4">{customer.u_fullName}'s Profile</h2>
+            <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-[70rem] mx-auto">
+                <div className="flex items-center mb-4">
+                    <button 
+                        onClick={() => navigate(-1)} 
+                        className="mr-4 text-blue-400 hover:text-blue-300 transition-colors"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                        </svg>
+                    </button>
+                    <h2 className="text-2xl font-bold">{customer.u_fullName}'s Profile</h2>
+                </div>
                 
                 {/* Navigation Tabs */}
                 <div className="flex mb-6 border-b border-gray-500">

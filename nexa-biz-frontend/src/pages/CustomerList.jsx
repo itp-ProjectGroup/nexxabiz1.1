@@ -39,7 +39,7 @@ const CustomerList = () => {
                     <tbody>
                         {customers.map(customer => (
                             <tr key={customer.userID} className="border-b border-gray-700 hover:bg-gray-800 text-center">
-                                <td className="py-3 px-4 font-medium text-white">{customer.userID }</td>
+                                <td className="py-3 px-4 font-medium text-white">{customer.userID}</td>
                                 <td className="py-3 px-4 text-gray-300">{customer.u_companyName || "N/A"}</td>
                                 <td className="py-3 px-4 text-gray-300">{customer.u_fullName || "N/A"}</td>
                                 <td className="py-3 px-4">
