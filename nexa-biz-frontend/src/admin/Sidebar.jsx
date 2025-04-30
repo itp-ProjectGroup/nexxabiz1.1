@@ -67,6 +67,8 @@ const Sidebar = () => {
                         </div>
                     </Link>
                 </li>
+
+                {/* order management */}
                 <li>
                     <Link 
                         to="/admin/orders" 
@@ -92,6 +94,40 @@ const Sidebar = () => {
                         </div>
                     </Link>
                 </li>
+
+
+                {/* finance management */}
+                <li>
+                    <Link 
+                        to="/admin/finance" 
+                        className={`block p-2 relative transition-all duration-300 group ${
+                            isActive("/admin/finance") 
+                                ? "text-blue-400 font-medium" 
+                                : "text-gray-300 hover:text-white"
+                        }`}
+                    >
+                        {isActive("/admin/finance") && (
+                            <span className="absolute left-0 top-0 h-full w-1 bg-blue-400"></span>
+                        )}
+                        {!isActive("/admin/finance") && (
+                            <span className="absolute left-0 top-0 h-full w-0 bg-blue-400/20 transition-all duration-300 group-hover:w-full rounded-md"></span>
+                        )}
+                        <div className="relative z-10">
+                            <span className="flex items-center justify-between">
+                                <span>Financials</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                                    <path d="M4.5 3.75a3 3 0 0 0-3 3v.75h21v-.75a3 3 0 0 0-3-3h-15Z" />
+                                    <path fillRule="evenodd" d="M22.5 9.75h-21v7.5a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3v-7.5Zm-18 3.75a.75.75 0 0 1 .75-.75h6a.75.75 0 0 1 0 1.5h-6a.75.75 0 0 1-.75-.75Zm.75 2.25a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3Z" clipRule="evenodd" />
+                                </svg>
+
+
+
+                            </span>
+                        </div>
+                    </Link>
+                </li>
+
+
                 <li>
                     <Link 
                         to="/admin/settings" 

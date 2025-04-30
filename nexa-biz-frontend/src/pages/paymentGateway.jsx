@@ -53,7 +53,7 @@ const PaymentGateway = () => {
         axios.post("http://localhost:5000/api/payments", paymentData)
             .then(response => {
                 alert(`Payment Successful! Payment ID: ${paymentId}`);
-                window.location.href = "/OrderList"; // Redirect to order list
+                window.location.href = "/admin/finance"; // Redirect to order list
             })
             .catch(error => console.error("Payment Error:", error));
     };

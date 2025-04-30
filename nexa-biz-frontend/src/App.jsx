@@ -4,6 +4,7 @@ import Register from "./pages/Register";
 import CustomerList from "./pages/CustomerList";
 import CustomerProfile from "./pages/CustomerProfile";
 import OrderList from "./pages/OrderList";
+import FinDashboard from "./pages/FinDashboard";
 import PaymentGateway  from "./pages/paymentGateway";
 import HeroSection from "./pages/HeroSection";
 import AdminLayout from "./admin/adminLayout";
@@ -25,6 +26,8 @@ const App = () => {
                     <Route index element={<div>Admin Dashboard</div>} />
                     <Route path="customers" element={<CustomerList />} />
                     <Route path="orders" element={<OrderList />} />
+                    <Route path="finance" element={<FinDashboard />} />
+                    <Route path="payment/:orderId" element={<PaymentGateway />} />
                     <Route path="customer/:id" element={<CustomerProfile />} />
                 </Route>
             </Routes>
