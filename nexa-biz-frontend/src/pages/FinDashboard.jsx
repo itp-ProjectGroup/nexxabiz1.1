@@ -5,10 +5,10 @@ import axios from "axios";
 const FinDashboard = () => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState("all"); // "all" or "paid"
+    const [activeTab, setActiveTab] = useState("all"); // "all", "paid", "new"
 
     useEffect(() => {
-        axios.get("http://localhost:5000/api/Orders") // Update API URL if needed
+        axios.get("http://localhost:5000/api/Orders")
             .then(response => {
                 setOrders(response.data);
                 setLoading(false);
@@ -22,14 +22,25 @@ const FinDashboard = () => {
     if (loading) return <p className="text-center text-gray-500">Loading...</p>;
 
     // Filtered orders based on active tab
-    const filteredOrders = activeTab === "paid" ? orders.filter(order => order.pay_status === "Paid") : orders;
+    const filteredOrders = orders.filter(order => {
+        if (activeTab === "paid") return order.pay_status === "Paid";
+        if (activeTab === "new") return order.od_status === "New" || order.od_status === "Pending";
+        return true; // all
+    });
 
     return (
         <div className="max-w-6xl mx-auto mt-10 font-roboto bg-gray-800 text-white p-6 rounded-lg shadow-lg">
             <h2 className="text-xl font-bold text-white mb-4">Payment Records</h2>
-            
+
             {/* Tabs */}
             <div className="flex mb-4 border-b border-gray-600">
+                <button 
+                    className={`py-2 px-4 ml-2 ${activeTab === "new" ? "border-b-2 border-yellow-500 text-yellow-500" : "text-gray-400"}`} 
+                    onClick={() => setActiveTab("new")}
+                >
+                    New Orders
+                </button>
+                
                 <button 
                     className={`py-2 px-4 ${activeTab === "all" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-400"}`} 
                     onClick={() => setActiveTab("all")}
@@ -44,6 +55,7 @@ const FinDashboard = () => {
                 </button>
             </div>
 
+            {/* Table */}
             <div className="overflow-x-auto p-4">
                 <table className="w-full text-left border-collapse">
                     <thead>
@@ -62,12 +74,12 @@ const FinDashboard = () => {
                                 <td className="py-3 px-4 font-medium text-white">{order.od_Id}</td>
                                 <td className="py-3 px-4 text-gray-300">{order.company_name}</td>
                                 <td className="py-3 px-4">
-                                    <span className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${order.od_status === "Completed" ? "bg-green-600 text-white" : "bg-yellow-600 text-white"}`}>
+                                    <span className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${order.od_status === "Completed" ? "bg-green-600" : "bg-yellow-600"} text-white`}>
                                         {order.od_status}
                                     </span>
                                 </td>
                                 <td className="py-3 px-4">
-                                    <span className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${order.pay_status === "Paid" ? "bg-green-600 text-white" : "bg-red-600 text-white"}`}>
+                                    <span className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${order.pay_status === "Paid" ? "bg-green-600" : "bg-red-600"} text-white`}>
                                         {order.pay_status}
                                     </span>
                                 </td>

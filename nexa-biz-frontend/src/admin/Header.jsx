@@ -1,13 +1,50 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 const Header = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+
+        if (location.pathname.includes("/admin/finance")) {
+            navigate(`/admin/finance?customer=${searchQuery}`);
+        } else if (location.pathname.includes("/admin/products")) {
+            navigate(`/admin/products?product=${searchQuery}`);
+        } else if (location.pathname.includes("/admin/orders")) {
+            navigate(`/admin/orders?orderId=${searchQuery}`);
+        }
+        // Add more routes if needed
+    };
+
+    const getSearchPlaceholder = () => {
+        if (location.pathname.includes("/admin/finance")) return "Search customer by name...";
+        if (location.pathname.includes("/admin/products")) return "Search product...";
+        if (location.pathname.includes("/admin/orders")) return "Search order ID...";
+        return "Search...";
+    };
+
     return (
         <header className="bg-gradient-to-r from-gray-700 to-gray-500 text-white p-4 shadow-md">
             <div className="flex justify-between items-center">
                 <div className="flex items-center">
                     <h1 className="text-xl font-bold">NexaBiz Admin</h1>
                 </div>
-                <div className="flex items-center space-x-4">
+
+                {/* Search input without button */}
+                <form onSubmit={handleSearch} className="ml-6 w-full max-w-md">
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder={getSearchPlaceholder()}
+                        className="w-full px-4 py-1.5 rounded-full bg-gray-600 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-300"
+                    />
+                </form>
+
+                <div className="flex items-center space-x-4 ml-6">
                     <Link to="/" className="text-gray-300 hover:text-white transition-colors">
                         <span className="flex items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
@@ -28,4 +65,4 @@ const Header = () => {
     );
 };
 
-export default Header; 
+export default Header;
