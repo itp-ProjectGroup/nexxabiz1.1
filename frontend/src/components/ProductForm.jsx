@@ -419,22 +419,25 @@ const ProductForm = () => {
           </button>
         )}
 
-        {activeTab !== 'images' ? (
-          <button
-            type="button"
-            className='px-6 py-2 leading-5 text-white transition-colors duration-200 transform bg-blue-500 rounded-md hover:bg-blue-700 focus:outline-none ml-auto'
-            onClick={() => setActiveTab(activeTab === 'details' ? 'pricing' : 'images')}
-          >
-            Next
-          </button>
-        ) : (
-          <button
-            type="submit"
-            className='px-6 py-2 leading-5 text-white transition-colors duration-200 transform bg-pink-500 rounded-md hover:bg-pink-700 focus:outline-none ml-auto'
-          >
-            Add Product
-          </button>
-        )}
+{activeTab !== 'images' ? (
+    <button
+      type="button"
+      className='px-6 py-2 leading-5 text-white transition-colors duration-200 transform bg-blue-500 rounded-md hover:bg-blue-700 focus:outline-none ml-auto'
+      onClick={() => {
+        if (activeTab === 'details') setActiveTab('pricing');
+        if (activeTab === 'pricing') setActiveTab('images');
+      }}
+    >
+      Next
+    </button>
+  ) : (
+    <button
+      type="submit"
+      className='px-6 py-2 leading-5 text-white transition-colors duration-200 transform bg-pink-500 rounded-md hover:bg-pink-700 focus:outline-none ml-auto'
+    >
+      Add Product
+    </button>
+  )}
       </div>
     </form>
   </div>
