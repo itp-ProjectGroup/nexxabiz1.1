@@ -23,12 +23,40 @@ const generateManufacturingID = () => {
 
 //add a new product
 const addProduct = async (req,res) => {
-    const{manufacturingID, productName, ManufacturingCost, sellingPrice, lowStockLevel} = req.body;
+    const {
+        productName,
+        ManufacturingCost,
+        sellingPrice,
+        lowStockLevel,
+        size,
+        theme,
+        material,
+        color,
+        function: productFunction,
+        brand,
+        promotions
+    } = req.body;
+
     const images = req.files ? req.files.map(file => file.path) : [];
 
     try{
         const manufacturingID = generateManufacturingID(); //generate unique id
-        const newProduct = new Product({manufacturingID,productName,ManufacturingCost,sellingPrice,lowStockLevel,images});
+        const newProduct = new Product({
+            manufacturingID,
+            productName,
+            ManufacturingCost,
+            sellingPrice,
+            lowStockLevel,
+            images,
+            size,
+            theme,
+            material,
+            color,
+            function: productFunction,
+            brand,
+            promotions: promotions ? JSON.parse(promotions) : []
+        });
+
         await newProduct.save();
         res.status(201).json({ message: 'Product added successfully', product: newProduct });
     }
@@ -62,13 +90,37 @@ const getProduct = async (req,res) => {
 
 const updateProduct = async (req, res) => {
     const { id } = req.params;
-    const { productName, ManufacturingCost, sellingPrice, lowStockLevel } = req.body;
+    const {
+        productName,
+        ManufacturingCost,
+        sellingPrice,
+        lowStockLevel,
+        size,
+        theme,
+        material,
+        color,
+        function: productFunction,
+        brand,
+        promotions
+    } = req.body;
 
     try {
         // Find the product by ID and update it
         const updatedProduct = await Product.findByIdAndUpdate(
             id,
-            { productName, ManufacturingCost, sellingPrice, lowStockLevel },
+            {
+                productName,
+                ManufacturingCost,
+                sellingPrice,
+                lowStockLevel,
+                size,
+                theme,
+                material,
+                color,
+                function: productFunction,
+                brand,
+                promotions: promotions ? JSON.parse(promotions) : []
+            },
             { new: true } // Return the updated document
         );
 
@@ -83,4 +135,23 @@ const updateProduct = async (req, res) => {
     }
 };
 
-module.exports = { addProduct, getProduct, updateProduct };
+// Get single product by ID
+const getSingleProduct = async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+        res.status(200).json(product);
+    } catch (err) {
+        console.error('Error fetching product:', err);
+        res.status(500).json({ message: 'Error fetching product' });
+    }
+};
+
+module.exports = {
+    addProduct,
+    getProduct,
+    updateProduct,
+    getSingleProduct
+};

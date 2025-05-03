@@ -11,7 +11,7 @@ function App() {
       <Navigation />
     <Routes>
 
-        < Route path ="/add" element= {<ProductForm/>}/>
+        < Route path ="/add" element= {<ProductForm />}/>
         <Route path="/all" element={<ProductList />} />
 
         </Routes>
