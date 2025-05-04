@@ -21,4 +21,30 @@ export const getOrderById = async (req, res) => {
     }
   };
   
-  
+  export const updateOverdueDate = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { overdue_date } = req.body;
+
+        const order = await Order.findOne({ od_Id: id });
+        if (!order) return res.status(404).json({ message: "Order not found" });
+
+        // If pay_status is "New", change it to "Pending"
+        const updatedFields = { overdue_date };
+        if (order.pay_status === "New") {
+            updatedFields.pay_status = "Pending";
+        }
+
+        const updatedOrder = await Order.findOneAndUpdate(
+            { od_Id: id },
+            updatedFields,
+            { new: true }
+        );
+
+        res.json(updatedOrder);
+    } catch (error) {
+        res.status(500).json({ message: "Failed to update overdue date", error });
+    }
+};
+
+

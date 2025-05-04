@@ -1,33 +1,52 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import SetOverdue from "../modal/SetOverdue"; // ✅ Import the modal
 
 const FinDashboard = () => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState("all"); // "all", "paid", "new"
+    const [activeTab, setActiveTab] = useState("all");
 
+    // ✅ Modal state
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Fetch orders on mount
     useEffect(() => {
-        axios.get("http://localhost:5000/api/Orders")
-            .then(response => {
-                setOrders(response.data);
-                setLoading(false);
-            })
-            .catch(error => {
-                console.error("Error fetching orders:", error);
-                setLoading(false);
-            });
+        fetchOrders();
     }, []);
 
-    if (loading) return <p className="text-center text-gray-500">Loading...</p>;
+    const fetchOrders = async () => {
+        try {
+            const response = await axios.get("http://localhost:5000/api/Orders");
+            setOrders(response.data);
+            setLoading(false);
+        } catch (error) {
+            console.error("Error fetching orders:", error);
+            setLoading(false);
+        }
+    };
 
-    // Filtered orders based on active tab
     const filteredOrders = orders.filter(order => {
         if (activeTab === "paid") return order.pay_status === "Paid";
         if (activeTab === "new") return order.pay_status === "New";
         if (activeTab === "Pending") return order.pay_status === "Pending";
-        return true; // all
+        return true;
     });
+
+    // Handle view click for modal
+    const handleViewClick = (order) => {
+        setSelectedOrder(order);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setSelectedOrder(null);
+        setIsModalOpen(false);
+    };
+
+    if (loading) return <p className="text-center text-gray-500">Loading...</p>;
 
     return (
         <div className="max-w-6xl mx-auto mt-10 font-roboto bg-gray-800 text-white p-6 rounded-lg shadow-lg">
@@ -35,35 +54,17 @@ const FinDashboard = () => {
 
             {/* Tabs */}
             <div className="flex mb-4 border-b border-gray-600">
-                
-                
-                <button 
-                    className={`py-2 px-4 ${activeTab === "all" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-400"}`} 
-                    onClick={() => setActiveTab("all")}
-                >
-                    All Payments
-                </button>
-
-                <button 
-                    className={`py-2 px-4 ml-2 ${activeTab === "new" ? "border-b-2 border-yellow-500 text-yellow-500" : "text-gray-400"}`} 
-                    onClick={() => setActiveTab("new")}
-                >
-                    New Orders
-                </button>
-
-                <button 
-                    className={`py-2 px-4 ml-2 ${activeTab === "paid" ? "border-b-2 border-green-500 text-green-500" : "text-gray-400"}`} 
-                    onClick={() => setActiveTab("paid")}
-                >
-                    Paid Payments
-                </button>
-
-                <button 
-                    className={`py-2 px-4 ml-2 ${activeTab === "Pending" ? "border-b-2 border-green-500 text-green-500" : "text-gray-400"}`} 
-                    onClick={() => setActiveTab("Pending")}
-                >
-                    Pending Payments
-                </button>
+                {["all", "new", "paid", "Pending"].map((tab) => (
+                    <button 
+                        key={tab}
+                        className={`py-2 px-4 ml-2 ${activeTab === tab ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-400"}`} 
+                        onClick={() => setActiveTab(tab)}
+                    >
+                        {tab === "all" ? "All Payments" :
+                         tab === "new" ? "New Orders" :
+                         tab === "paid" ? "Paid Payments" : "Pending Payments"}
+                    </button>
+                ))}
             </div>
 
             {/* Table */}
@@ -97,12 +98,21 @@ const FinDashboard = () => {
                                 <td className="py-3 px-4 text-gray-300">${order.od_Tamount.toFixed(2)}</td>
                                 <td className="py-3 px-4">
                                     {order.pay_status !== "Paid" ? (
-                                        <Link 
-                                            to={`/admin/payment/${order.od_Id}`} 
-                                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                                        >
-                                            {activeTab === "new" ? "View" : "Pay"}
-                                        </Link>
+                                        activeTab === "new" ? (
+                                            <button 
+                                                onClick={() => handleViewClick(order)} 
+                                                className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
+                                            >
+                                                View
+                                            </button>
+                                        ) : (
+                                            <Link 
+                                                to={`/admin/payment/${order.od_Id}`} 
+                                                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                                            >
+                                                Pay
+                                            </Link>
+                                        )
                                     ) : (
                                         <span className="text-gray-400">Paid</span>
                                     )}
@@ -112,6 +122,14 @@ const FinDashboard = () => {
                     </tbody>
                 </table>
             </div>
+
+            {/* ✅ Modal Component */}
+            <SetOverdue 
+                order={selectedOrder} 
+                isOpen={isModalOpen} 
+                onClose={handleCloseModal} 
+                onUpdated={fetchOrders} // Pass fetchOrders as onUpdated
+            />
         </div>
     );
 };
