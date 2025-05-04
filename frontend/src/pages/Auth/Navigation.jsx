@@ -46,7 +46,7 @@ const Navigation = () => {
       style={{ zIndex: 9999 }}
       className={`${
         showSidebar ? "hidden" : "flex"
-      } xl:flex lg:flex md:hidden sm:hidden flex-col justify-between p-4 text-white bg-[#000] w-[4%] hover:w-[15%] h-[100vh]  fixed `}
+      } xl:flex lg:flex md:hidden sm:hidden flex-col justify-between p-4 text-gray-800 bg-white w-[4%] hover:w-[15%] h-[100vh] fixed shadow-lg`}
       id="navigation-container"
     >
       <div className="flex flex-col justify-center space-y-4">
@@ -75,7 +75,7 @@ const Navigation = () => {
           <div className="absolute top-9">
             {cartItems.length > 0 && (
               <span>
-                <span className="px-1 py-0 text-sm text-white bg-pink-500 rounded-full">
+                <span className="px-1 py-0 text-sm text-white bg-[#bd7df0] rounded-full">
                   {cartItems.reduce((a, c) => a + c.qty, 0)}
                 </span>
               </span>
@@ -100,7 +100,7 @@ const Navigation = () => {
           className="flex items-center text-gray-800 focus:outline-none"
         >
           {userInfo ? (
-            <span className="text-white">{userInfo.username}</span>
+            <span className="text-[#bd7df0]">{userInfo.username}</span>
           ) : (
             <></>
           )}

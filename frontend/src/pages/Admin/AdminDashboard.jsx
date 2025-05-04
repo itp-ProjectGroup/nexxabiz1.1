@@ -94,33 +94,33 @@ const AdminDashboard = () => {
 
       <section className="xl:ml-[4rem] md:ml-[0rem]">
         <div className="w-[80%] flex justify-around flex-wrap">
-          <div className="rounded-lg bg-black p-5 w-[20rem] mt-5">
-            <div className="font-bold rounded-full w-[3rem] bg-pink-500 text-center p-3">
+          <div className="rounded-lg bg-white p-5 w-[20rem] mt-5 shadow-md border border-gray-200">
+            <div className="font-bold rounded-full w-[3rem] bg-[#bd7df0] text-center p-3 text-white">
               $
             </div>
 
-            <p className="mt-5">Sales</p>
-            <h1 className="text-xl font-bold">
+            <p className="mt-5 text-gray-600">Sales</p>
+            <h1 className="text-xl font-bold text-gray-800">
               $ {isLoading ? <Loader /> : sales.totalSales.toFixed(2)}
             </h1>
           </div>
-          <div className="rounded-lg bg-black p-5 w-[20rem] mt-5">
-            <div className="font-bold rounded-full w-[3rem] bg-pink-500 text-center p-3">
+          <div className="rounded-lg bg-white p-5 w-[20rem] mt-5 shadow-md border border-gray-200">
+            <div className="font-bold rounded-full w-[3rem] bg-[#bd7df0] text-center p-3 text-white">
               $
             </div>
 
-            <p className="mt-5">Customers</p>
-            <h1 className="text-xl font-bold">
+            <p className="mt-5 text-gray-600">Customers</p>
+            <h1 className="text-xl font-bold text-gray-800">
               $ {isLoading ? <Loader /> : customers?.length}
             </h1>
           </div>
-          <div className="rounded-lg bg-black p-5 w-[20rem] mt-5">
-            <div className="font-bold rounded-full w-[3rem] bg-pink-500 text-center p-3">
+          <div className="rounded-lg bg-white p-5 w-[20rem] mt-5 shadow-md border border-gray-200">
+            <div className="font-bold rounded-full w-[3rem] bg-[#bd7df0] text-center p-3 text-white">
               $
             </div>
 
-            <p className="mt-5">All Orders</p>
-            <h1 className="text-xl font-bold">
+            <p className="mt-5 text-gray-600">All Orders</p>
+            <h1 className="text-xl font-bold text-gray-800">
               $ {isLoading ? <Loader /> : orders?.totalOrders}
             </h1>
           </div>

@@ -67,7 +67,7 @@ const UserOrder = () => {
 
                 <td className="px-2 py-2">
                   <Link to={`/order/${order._id}`}>
-                    <button className="bg-pink-400 text-back py-2 px-3 rounded">
+                    <button className="bg-[#bd7df0] text-white py-2 px-3 rounded hover:bg-[#a86de0]">
                       View Details
                     </button>
                   </Link>
