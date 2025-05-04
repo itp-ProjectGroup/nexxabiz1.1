@@ -205,6 +205,7 @@ const FinDashboard = () => {
                 isOpen={isPaymentDetailsModalOpen}
                 onClose={() => setIsPaymentDetailsModalOpen(false)}
                 order={orders.find(o => o.od_Id === selectedPayment?.orderId)} 
+                onDelete={fetchPayments} // 🔁 Refresh payments list after deletion
             />
         </div>
     );

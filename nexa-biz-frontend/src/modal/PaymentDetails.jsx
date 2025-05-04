@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
 
 const PaymentDetails = ({ payment, isOpen, onClose, order, onEdit, onDelete }) => {
     if (!payment || !isOpen) return null;
@@ -65,7 +66,22 @@ const PaymentDetails = ({ payment, isOpen, onClose, order, onEdit, onDelete }) =
                                 Edit
                             </button>
                             <button
-                                onClick={onDelete}
+                                onClick={async () => {
+                                    const confirmDelete = window.confirm("Are you sure you want to delete this payment?");
+                                    if (confirmDelete) {
+                                        try {
+                                            await axios.delete(`http://localhost:5000/api/payments/${payment.paymentId}`);
+                                            alert("Payment deleted successfully.");
+                                            onClose(); // Close the modal
+                                            if (typeof onDelete === "function") {
+                                                onDelete(); // Let parent refresh payments
+                                            }
+                                        } catch (error) {
+                                            console.error("Error deleting payment:", error);
+                                            alert("Failed to delete payment.");
+                                        }
+                                    }
+                                }}
                                 className="w-24 px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-800 transition-colors duration-300"
                             >
                                 Delete
