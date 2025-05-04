@@ -29,3 +29,13 @@ export const createPayment = async (req, res) => {
         res.status(500).json({ message: "Server error", error });
     }
 };
+
+export const getAllPayments = async (req, res) => {
+    try {
+        const payments = await Payment.find().sort({ createdAt: -1 });
+        res.status(200).json(payments);
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error });
+    }
+};
+
