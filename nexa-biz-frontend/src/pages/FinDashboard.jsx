@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import SetOverdue from "../modal/SetOverdue";
-import PaymentGateway from "../modal/PaymentGateway"; // ✅ Import PaymentGateway modal
+import PaymentGateway from "../modal/PaymentGateway";
+import PaymentDetails from "../modal/PaymentDetails";
 
 const FinDashboard = () => {
     const [orders, setOrders] = useState([]);
     const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("all");
-
+    const [selectedPayment, setSelectedPayment] = useState(null);
+    const [isPaymentDetailsModalOpen, setIsPaymentDetailsModalOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false); // ✅ Payment modal state
@@ -25,6 +27,11 @@ const FinDashboard = () => {
         } catch (error) {
             console.error("Error fetching payments:", error);
         }
+    };
+
+    const handlePaymentActionClick = (payment) => {
+        setSelectedPayment(payment);
+        setIsPaymentDetailsModalOpen(true);
     };
 
     const fetchOrders = async () => {
@@ -191,6 +198,13 @@ const FinDashboard = () => {
                 isOpen={isPaymentModalOpen} 
                 onClose={handleClosePaymentModal} 
                 onUpdated={fetchOrders}
+            />
+
+            <PaymentDetails 
+                payment={selectedPayment}
+                isOpen={isPaymentDetailsModalOpen}
+                onClose={() => setIsPaymentDetailsModalOpen(false)}
+                order={orders.find(o => o.od_Id === selectedPayment?.orderId)} 
             />
         </div>
     );

@@ -39,3 +39,35 @@ export const getAllPayments = async (req, res) => {
     }
 };
 
+
+export const updatePayment = async (req, res) => {
+    const { paymentMethod, paymentAmount, remark, createdAt } = req.body;
+    const { paymentId } = req.params;
+
+    try {
+        const updated = await Payment.findOneAndUpdate(
+            { paymentId },
+            { paymentMethod, paymentAmount, remark, createdAt },
+            { new: true }
+        );
+        if (!updated) return res.status(404).json({ message: "Payment not found" });
+
+        res.status(200).json({ message: "Payment updated", payment: updated });
+    } catch (err) {
+        res.status(500).json({ message: "Server error", error: err });
+    }
+};
+
+export const deletePayment = async (req, res) => {
+    const { paymentId } = req.params;
+
+    try {
+        const deleted = await Payment.findOneAndDelete({ paymentId });
+        if (!deleted) return res.status(404).json({ message: "Payment not found" });
+
+        res.status(200).json({ message: "Payment deleted" });
+    } catch (err) {
+        res.status(500).json({ message: "Server error", error: err });
+    }
+};
+
