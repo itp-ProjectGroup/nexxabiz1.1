@@ -29,11 +29,6 @@ const FinDashboard = () => {
         }
     };
 
-    const handlePaymentActionClick = (payment) => {
-        setSelectedPayment(payment);
-        setIsPaymentDetailsModalOpen(true);
-    };
-
     const fetchOrders = async () => {
         try {
             const response = await axios.get("http://localhost:5000/api/Orders");
@@ -43,6 +38,11 @@ const FinDashboard = () => {
             console.error("Error fetching orders:", error);
             setLoading(false);
         }
+    };
+
+    const handlePaymentActionClick = (payment) => {
+        setSelectedPayment(payment);
+        setIsPaymentDetailsModalOpen(true);
     };
 
     const filteredOrders = orders.filter(order => {
@@ -71,6 +71,30 @@ const FinDashboard = () => {
         setSelectedOrder(null);
         setIsPaymentModalOpen(false);
     };
+
+    const getPaidAmountForOrder = (orderId) => {
+        const orderPayments = payments.filter(payment => payment.orderId === orderId);
+        const totalPaidAmount = orderPayments.reduce((sum, payment) => sum + payment.paymentAmount, 0);
+        return totalPaidAmount;
+    };
+
+    const handlePaymentSuccess = () => {
+        // After successful payment, re-fetch both payments and orders
+        fetchPayments();
+        fetchOrders();
+    };
+
+    useEffect(() => {
+        // Re-render only when payments or orders are updated
+        if (activeTab === "Pending" || activeTab === "paid") {
+            setOrders(prevOrders =>
+                prevOrders.map(order => ({
+                    ...order,
+                    paidAmount: getPaidAmountForOrder(order.od_Id),
+                }))
+            );
+        }
+    }, [payments]);  // Re-run whenever payments change
 
     if (loading) return <p className="text-center text-gray-500">Loading...</p>;
 
@@ -129,57 +153,69 @@ const FinDashboard = () => {
                     </table>
                 ) : (
                     <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="border-b border-gray-700 text-gray-400 uppercase text-sm text-center">
-                                <th className="py-3 px-4">Order ID</th>
-                                <th className="py-3 px-4">Company Name</th>
-                                <th className="py-3 px-4">Order Status</th>
+                    <thead>
+                        <tr className="border-b border-gray-700 text-gray-400 uppercase text-sm text-center">
+                            <th className="py-3 px-4">Order ID</th>
+                            <th className="py-3 px-4">Company Name</th>
+                            <th className="py-3 px-4">Order Status</th>
+                            {activeTab !== "Pending" && (
                                 <th className="py-3 px-4">Payment Status</th>
-                                <th className="py-3 px-4">Total Amount</th>
-                                <th className="py-3 px-4">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredOrders.map(order => (
-                                <tr key={order.od_Id} className="border-b border-gray-700 hover:bg-gray-800 text-center">
-                                    <td className="py-3 px-4 font-medium text-white">{order.od_Id}</td>
-                                    <td className="py-3 px-4 text-gray-300">{order.company_name}</td>
-                                    <td className="py-3 px-4">
-                                        <span className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${order.od_status === "Completed" ? "bg-green-600" : "bg-yellow-600"} text-white`}>
-                                            {order.od_status}
-                                        </span>
-                                    </td>
+                            )}
+                            <th className="py-3 px-4">Total Amount</th>
+                            {activeTab === "Pending" && (
+                                <th className="py-3 px-4">Paid Amount</th>
+                            )}
+                            <th className="py-3 px-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredOrders.map(order => (
+                            <tr key={order.od_Id} className="border-b border-gray-700 hover:bg-gray-800 text-center">
+                                <td className="py-3 px-4 font-medium text-white">{order.od_Id}</td>
+                                <td className="py-3 px-4 text-gray-300">{order.company_name}</td>
+                                <td className="py-3 px-4">
+                                    <span className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${order.od_status === "Completed" ? "bg-green-600" : "bg-yellow-600"} text-white`}>
+                                        {order.od_status}
+                                    </span>
+                                </td>
+                                {activeTab !== "Pending" && (
                                     <td className="py-3 px-4">
                                         <span className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${order.pay_status === "Paid" ? "bg-green-600" : "bg-red-600"} text-white`}>
                                             {order.pay_status}
                                         </span>
                                     </td>
-                                    <td className="py-3 px-4 text-gray-300">${order.od_Tamount.toFixed(2)}</td>
-                                    <td className="py-3 px-4">
-                                        {order.pay_status !== "Paid" ? (
-                                            activeTab === "new" ? (
-                                                <button 
-                                                    onClick={() => handleViewClick(order)} 
-                                                    className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
-                                                >
-                                                    View
-                                                </button>
-                                            ) : (
-                                                <button 
-                                                    onClick={() => handlePayClick(order)} 
-                                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                                                >
-                                                    Pay
-                                                </button>
-                                            )
-                                        ) : (
-                                            <span className="text-gray-400">Paid</span>
-                                        )}
+                                )}
+                                <td className="py-3 px-4 text-gray-300">${order.od_Tamount.toFixed(2)}</td>
+                                {activeTab === "Pending" && (
+                                    <td className="py-3 px-4 text-gray-300">
+                                        ${getPaidAmountForOrder(order.od_Id).toFixed(2)}
                                     </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                )}
+                                <td className="py-3 px-4">
+                                    {order.pay_status !== "Paid" ? (
+                                        activeTab === "new" ? (
+                                            <button 
+                                                onClick={() => handleViewClick(order)} 
+                                                className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
+                                            >
+                                                View
+                                            </button>
+                                        ) : (
+                                            <button 
+                                                onClick={() => handlePayClick(order)} 
+                                                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                                            >
+                                                Pay
+                                            </button>
+                                        )
+                                    ) : (
+                                        <span className="text-gray-400">Paid</span>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
                 )}
             </div>
 
@@ -197,7 +233,7 @@ const FinDashboard = () => {
                 order={selectedOrder} 
                 isOpen={isPaymentModalOpen} 
                 onClose={handleClosePaymentModal} 
-                onUpdated={fetchOrders}
+                onUpdated={handlePaymentSuccess} // Trigger payment success updates
             />
 
             <PaymentDetails 
