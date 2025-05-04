@@ -1,18 +1,17 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import axios from "axios";
-import SetOverdue from "../modal/SetOverdue"; // ✅ Import the modal
+import SetOverdue from "../modal/SetOverdue";
+import PaymentGateway from "../modal/PaymentGateway"; // ✅ Import PaymentGateway modal
 
 const FinDashboard = () => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("all");
 
-    // ✅ Modal state
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false); // ✅ Payment modal state
 
-    // Fetch orders on mount
     useEffect(() => {
         fetchOrders();
     }, []);
@@ -35,15 +34,24 @@ const FinDashboard = () => {
         return true;
     });
 
-    // Handle view click for modal
     const handleViewClick = (order) => {
         setSelectedOrder(order);
         setIsModalOpen(true);
     };
 
+    const handlePayClick = (order) => {
+        setSelectedOrder(order);
+        setIsPaymentModalOpen(true);
+    };
+
     const handleCloseModal = () => {
         setSelectedOrder(null);
         setIsModalOpen(false);
+    };
+
+    const handleClosePaymentModal = () => {
+        setSelectedOrder(null);
+        setIsPaymentModalOpen(false);
     };
 
     if (loading) return <p className="text-center text-gray-500">Loading...</p>;
@@ -54,15 +62,16 @@ const FinDashboard = () => {
 
             {/* Tabs */}
             <div className="flex mb-4 border-b border-gray-600">
-                {["all", "new", "paid", "Pending"].map((tab) => (
+                {["all", "allp", "new", "paid", "Pending"].map((tab) => (
                     <button 
                         key={tab}
                         className={`py-2 px-4 ml-2 ${activeTab === tab ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-400"}`} 
                         onClick={() => setActiveTab(tab)}
                     >
-                        {tab === "all" ? "All Payments" :
+                        {tab === "all" ? "All Order" :
+                        tab === "allp" ? "All  Payment" :
                          tab === "new" ? "New Orders" :
-                         tab === "paid" ? "Paid Payments" : "Pending Payments"}
+                         tab === "paid" ? "Paid Order" : "To be paid Orders"}
                     </button>
                 ))}
             </div>
@@ -106,12 +115,12 @@ const FinDashboard = () => {
                                                 View
                                             </button>
                                         ) : (
-                                            <Link 
-                                                to={`/admin/payment/${order.od_Id}`} 
+                                            <button 
+                                                onClick={() => handlePayClick(order)} 
                                                 className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                                             >
                                                 Pay
-                                            </Link>
+                                            </button>
                                         )
                                     ) : (
                                         <span className="text-gray-400">Paid</span>
@@ -123,12 +132,20 @@ const FinDashboard = () => {
                 </table>
             </div>
 
-            {/* ✅ Modal Component */}
+            {/* View Modal */}
             <SetOverdue 
                 order={selectedOrder} 
                 isOpen={isModalOpen} 
                 onClose={handleCloseModal} 
-                onUpdated={fetchOrders} // Pass fetchOrders as onUpdated
+                onUpdated={fetchOrders}
+            />
+
+            {/* ✅ Pay Modal */}
+            <PaymentGateway 
+                order={selectedOrder} 
+                isOpen={isPaymentModalOpen} 
+                onClose={handleClosePaymentModal} 
+                onUpdated={fetchOrders}
             />
         </div>
     );
