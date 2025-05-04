@@ -13,7 +13,6 @@ import {
   Legend
 } from 'chart.js';
 
-// Register ChartJS components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -46,6 +45,7 @@ const Stock = () => {
           productName: product.productName,
           quantity: product.quantity || 0,
           price: product.sellingPrice || 0,
+          manufacturingDate: product.manufacturingDate || new Date().toISOString(),
           lastUpdated: product.updatedAt || new Date().toISOString()
         }));
 
@@ -60,6 +60,34 @@ const Stock = () => {
 
     fetchStockData();
   }, []);
+
+  // Function to group products by month
+  const getProductsByMonth = () => {
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    // Initialize an object to count products per month
+    const monthlyCounts = {};
+
+    // Initialize all months with 0 count
+    monthNames.forEach(month => {
+      monthlyCounts[month] = 0;
+    });
+
+    // Count products per month using manufacturingDate
+    stockData.forEach(product => {
+      const date = new Date(product.manufacturingDate);
+      const month = monthNames[date.getMonth()];
+      monthlyCounts[month]++;
+    });
+
+    return {
+      labels: monthNames,
+      counts: monthNames.map(month => monthlyCounts[month])
+    };
+  };
 
   if (loading) return (
     <div className="flex justify-center items-center h-64">
@@ -89,10 +117,11 @@ const Stock = () => {
     </div>
   );
 
-  // Prepare data for charts
+  // Prepare data for all charts
   const productNames = stockData.map(item => item.productName);
   const quantities = stockData.map(item => item.quantity);
   const prices = stockData.map(item => item.price);
+  const monthlyData = getProductsByMonth();
 
   // Bar chart data for stock quantities
   const barChartData = {
@@ -122,26 +151,15 @@ const Stock = () => {
     ],
   };
 
-  // Pie chart data for stock distribution
-  const pieChartData = {
-    labels: productNames,
+  // New chart: Monthly product additions
+  const monthlyChartData = {
+    labels: monthlyData.labels,
     datasets: [
       {
-        data: quantities,
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.5)',
-          'rgba(54, 162, 235, 0.5)',
-          'rgba(255, 206, 86, 0.5)',
-          'rgba(75, 192, 192, 0.5)',
-          'rgba(153, 102, 255, 0.5)',
-        ],
-        borderColor: [
-          'rgba(255, 99, 132, 1)',
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 206, 86, 1)',
-          'rgba(75, 192, 192, 1)',
-          'rgba(153, 102, 255, 1)',
-        ],
+        label: 'Products Added',
+        data: monthlyData.counts,
+        backgroundColor: 'rgba(153, 102, 255, 0.5)',
+        borderColor: 'rgba(153, 102, 255, 1)',
         borderWidth: 1,
       },
     ],
@@ -160,6 +178,28 @@ const Stock = () => {
     },
   };
 
+  const monthlyChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: 'Monthly Product Additions',
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1,
+          precision: 0
+        }
+      }
+    }
+  };
+
   return (
     <div className="p-4">
       <h2 className="text-2xl font-bold mb-4">Stock Management</h2>
@@ -176,10 +216,13 @@ const Stock = () => {
         </div>
       </div>
 
-      <div className="bg-white p-4 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-2">Stock Distribution</h3>
-        <div className="h-64">
-          <Pie data={pieChartData} options={chartOptions} />
+      <div className="grid grid-cols-1 gap-4 mb-8">
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-2">Monthly Product Additions</h3>
+          <Bar
+            data={monthlyChartData}
+            options={monthlyChartOptions}
+          />
         </div>
       </div>
 
@@ -192,16 +235,18 @@ const Stock = () => {
                 <th className="py-2 px-4 border-b">Product Name</th>
                 <th className="py-2 px-4 border-b">Quantity</th>
                 <th className="py-2 px-4 border-b">Price</th>
+                <th className="py-2 px-4 border-b">Added Date</th>
                 <th className="py-2 px-4 border-b">Last Updated</th>
               </tr>
             </thead>
             <tbody>
               {stockData.map((item) => (
                 <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="py-2 px-4 border-b">{item.productName}</td>
-                  <td className="py-2 px-4 border-b">{item.quantity}</td>
-                  <td className="py-2 px-4 border-b">${item.price.toFixed(2)}</td>
-                  <td className="py-2 px-4 border-b">
+                  <td className=" py-2 px-4 border-b mr-4 ">{item.productName}</td>
+                  <td className=" py-2 px-4 border-b mr-4 ">{item.quantity}</td>
+                  <td className=" py-2 px-4 border-b mr-4 ">${item.price.toFixed(2)}</td>
+                  <td className=" py-2 px-4 border-b mr-4 ">{item.manufacturingDate}</td>
+                  <td className=" py-2 px-4 border-b mr-4 ">
                     {new Date(item.lastUpdated).toLocaleDateString()}
                   </td>
                 </tr>

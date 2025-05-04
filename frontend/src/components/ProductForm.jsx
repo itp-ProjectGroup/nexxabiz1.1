@@ -16,7 +16,8 @@ const ProductForm = () => {
     color: '',
     function: '',
     brand: '',
-    promotions: []
+    promotions: [],
+    manufacturingDate: new Date().toISOString().split('T')[0]
   });
   const [message, setMessage] = useState('');
   const [errors, setErrors] = useState({});
@@ -105,6 +106,7 @@ const ProductForm = () => {
     formData.append('function', product.function);
     formData.append('brand', product.brand);
     formData.append('promotions', JSON.stringify(product.promotions));
+    formData.append('manufacturingDate', product.manufacturingDate);
 
     product.images.forEach((image) => {
       formData.append('images', image);
@@ -131,7 +133,8 @@ const ProductForm = () => {
         color: '',
         function: '',
         brand: '',
-        promotions: []
+        promotions: [],
+        manufacturingDate: new Date().toISOString().split('T')[0]
       });
       setTimeout(() => setMessage(null), 3000);
     } catch (error) {
@@ -187,6 +190,19 @@ const ProductForm = () => {
               id="productName"
               name="productName"
               value={product.productName}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div>
+            <label className='text-white dark:text-gray-200' htmlFor="manufacturingDate">Manufacturing Date:</label>
+            <input
+              className='block w-full px-4 py-2 mt-2 text-gray-700 bg-white border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none focus:ring'
+              type="date"
+              id="manufacturingDate"
+              name="manufacturingDate"
+              value={product.manufacturingDate}
               onChange={handleChange}
               required
             />

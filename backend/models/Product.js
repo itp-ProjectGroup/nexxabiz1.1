@@ -7,6 +7,7 @@ const ProductSchema = new mongoose.Schema({
     sellingPrice: { type: Number, required: true },
     lowStockLevel: { type: Number, required: true },
     quantity: { type: Number, required: true },
+    manufacturingDate: { type: Date, required: true },
     images: { type: [String], required: false },
     size: { type: String, default: '' },
     theme: { type: String, default: '' },
