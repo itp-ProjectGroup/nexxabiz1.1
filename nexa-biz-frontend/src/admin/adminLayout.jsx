@@ -4,7 +4,7 @@ import Sidebar from "./Sidebar";
 import Header from "./Header";
 
 const AdminLayout = () => {
-    const [sidebarWidth, setSidebarWidth] = useState("256px"); // Default width when expanded (64px)
+    const [sidebarWidth, setSidebarWidth] = useState("256px"); // Default width when expanded
 
     // Listen for custom event from Sidebar to update layout
     useEffect(() => {
@@ -28,7 +28,7 @@ const AdminLayout = () => {
                 className="main-content flex-1 flex flex-col transition-all duration-300"
                 style={{ marginLeft: sidebarWidth }}
             >
-                {/* Static Header */}
+                {/* Header is now self-positioning based on sidebar width */}
                 <Header />
                 
                 {/* Dynamic Content Area */}

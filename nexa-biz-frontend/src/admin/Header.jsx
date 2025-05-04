@@ -1,10 +1,23 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const Header = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState("");
+    const [sidebarWidth, setSidebarWidth] = useState("256px");
+
+    // Listen for sidebar toggle events
+    useEffect(() => {
+        const handleSidebarToggle = (e) => {
+            setSidebarWidth(e.detail.isCollapsed ? "64px" : "256px");
+        };
+
+        window.addEventListener("sidebar-toggle", handleSidebarToggle);
+        return () => {
+            window.removeEventListener("sidebar-toggle", handleSidebarToggle);
+        };
+    }, []);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -27,7 +40,10 @@ const Header = () => {
     };
 
     return (
-        <header className="fixed top-0 left-64 right-0 bg-gradient-to-r from-gray-700 to-gray-500 text-white p-4 shadow-md z-50">
+        <header 
+            className="fixed top-0 right-0 bg-gradient-to-r from-gray-700 to-gray-500 text-white p-4 shadow-md z-50 transition-all duration-300"
+            style={{ left: sidebarWidth }}
+        >
             <div className="flex justify-between items-center">
                 <div className="flex items-center">
                     <h1 className="text-xl font-bold">NexaBiz Admin</h1>
