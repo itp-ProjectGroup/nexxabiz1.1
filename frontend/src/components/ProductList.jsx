@@ -31,16 +31,7 @@ const ProductList = () => {
         fetchProducts();
     }, []);
 
-    // Calculate stock by category
-    const getStockByCategory = (category) => {
-        if (!products || !Array.isArray(products)) return 0;
-        return products.reduce((total, product) => {
-            if (product[category]) {
-                return total + 1;
-            }
-            return total;
-        }, 0);
-    };
+
 
     const handleSearch = (searchTerm) => {
         const filtered = products.filter((product) =>
@@ -129,22 +120,6 @@ const ProductList = () => {
                     className="p-2 rounded-lg dark:bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     onChange={(e) => handleSearch(e.target.value)}
                 />
-            </div>
-
-            {/* Stock Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-blue-600 p-4 rounded-lg">
-                    <h3 className="text-white font-semibold">Total Products</h3>
-                    <p className="text-white text-2xl">{products.length}</p>
-                </div>
-                <div className="bg-green-600 p-4 rounded-lg">
-                    <h3 className="text-white font-semibold">Products by Size</h3>
-                    <p className="text-white text-2xl">{getStockByCategory('size')}</p>
-                </div>
-                <div className="bg-purple-600 p-4 rounded-lg">
-                    <h3 className="text-white font-semibold">Products by Theme</h3>
-                    <p className="text-white text-2xl">{getStockByCategory('theme')}</p>
-                </div>
             </div>
 
             {/* Edit Product Modal */}
