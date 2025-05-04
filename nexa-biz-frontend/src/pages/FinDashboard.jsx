@@ -13,7 +13,7 @@ const FinDashboard = () => {
     const [isPaymentDetailsModalOpen, setIsPaymentDetailsModalOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false); // ✅ Payment modal state
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
     useEffect(() => {
         fetchOrders();
@@ -79,13 +79,11 @@ const FinDashboard = () => {
     };
 
     const handlePaymentSuccess = () => {
-        // After successful payment, re-fetch both payments and orders
         fetchPayments();
         fetchOrders();
     };
 
     useEffect(() => {
-        // Re-render only when payments or orders are updated
         if (activeTab === "Pending" || activeTab === "paid") {
             setOrders(prevOrders =>
                 prevOrders.map(order => ({
@@ -94,24 +92,24 @@ const FinDashboard = () => {
                 }))
             );
         }
-    }, [payments]);  // Re-run whenever payments change
+    }, [payments]);
 
     if (loading) return <p className="text-center text-gray-500">Loading...</p>;
 
     return (
-        <div className="max-w-6xl mx-auto mt-10 font-roboto bg-gray-800 text-white p-6 rounded-lg shadow-lg">
+        <div className="mt-4 w-full mx-auto font-roboto bg-gray-800 text-white p-6 rounded-lg shadow-lg">
             <h2 className="text-xl font-bold text-white mb-4">Payment Records</h2>
 
             {/* Tabs */}
-            <div className="flex mb-4 border-b border-gray-600">
+            <div className="flex mb-4 border-b border-gray-600 overflow-x-auto">
                 {["all", "allp", "new", "paid", "Pending"].map((tab) => (
                     <button 
                         key={tab}
-                        className={`py-2 px-4 ml-2 ${activeTab === tab ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-400"}`} 
+                        className={`py-2 px-4 ml-2 whitespace-nowrap ${activeTab === tab ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-400"}`} 
                         onClick={() => setActiveTab(tab)}
                     >
                         {tab === "all" ? "All Order" :
-                        tab === "allp" ? "All  Payment" :
+                        tab === "allp" ? "All Payment" :
                          tab === "new" ? "New Orders" :
                          tab === "paid" ? "Paid Order" : "To be paid Orders"}
                     </button>
@@ -142,7 +140,7 @@ const FinDashboard = () => {
                                     <td className="py-3 px-4 text-gray-300">${payment.paymentAmount.toFixed(2)}</td>
                                     <td className="py-3 px-4">
                                         <button
-                                            onClick={() => handlePaymentActionClick(payment)} // Create this handler
+                                            onClick={() => handlePaymentActionClick(payment)}
                                             className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
                                             View
                                         </button>
@@ -219,8 +217,7 @@ const FinDashboard = () => {
                 )}
             </div>
 
-
-            {/* View Modal */}
+            {/* Modals */}
             <SetOverdue 
                 order={selectedOrder} 
                 isOpen={isModalOpen} 
@@ -228,12 +225,11 @@ const FinDashboard = () => {
                 onUpdated={fetchOrders}
             />
 
-            {/* ✅ Pay Modal */}
             <PaymentGateway 
                 order={selectedOrder} 
                 isOpen={isPaymentModalOpen} 
                 onClose={handleClosePaymentModal} 
-                onUpdated={handlePaymentSuccess} // Trigger payment success updates
+                onUpdated={handlePaymentSuccess}
             />
 
             <PaymentDetails 
@@ -241,7 +237,7 @@ const FinDashboard = () => {
                 isOpen={isPaymentDetailsModalOpen}
                 onClose={() => setIsPaymentDetailsModalOpen(false)}
                 order={orders.find(o => o.od_Id === selectedPayment?.orderId)} 
-                onDelete={fetchPayments} // 🔁 Refresh payments list after deletion
+                onDelete={fetchPayments}
             />
         </div>
     );
