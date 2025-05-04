@@ -149,9 +149,43 @@ const getSingleProduct = async (req, res) => {
     }
 };
 
+
+const getChartData = async (req, res) => {
+    try {
+      const products = await Product.find();
+
+      // Monthly aggregation
+      const monthlyData = await Product.aggregate([
+        {
+          $group: {
+            _id: { $month: "$createdAt" },
+            count: { $sum: "$lowStockLevel" }
+          }
+        },
+        { $sort: { "_id": 1 } }
+      ]);
+
+      // Size distribution
+      const sizeData = await Product.aggregate([
+        { $group: { _id: "$size", count: { $sum: 1 } } }
+      ]);
+
+      res.status(200).json({
+        products, // Send raw products data
+        aggregatedData: {
+          monthlyData,
+          sizeData
+        }
+      });
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+};
+
 module.exports = {
     addProduct,
     getProduct,
     updateProduct,
-    getSingleProduct
+    getSingleProduct,
+    getChartData
 };

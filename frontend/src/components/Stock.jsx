@@ -1,0 +1,217 @@
+import React, { useState, useEffect } from 'react';
+import { Bar, Line, Pie } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
+
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+const Stock = () => {
+  const [stockData, setStockData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchStockData = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/products/all');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+
+        // Transform the data to match our chart requirements
+        const transformedData = data.map(product => ({
+          id: product._id,
+          productName: product.productName,
+          quantity: product.quantity || 0,
+          price: product.sellingPrice || 0,
+          lastUpdated: product.updatedAt || new Date().toISOString()
+        }));
+
+        setStockData(transformedData);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching stock data:', err);
+        setError(`Failed to fetch stock data: ${err.message}`);
+        setLoading(false);
+      }
+    };
+
+    fetchStockData();
+  }, []);
+
+  if (loading) return (
+    <div className="flex justify-center items-center h-64">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Loading stock data...</p>
+      </div>
+    </div>
+  );
+
+  if (error) return (
+    <div className="p-4">
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <strong className="font-bold">Error!</strong>
+        <span className="block sm:inline"> {error}</span>
+        <p className="mt-2 text-sm">Please check if the backend server is running and accessible.</p>
+      </div>
+    </div>
+  );
+
+  if (stockData.length === 0) return (
+    <div className="p-4">
+      <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
+        <strong className="font-bold">No Data Available</strong>
+        <span className="block sm:inline"> No stock data found.</span>
+      </div>
+    </div>
+  );
+
+  // Prepare data for charts
+  const productNames = stockData.map(item => item.productName);
+  const quantities = stockData.map(item => item.quantity);
+  const prices = stockData.map(item => item.price);
+
+  // Bar chart data for stock quantities
+  const barChartData = {
+    labels: productNames,
+    datasets: [
+      {
+        label: 'Stock Quantity',
+        data: quantities,
+        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  // Line chart data for price trends
+  const lineChartData = {
+    labels: productNames,
+    datasets: [
+      {
+        label: 'Price',
+        data: prices,
+        fill: false,
+        borderColor: 'rgba(75, 192, 192, 1)',
+        tension: 0.1,
+      },
+    ],
+  };
+
+  // Pie chart data for stock distribution
+  const pieChartData = {
+    labels: productNames,
+    datasets: [
+      {
+        data: quantities,
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.5)',
+          'rgba(54, 162, 235, 0.5)',
+          'rgba(255, 206, 86, 0.5)',
+          'rgba(75, 192, 192, 0.5)',
+          'rgba(153, 102, 255, 0.5)',
+        ],
+        borderColor: [
+          'rgba(255, 99, 132, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      title: {
+        display: true,
+        text: 'Stock Analysis',
+      },
+    },
+  };
+
+  return (
+    <div className="p-4">
+      <h2 className="text-2xl font-bold mb-4">Stock Management</h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-2">Stock Quantities</h3>
+          <Bar data={barChartData} options={chartOptions} />
+        </div>
+
+        <div className="bg-white p-4 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-2">Price Trends</h3>
+          <Line data={lineChartData} options={chartOptions} />
+        </div>
+      </div>
+
+      <div className="bg-white p-4 rounded-lg shadow">
+        <h3 className="text-lg font-semibold mb-2">Stock Distribution</h3>
+        <div className="h-64">
+          <Pie data={pieChartData} options={chartOptions} />
+        </div>
+      </div>
+
+      <div className="mt-8">
+        <h3 className="text-xl font-semibold mb-4">Stock Details</h3>
+        <div className="overflow-x-auto">
+          <table className="min-w-full bg-white border border-gray-200">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="py-2 px-4 border-b">Product Name</th>
+                <th className="py-2 px-4 border-b">Quantity</th>
+                <th className="py-2 px-4 border-b">Price</th>
+                <th className="py-2 px-4 border-b">Last Updated</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stockData.map((item) => (
+                <tr key={item.id} className="hover:bg-gray-50">
+                  <td className="py-2 px-4 border-b">{item.productName}</td>
+                  <td className="py-2 px-4 border-b">{item.quantity}</td>
+                  <td className="py-2 px-4 border-b">${item.price.toFixed(2)}</td>
+                  <td className="py-2 px-4 border-b">
+                    {new Date(item.lastUpdated).toLocaleDateString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Stock;

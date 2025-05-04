@@ -1,5 +1,5 @@
 const express = require('express');
-const { addProduct, getProduct, updateProduct, getSingleProduct } = require('../controllers/productController');
+const { addProduct, getProduct, updateProduct, getSingleProduct, getChartData } = require('../controllers/productController');
 const Product = require('../models/Product');
 const multer = require('multer');
 
@@ -45,5 +45,8 @@ router.delete('/:id', async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
+
+//charts
+router.get('/charts', getChartData);
 
 module.exports = router;

@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import Navigation from './components/Navigation';
 import ProductList from './components/ProductList';
 import './index.css';
+import Stock from './components/Stock';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
             <Route path="/" element={<Navigate to="/add" replace />} />
             <Route path="/add" element={<ProductForm />} />
             <Route path="/all" element={<ProductList />} />
+            <Route path="/stock" element={<Stock />} />
           </Routes>
         </div>
       </div>
