@@ -24,7 +24,8 @@ const FinDashboard = () => {
     // Filtered orders based on active tab
     const filteredOrders = orders.filter(order => {
         if (activeTab === "paid") return order.pay_status === "Paid";
-        if (activeTab === "new") return order.od_status === "New" || order.od_status === "Pending";
+        if (activeTab === "new") return order.pay_status === "New";
+        if (activeTab === "Pending") return order.pay_status === "Pending";
         return true; // all
     });
 
@@ -34,12 +35,7 @@ const FinDashboard = () => {
 
             {/* Tabs */}
             <div className="flex mb-4 border-b border-gray-600">
-                <button 
-                    className={`py-2 px-4 ml-2 ${activeTab === "new" ? "border-b-2 border-yellow-500 text-yellow-500" : "text-gray-400"}`} 
-                    onClick={() => setActiveTab("new")}
-                >
-                    New Orders
-                </button>
+                
                 
                 <button 
                     className={`py-2 px-4 ${activeTab === "all" ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-400"}`} 
@@ -47,11 +43,26 @@ const FinDashboard = () => {
                 >
                     All Payments
                 </button>
+
+                <button 
+                    className={`py-2 px-4 ml-2 ${activeTab === "new" ? "border-b-2 border-yellow-500 text-yellow-500" : "text-gray-400"}`} 
+                    onClick={() => setActiveTab("new")}
+                >
+                    New Orders
+                </button>
+
                 <button 
                     className={`py-2 px-4 ml-2 ${activeTab === "paid" ? "border-b-2 border-green-500 text-green-500" : "text-gray-400"}`} 
                     onClick={() => setActiveTab("paid")}
                 >
                     Paid Payments
+                </button>
+
+                <button 
+                    className={`py-2 px-4 ml-2 ${activeTab === "Pending" ? "border-b-2 border-green-500 text-green-500" : "text-gray-400"}`} 
+                    onClick={() => setActiveTab("Pending")}
+                >
+                    Pending Payments
                 </button>
             </div>
 
@@ -86,8 +97,11 @@ const FinDashboard = () => {
                                 <td className="py-3 px-4 text-gray-300">${order.od_Tamount.toFixed(2)}</td>
                                 <td className="py-3 px-4">
                                     {order.pay_status !== "Paid" ? (
-                                        <Link to={`/admin/payment/${order.od_Id}`} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                                            Pay
+                                        <Link 
+                                            to={`/admin/payment/${order.od_Id}`} 
+                                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                                        >
+                                            {activeTab === "new" ? "View" : "Pay"}
                                         </Link>
                                     ) : (
                                         <span className="text-gray-400">Paid</span>
