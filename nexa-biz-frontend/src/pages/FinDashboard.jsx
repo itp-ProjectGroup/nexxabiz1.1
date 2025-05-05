@@ -9,6 +9,7 @@ import SetOverdue from "../modal/SetOverdue";
 import PaymentGateway from "../modal/PaymentGateway";
 import PaymentDetails from "../modal/PaymentDetails";
 import CashFlowChart from "../components/CashFlowChart";
+import PaymentReminderCard from "../components/PaymentReminderCard";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -195,11 +196,9 @@ const FinDashboard = () => {
                     />
                 </div>
                 <div key="5" data-grid={{ x: 4, y: 0, w: 2, h: 4 }}>
-                    <DashboardCard
-                        title="Payment reminders"
-                        value={orders.filter(o => o.pay_status === "Pending").length}
-                        disableCurrencyFormatting={true} 
-                        
+                    <PaymentReminderCard 
+                        orders={orders} 
+                        calculateOrderTotal={calculateOrderTotal}
                     />
                 </div>
                 <div key="6" data-grid={{ x: 0, y: 1, w: 1, h: 1.3 }}>

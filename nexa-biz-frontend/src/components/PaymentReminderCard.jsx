@@ -3,6 +3,15 @@ import { useState, useEffect } from 'react';
 const PaymentReminderCard = ({ orders, calculateOrderTotal }) => {
   const [reminderOrders, setReminderOrders] = useState([]);
 
+  // CSS for hiding scrollbars
+  const hideScrollbarStyle = {
+    scrollbarWidth: 'none',  // Firefox
+    msOverflowStyle: 'none', // IE and Edge
+    '&::-webkit-scrollbar': { 
+      display: 'none'        // Chrome, Safari, newer Edge
+    }
+  };
+
   useEffect(() => {
     if (!orders || !Array.isArray(orders)) return;
 
@@ -51,45 +60,60 @@ const PaymentReminderCard = ({ orders, calculateOrderTotal }) => {
           <p className="text-gray-400">No payment reminders</p>
         </div>
       ) : (
-        <div className="flex-grow overflow-y-auto pr-1">
-          {reminderOrders.map((order) => (
-            <div 
-              key={order.od_Id}
-              className={`mb-3 p-3 rounded-lg ${
-                isOrderOverdue(order.overdue_date) 
-                  ? 'bg-red-900/30 border border-red-500' 
-                  : 'bg-yellow-900/30 border border-yellow-500'
-              }`}
-            >
-              <div className="flex justify-between items-center">
-                <span className="font-medium text-white">Order #{order.od_Id}</span>
-                <span className={`text-sm px-2 py-1 rounded ${
+        <div 
+          className="flex-grow overflow-auto" 
+          style={{ 
+            scrollbarWidth: 'none', 
+            msOverflowStyle: 'none' 
+          }}
+        >
+          {/* This style hides the scrollbar in WebKit browsers */}
+          <style jsx>{`
+            div::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
+          
+          <div className="space-y-3 mt-1">
+            {reminderOrders.map((order) => (
+              <div 
+                key={order.od_Id}
+                className={`p-3 rounded-lg transition-all ${
                   isOrderOverdue(order.overdue_date) 
-                    ? 'bg-red-500 text-white' 
-                    : 'bg-yellow-500 text-gray-900'
-                }`}>
-                  {isOrderOverdue(order.overdue_date) ? 'Overdue' : 'Due Tomorrow'}
-                </span>
+                    ? 'bg-red-900/20 border border-red-600/40' 
+                    : 'bg-yellow-900/20 border border-yellow-600/40'
+                }`}
+              >
+                <div className="flex justify-between items-center flex-wrap gap-2">
+                  <span className="font-medium text-white">Order #{order.od_Id}</span>
+                  <span className={`text-xs px-2 py-1 rounded ${
+                    isOrderOverdue(order.overdue_date) 
+                      ? 'bg-red-500/80 text-white' 
+                      : 'bg-yellow-500/80 text-gray-900'
+                  }`}>
+                    {isOrderOverdue(order.overdue_date) ? 'Overdue' : 'Due Tomorrow'}
+                  </span>
+                </div>
+                <div className="flex justify-between mt-2 flex-wrap gap-1">
+                  <span className="text-gray-300 text-sm">
+                    {order.company_name}
+                  </span>
+                  <span className="font-semibold text-white">
+                    ${calculateOrderTotal(order).toFixed(2)}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-400 mt-1">
+                  Due: {formatDate(order.overdue_date)}
+                </div>
               </div>
-              <div className="flex justify-between mt-2">
-                <span className="text-gray-300">
-                  {order.company_name}
-                </span>
-                <span className="font-semibold text-white">
-                  ${calculateOrderTotal(order).toFixed(2)}
-                </span>
-              </div>
-              <div className="text-sm text-gray-400 mt-1">
-                Due: {formatDate(order.overdue_date)}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
       
       {reminderOrders.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-gray-700">
-          <p className="text-sm text-gray-400">
+        <div className="mt-3 pt-2 border-t border-gray-700">
+          <p className="text-xs text-gray-400 text-center">
             {reminderOrders.length} {reminderOrders.length === 1 ? 'order' : 'orders'} need attention
           </p>
         </div>
