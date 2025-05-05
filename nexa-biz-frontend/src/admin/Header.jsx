@@ -40,7 +40,7 @@ const Header = () => {
     };
 
     return (
-        <header 
+        <header
             className="fixed top-0 right-0 bg-gradient-to-r from-gray-700 to-gray-500 text-white p-4 shadow-md z-50 transition-all duration-300"
             style={{ left: sidebarWidth }}
         >
