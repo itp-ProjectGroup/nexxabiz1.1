@@ -4,7 +4,7 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import userRoutes from "./routes/userRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
-import paymentRoutes from "./routes/paymentRoutes.js"; 
+import paymentRoutes from "./routes/paymentRoutes.js";
 
 dotenv.config();
 connectDB(); // Connect to MongoDB
@@ -19,5 +19,5 @@ app.use("/api/users", userRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
