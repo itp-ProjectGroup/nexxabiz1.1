@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, NavLink } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 const Header = () => {
@@ -6,6 +6,9 @@ const Header = () => {
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState("");
     const [sidebarWidth, setSidebarWidth] = useState("256px");
+
+    // Check if we're on the products tab
+    const isProductsTab = location.pathname.includes("/admin/products");
 
     // Listen for sidebar toggle events
     useEffect(() => {
@@ -24,17 +27,14 @@ const Header = () => {
 
         if (location.pathname.includes("/admin/finance")) {
             navigate(`/admin/finance?customer=${searchQuery}`);
-        } else if (location.pathname.includes("/admin/products")) {
-            navigate(`/admin/products?product=${searchQuery}`);
         } else if (location.pathname.includes("/admin/orders")) {
             navigate(`/admin/orders?orderId=${searchQuery}`);
         }
-        // Add more routes if needed
+        // Products search removed as per requirement
     };
 
     const getSearchPlaceholder = () => {
         if (location.pathname.includes("/admin/finance")) return "Search customer by name...";
-        if (location.pathname.includes("/admin/products")) return "Search product...";
         if (location.pathname.includes("/admin/orders")) return "Search order ID...";
         return "Search...";
     };
@@ -49,16 +49,59 @@ const Header = () => {
                     <h1 className="text-xl font-bold">NexaBiz Admin</h1>
                 </div>
 
-                {/* Search input without button */}
-                <form onSubmit={handleSearch} className="ml-6 w-full max-w-md">
-                    <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder={getSearchPlaceholder()}
-                        className="w-full px-4 py-1.5 rounded-full bg-gray-600 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-300"
-                    />
-                </form>
+                {/* Conditional rendering: Show navigation buttons for products tab, search bar for others */}
+                {isProductsTab ? (
+                    <div className="ml-6 w-full max-w-md">
+                        <nav className="flex space-x-4">
+                            <NavLink
+                                to="/admin/products/add"
+                                className={({ isActive }) =>
+                                    `px-4 py-2 text-sm font-medium rounded-md shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
+                                        isActive
+                                            ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                            : 'bg-gray-600 text-white hover:bg-gray-500'
+                                    }`
+                                }
+                            >
+                                Add Product
+                            </NavLink>
+                            <NavLink
+                                to="/admin/products/all"
+                                className={({ isActive }) =>
+                                    `px-4 py-2 text-sm font-medium rounded-md shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
+                                        isActive
+                                            ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                            : 'bg-gray-600 text-white hover:bg-gray-500'
+                                    }`
+                                }
+                            >
+                                View Products
+                            </NavLink>
+                            <NavLink
+                                to="/admin/products/stock"
+                                className={({ isActive }) =>
+                                    `px-4 py-2 text-sm font-medium rounded-md shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
+                                        isActive
+                                            ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                            : 'bg-gray-600 text-white hover:bg-gray-500'
+                                    }`
+                                }
+                            >
+                                Stock Levels
+                            </NavLink>
+                        </nav>
+                    </div>
+                ) : (
+                    <form onSubmit={handleSearch} className="ml-6 w-full max-w-md">
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder={getSearchPlaceholder()}
+                            className="w-full px-4 py-1.5 rounded-full bg-gray-600 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-300"
+                        />
+                    </form>
+                )}
 
                 <div className="flex items-center space-x-4 ml-6">
                     <Link to="/" className="text-gray-300 hover:text-white transition-colors">
