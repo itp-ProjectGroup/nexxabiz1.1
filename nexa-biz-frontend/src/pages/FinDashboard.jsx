@@ -15,6 +15,7 @@ const ResponsiveGridLayout = WidthProvider(Responsive);
 const FinDashboard = () => {
     const [orders, setOrders] = useState([]);
     const [payments, setPayments] = useState([]);
+    const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("all");
     const [selectedPayment, setSelectedPayment] = useState(null);
@@ -28,7 +29,17 @@ const FinDashboard = () => {
     useEffect(() => {
         fetchOrders();
         fetchPayments();
+        fetchProducts();
     }, []);
+
+    const fetchProducts = async () => {
+        try {
+            const response = await axios.get("http://localhost:5000/api/products");
+            setProducts(response.data);
+        } catch (error) {
+            console.error("Error fetching products:", error);
+        }
+    };
 
     const fetchPayments = async () => {
         try {
@@ -88,6 +99,17 @@ const FinDashboard = () => {
         return totalPaidAmount;
     };
 
+    const calculateOrderTotal = (order) => {
+        if (!products || !Array.isArray(order.od_items)) return 0;
+    
+        return order.od_items.reduce((sum, item) => {
+            const product = products.find(p => p.manufacturingID === item.manufacturingID);
+            const price = product?.sellingPrice || 0;
+            return sum + price * item.qty;
+        }, 0);
+    };
+    
+
     const handlePaymentSuccess = () => {
         fetchPayments();
         fetchOrders();
@@ -118,11 +140,10 @@ const FinDashboard = () => {
                 isResizable={false}
             >
                 <div key="1" data-grid={{ x: 0, y: 0, w: 1, h: 1.4 }}>
-                    <DashboardCard
-                        title="Total Sales"
-                        value={`$${orders.reduce((sum, order) => sum + order.od_Tamount, 0).toFixed(2)}`}
-                        
-                    />
+                <DashboardCard
+                    title="Total Sales"
+                    value={`$${orders.reduce((sum, order) => sum + calculateOrderTotal(order), 0).toFixed(2)}`}
+                />
                 </div>
                 <div key="2" data-grid={{ x: 1, y: 0, w: 1, h: 1 }}>
                     <DashboardCard
@@ -261,7 +282,7 @@ const FinDashboard = () => {
                                         </span>
                                     </td>
                                 )}
-                                <td className="py-3 px-4 text-gray-300">${order.od_Tamount.toFixed(2)}</td>
+                                <td className="py-3 px-4 text-gray-300">${calculateOrderTotal(order).toFixed(2)}</td>
                                 {activeTab === "Pending" && (
                                     <td className="py-3 px-4 text-gray-300">
                                         ${getPaidAmountForOrder(order.od_Id).toFixed(2)}

@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import DashboardCard from "../components/DashboardCard";
+import "react-grid-layout/css/styles.css";
+import "react-resizable/css/styles.css";
+import { Responsive, WidthProvider } from "react-grid-layout";
+
+
+const ResponsiveGridLayout = WidthProvider(Responsive);
 
 const OrderList = () => {
     const [orders, setOrders] = useState([]);
@@ -25,6 +32,25 @@ const OrderList = () => {
     const filteredOrders = activeTab === "paid" ? orders.filter(order => order.pay_status === "Paid") : orders;
 
     return (
+
+        <div className="p-4">
+        <ResponsiveGridLayout
+            className="layout mb-6"
+            breakpoints={{ lg: 1024, md: 768, sm: 480 }}
+            cols={{ lg: 6, md: 6, sm: 1 }}
+            rowHeight={100}
+            isDraggable={true}
+            isResizable={false}
+        >
+            <div key="1" data-grid={{ x: 0, y: 0, w: 1, h: 1.4 }}>
+                <DashboardCard
+                    title="Total Sales"
+                    
+                    
+                />
+            </div>
+
+        </ResponsiveGridLayout>    
         <div className="max-w-6xl mx-auto mt-10 font-roboto bg-gray-800 text-white p-6 rounded-lg shadow-lg">
             <h2 className="text-xl font-bold text-white mb-4">Payment Records</h2>
             
@@ -87,6 +113,8 @@ const OrderList = () => {
                 </table>
             </div>
         </div>
+
+    </div>    
     );
 };
 
