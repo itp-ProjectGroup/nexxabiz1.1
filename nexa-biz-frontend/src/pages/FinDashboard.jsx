@@ -1,8 +1,16 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { Responsive, WidthProvider } from "react-grid-layout";
+import DashboardCard from "../components/DashboardCard";
+import { FaMoneyBillWave, FaClipboardList } from "react-icons/fa";
+import "react-grid-layout/css/styles.css";
+import "react-resizable/css/styles.css";
 import SetOverdue from "../modal/SetOverdue";
 import PaymentGateway from "../modal/PaymentGateway";
 import PaymentDetails from "../modal/PaymentDetails";
+
+
+const ResponsiveGridLayout = WidthProvider(Responsive);
 
 const FinDashboard = () => {
     const [orders, setOrders] = useState([]);
@@ -14,6 +22,8 @@ const FinDashboard = () => {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+
+    
 
     useEffect(() => {
         fetchOrders();
@@ -97,6 +107,74 @@ const FinDashboard = () => {
     if (loading) return <p className="text-center text-gray-500">Loading...</p>;
 
     return (
+
+        <div className="p-4">
+            <ResponsiveGridLayout
+                className="layout mb-6"
+                breakpoints={{ lg: 1024, md: 768, sm: 480 }}
+                cols={{ lg: 6, md: 6, sm: 1 }}
+                rowHeight={100}
+                isDraggable={true}
+                isResizable={false}
+            >
+                <div key="1" data-grid={{ x: 0, y: 0, w: 1, h: 1.4 }}>
+                    <DashboardCard
+                        title="Total Sales"
+                        value={`$${orders.reduce((sum, order) => sum + order.od_Tamount, 0).toFixed(2)}`}
+                        
+                    />
+                </div>
+                <div key="2" data-grid={{ x: 1, y: 0, w: 1, h: 1 }}>
+                    <DashboardCard
+                        title="Total Payments"
+                        value={`$${payments.reduce((sum, p) => sum + p.paymentAmount, 0).toFixed(2)}`}
+                        
+                    />
+                </div>
+                <div key="3" data-grid={{ x: 2, y: 0, w: 1, h: 1 }}>
+                    <DashboardCard
+                        title="Pending Orders"
+                        value={orders.filter(o => o.pay_status === "Pending").length}
+                        
+                    />
+                </div>
+                <div key="4" data-grid={{ x: 3, y: 0, w: 1, h: 1 }}>
+                    <DashboardCard
+                        title="Overdue payments"
+                        value={orders.filter(o => o.pay_status === "Pending").length}
+                        
+                    />
+                </div>
+                <div key="5" data-grid={{ x: 4, y: 0, w: 2, h: 4 }}>
+                    <DashboardCard
+                        title="Overdue payments"
+                        value={orders.filter(o => o.pay_status === "Pending").length}
+                        
+                    />
+                </div>
+                <div key="6" data-grid={{ x: 0, y: 1, w: 1, h: 1.3 }}>
+                    <DashboardCard
+                        title="Overdue payments"
+                        value={orders.filter(o => o.pay_status === "Pending").length}
+                        
+                    />
+                </div>
+                <div key="7" data-grid={{ x: 0, y: 2, w: 1, h: 1.3 }}>
+                    <DashboardCard
+                        title="Overdue payments"
+                        value={orders.filter(o => o.pay_status === "Pending").length}
+                        
+                    />
+                </div>
+                <div key="8" data-grid={{ x: 1, y: 1, w: 3, h: 3 }}>
+                    <DashboardCard
+                        title="Overdue payments"
+                        value={orders.filter(o => o.pay_status === "Pending").length}
+                        
+                    />
+                </div>
+            </ResponsiveGridLayout>
+
         <div className="mt-4 w-full mx-auto font-roboto bg-gray-800 text-white p-6 rounded-lg shadow-lg">
             <h2 className="text-xl font-bold text-white mb-4">Payment Records</h2>
 
@@ -216,6 +294,7 @@ const FinDashboard = () => {
                 </table>
                 )}
             </div>
+        </div>    
 
             {/* Modals */}
             <SetOverdue 
