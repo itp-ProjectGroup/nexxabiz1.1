@@ -12,9 +12,7 @@ import Loader from "../components/Loader";
 import ProductCard from "./Products/ProductCard";
 import Header2 from "../components/Header2";
 
-
 const Shop = () => {
- 
   const dispatch = useDispatch();
   const { categories, products, checked, radio } = useSelector(
     (state) => state.shop
@@ -22,6 +20,7 @@ const Shop = () => {
 
   const categoriesQuery = useFetchCategoriesQuery();
   const [priceFilter, setPriceFilter] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const filteredProductsQuery = useGetFilteredProductsQuery({
     checked,
@@ -40,14 +39,12 @@ const Shop = () => {
         // Filter products based on both checked categories and price filter
         const filteredProducts = filteredProductsQuery.data.filter(
           (product) => {
-            // Check if the product price includes the entered price filter value
             return (
               product.price.toString().includes(priceFilter) ||
               product.price === parseInt(priceFilter, 10)
             );
           }
         );
-
         dispatch(setProducts(filteredProducts));
       }
     }
@@ -79,20 +76,33 @@ const Shop = () => {
   ];
 
   const handlePriceChange = (e) => {
-    // Update the price filter state when the user types in the input filed
     setPriceFilter(e.target.value);
   };
+
+  // Optimized search: filter products by name (case-insensitive)
+  const searchedProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <>
       <Header2 />
+      {/* Search Bar */}
+      <div className="w-full flex justify-center bg-white pt-8 pb-4 shadow">
+        <input
+          type="text"
+          placeholder="Search products..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full max-w-xl px-4 py-2 border border-gray-300 rounded-full shadow focus:outline-none focus:ring-2 focus:ring-[#bd7df0] transition"
+        />
+      </div>
       <div className="container mx-auto">
         <div className="flex md:flex-row">
           <div className="bg-white p-3 mt-2 mb-2 shadow-md border border-gray-200">
             <h2 className="h4 text-center py-2 bg-gray-100 text-gray-800 rounded-full mb-2">
               Filter by Categories
             </h2>
-
             <div className="p-5 w-[15rem]">
               {categories?.map((c) => (
                 <div key={c._id} className="mb-2">
@@ -103,7 +113,6 @@ const Shop = () => {
                       onChange={(e) => handleCheck(e.target.checked, c._id)}
                       className="w-4 h-4 text-[#bd7df0] bg-gray-100 border-gray-300 rounded focus:ring-[#bd7df0]"
                     />
-
                     <label
                       htmlFor="pink-checkbox"
                       className="ml-2 text-sm font-medium text-gray-700"
@@ -114,11 +123,9 @@ const Shop = () => {
                 </div>
               ))}
             </div>
-
             <h2 className="h4 text-center py-2 bg-gray-100 text-gray-800 rounded-full mb-2">
               Filter by Brands
             </h2>
-
             <div className="p-5">
               {uniqueBrands?.map((brand) => (
                 <>
@@ -130,7 +137,6 @@ const Shop = () => {
                       onChange={() => handleBrandClick(brand)}
                       className="w-4 h-4 text-[#bd7df0] bg-gray-100 border-gray-300 focus:ring-[#bd7df0]"
                     />
-
                     <label
                       htmlFor="pink-radio"
                       className="ml-2 text-sm font-medium text-gray-700"
@@ -141,11 +147,9 @@ const Shop = () => {
                 </>
               ))}
             </div>
-
             <h2 className="h4 text-center py-2 bg-gray-100 text-gray-800 rounded-full mb-2">
               Filter by Price
             </h2>
-
             <div className="p-5 w-[15rem]">
               <input
                 type="text"
@@ -155,7 +159,6 @@ const Shop = () => {
                 className="w-full px-3 py-2 placeholder-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-[#bd7df0] bg-white"
               />
             </div>
-
             <div className="p-5 pt-0">
               <button
                 className="w-full border border-gray-300 my-4 py-2 rounded-lg hover:bg-gray-100 text-gray-700"
@@ -165,14 +168,13 @@ const Shop = () => {
               </button>
             </div>
           </div>
-
           <div className="p-3">
-            <h2 className="h4 text-center mb-2">{products?.length} Products</h2>
+            <h2 className="h4 text-center mb-2">{searchedProducts?.length} Products</h2>
             <div className="flex flex-wrap">
-              {products.length === 0 ? (
+              {searchedProducts.length === 0 ? (
                 <Loader />
               ) : (
-                products?.map((p) => (
+                searchedProducts?.map((p) => (
                   <div className="p-3" key={p._id}>
                     <ProductCard p={p} />
                   </div>
