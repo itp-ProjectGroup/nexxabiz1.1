@@ -52,44 +52,44 @@ const Profile = () => {
           <h2 className="text-2xl font-semibold mb-4">Update Profile</h2>
           <form onSubmit={submitHandler}>
             <div className="mb-4">
-              <label className="block text-white mb-2">Name</label>
+              <label className="block text-violetCustom mb-2">Name</label>
               <input
                 type="text"
                 placeholder="Enter name"
-                className="form-input p-4 rounded-sm w-full"
+                className="form-input p-4 rounded-sm w-full text-[#bd7df0]"
                 value={username}
                 onChange={(e) => setUserName(e.target.value)}
               />
             </div>
 
             <div className="mb-4">
-              <label className="block text-white mb-2">Email Address</label>
+              <label className="block text-violetCustom mb-2">Email Address</label>
               <input
                 type="email"
                 placeholder="Enter email"
-                className="form-input p-4 rounded-sm w-full"
+                className="form-input p-4 rounded-sm w-full text-[#bd7df0]"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
 
             <div className="mb-4">
-              <label className="block text-white mb-2">Password</label>
+              <label className="block text-violetCustom mb-2">Password</label>
               <input
                 type="password"
                 placeholder="Enter password"
-                className="form-input p-4 rounded-sm w-full"
+                className="form-input p-4 rounded-sm w-full text-[#bd7df0]"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
 
             <div className="mb-4">
-              <label className="block text-white mb-2">Confirm Password</label>
+              <label className="block text-violetCustom mb-2">Confirm Password</label>
               <input
                 type="password"
                 placeholder="Confirm password"
-                className="form-input p-4 rounded-sm w-full"
+                className="form-input p-4 rounded-sm w-full text-[#bd7df0]"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />

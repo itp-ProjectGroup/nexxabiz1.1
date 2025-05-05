@@ -94,7 +94,7 @@ const Shop = () => {
           placeholder="Search products..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full max-w-xl px-4 py-2 border border-gray-300 rounded-full shadow focus:outline-none focus:ring-2 focus:ring-[#bd7df0] transition"
+          className="w-full max-w-xl px-4 py-2 border border-gray-300 rounded-full shadow focus:outline-none focus:ring-2 focus:ring-[#bd7df0] transition text-[#bd7df0]"
         />
       </div>
       <div className="container mx-auto">

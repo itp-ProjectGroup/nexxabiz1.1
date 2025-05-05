@@ -5,7 +5,7 @@ import Message from "../components/Message";
 import Header from "../components/Header";
 import Product from "./Products/Product";
 import HomeHeroSection from "../components/HomeHeroSection";
-
+import Header2 from "../components/Header2";
 
 const Home = () => {
   const { keyword } = useParams();
@@ -13,6 +13,7 @@ const Home = () => {
 
   return (
     <>
+    <Header2 />
       <HomeHeroSection />
       {!keyword ? <Header /> : null}
       {isLoading ? (
