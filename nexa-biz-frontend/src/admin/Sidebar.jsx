@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 const Sidebar = () => {
     const location = useLocation();
     const [isCollapsed, setIsCollapsed] = useState(false);
-    
+
     // Function to check if a link is active
     const isActive = (path) => {
         if (path === "/admin" && location.pathname === "/admin") {
@@ -12,24 +12,24 @@ const Sidebar = () => {
         }
         return location.pathname.startsWith(path) && path !== "/admin";
     };
-    
+
     const toggleSidebar = () => {
         const newCollapsedState = !isCollapsed;
         setIsCollapsed(newCollapsedState);
-        
+
         // Dispatch custom event for the AdminLayout and Header
         window.dispatchEvent(
-            new CustomEvent("sidebar-toggle", { 
-                detail: { isCollapsed: newCollapsedState } 
+            new CustomEvent("sidebar-toggle", {
+                detail: { isCollapsed: newCollapsedState }
             })
         );
     };
-    
+
     // Dispatch event on initial load to ensure synced state
     useEffect(() => {
         window.dispatchEvent(
-            new CustomEvent("sidebar-toggle", { 
-                detail: { isCollapsed: isCollapsed } 
+            new CustomEvent("sidebar-toggle", {
+                detail: { isCollapsed: isCollapsed }
             })
         );
     }, []);
@@ -41,17 +41,17 @@ const Sidebar = () => {
             mainContent.style.marginLeft = isCollapsed ? '64px' : '256px';
         }
     }, [isCollapsed]);
-    
+
     return (
-        <div 
+        <div
             className={`transition-all duration-300 h-screen bg-gray-800 text-white p-5 fixed ${
                 isCollapsed ? "w-16" : "w-64"
             }`}
         >
             {/* Toggle Button */}
             <div className="flex justify-end mb-4">
-                <button 
-                    onClick={toggleSidebar} 
+                <button
+                    onClick={toggleSidebar}
                     className="text-gray-300 hover:text-white p-1 rounded-md transition-colors"
                     title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                 >
@@ -62,22 +62,22 @@ const Sidebar = () => {
                     </svg>
                 </button>
             </div>
-            
+
             {/* Logo section - only shown when expanded */}
             <div className="flex justify-center mb-6">
                 {!isCollapsed && (
                     <img src="/logo.png" alt="NexaBiz Logo" className="h-28 w-auto" />
                 )}
             </div>
-            
-           
+
+
             <ul className="mt-5 space-y-4">
                 <li>
-                    <Link 
-                        to="/admin" 
+                    <Link
+                        to="/admin"
                         className={`block p-2 relative transition-all duration-300 group ${
-                            isActive("/admin") 
-                                ? "text-blue-400 font-medium" 
+                            isActive("/admin")
+                                ? "text-blue-400 font-medium"
                                 : "text-gray-300 hover:text-white"
                         }`}
                     >
@@ -98,11 +98,11 @@ const Sidebar = () => {
                     </Link>
                 </li>
                 <li>
-                    <Link 
-                        to="/admin/customers" 
+                    <Link
+                        to="/admin/customers"
                         className={`block p-2 relative transition-all duration-300 group ${
-                            isActive("/admin/customers") 
-                                ? "text-blue-400 font-medium" 
+                            isActive("/admin/customers")
+                                ? "text-blue-400 font-medium"
                                 : "text-gray-300 hover:text-white"
                         }`}
                     >
@@ -123,13 +123,39 @@ const Sidebar = () => {
                     </Link>
                 </li>
 
+                <li>
+                    <Link
+                        to="/admin/products"
+                        className={`block p-2 relative transition-all duration-300 group ${
+                            isActive("/admin/customers")
+                                ? "text-blue-400 font-medium"
+                                : "text-gray-300 hover:text-white"
+                        }`}
+                    >
+                        {isActive("/admin/products") && !isCollapsed && (
+                            <span className="absolute left-0 top-0 h-full w-1 bg-blue-400"></span>
+                        )}
+                        {!isActive("/admin/products") && !isCollapsed && (
+                            <span className="absolute left-0 top-0 h-full w-0 bg-blue-400/20 transition-all duration-300 group-hover:w-full rounded-md"></span>
+                        )}
+                        <div className="relative z-10">
+                            <span className={`flex items-center ${isCollapsed ? "justify-center" : "justify-between"}`}>
+                                {!isCollapsed && <span>Products</span>}
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 min-w-6 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                                </svg>
+                            </span>
+                        </div>
+                    </Link>
+                </li>
+
                 {/* order management */}
                 <li>
-                    <Link 
-                        to="/admin/orders" 
+                    <Link
+                        to="/admin/orders"
                         className={`block p-2 relative transition-all duration-300 group ${
-                            isActive("/admin/orders") 
-                                ? "text-blue-400 font-medium" 
+                            isActive("/admin/orders")
+                                ? "text-blue-400 font-medium"
                                 : "text-gray-300 hover:text-white"
                         }`}
                     >
@@ -152,11 +178,11 @@ const Sidebar = () => {
 
                 {/* finance management */}
                 <li>
-                    <Link 
-                        to="/admin/finance" 
+                    <Link
+                        to="/admin/finance"
                         className={`block p-2 relative transition-all duration-300 group ${
-                            isActive("/admin/finance") 
-                                ? "text-blue-400 font-medium" 
+                            isActive("/admin/finance")
+                                ? "text-blue-400 font-medium"
                                 : "text-gray-300 hover:text-white"
                         }`}
                     >
@@ -179,11 +205,11 @@ const Sidebar = () => {
                 </li>
 
                 <li>
-                    <Link 
-                        to="/admin/settings" 
+                    <Link
+                        to="/admin/settings"
                         className={`block p-2 relative transition-all duration-300 group ${
-                            isActive("/admin/settings") 
-                                ? "text-blue-400 font-medium" 
+                            isActive("/admin/settings")
+                                ? "text-blue-400 font-medium"
                                 : "text-gray-300 hover:text-white"
                         }`}
                     >

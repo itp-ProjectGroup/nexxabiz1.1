@@ -7,6 +7,11 @@ import OrderList from "./pages/OrderList";
 import FinDashboard from "./pages/FinDashboard";
 import HeroSection from "./pages/HeroSection";
 import AdminLayout from "./admin/adminLayout";
+import Navigation from "./pages/Navigation";
+import ProductForm from "./pages/ProductForm";
+import ProductList from "./pages/ProductList";
+import Stock from "./pages/Stock";
+
 
 
 const App = () => {
@@ -18,12 +23,17 @@ const App = () => {
                 <Route path="/customers" element={<CustomerList />} />
                 <Route path="/OrderList" element={<OrderList />} />
                 <Route path="/HeroSection" element={<HeroSection />} />
-                
+
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminLayout />}>
                     <Route index element={<div>Admin Dashboard</div>} />
                     <Route path="customers" element={<CustomerList />} />
                     <Route path="orders" element={<OrderList />} />
+                    <Route path="products" element={<Navigation />} />
+                    <Route path="/admin/products/add" element={<ProductForm />} />
+                    <Route path="/admin/products/all" element={<ProductList />} />
+                    <Route path="/admin/products/add" element={<ProductForm />} />
+                    <Route path="/admin/products/stock" element={<Stock />} />
                     <Route path="finance" element={<FinDashboard />} />
                     <Route path="customer/:id" element={<CustomerProfile />} />
                 </Route>

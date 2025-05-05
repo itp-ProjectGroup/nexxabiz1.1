@@ -1,0 +1,11 @@
+
+.message{
+    text-align: center;
+    font-weight: bold;
+}
+.success{
+    color: green;
+}
+.error{
+    color:red;
+}
