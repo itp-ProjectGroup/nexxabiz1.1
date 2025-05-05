@@ -152,7 +152,7 @@ const Home = () => {
                     <span className="text-purple-700 font-bold text-xl">J</span>
                   </div>
                   <div className="ml-4">
-                    <h4 className="font-semibold">Jessica R.</h4>
+                    <h4 className="font-semibold">Dinura</h4>
                     <div className="flex text-yellow-400">
                       {"★".repeat(5)}
                     </div>
@@ -170,7 +170,7 @@ const Home = () => {
                     <span className="text-purple-700 font-bold text-xl">M</span>
                   </div>
                   <div className="ml-4">
-                    <h4 className="font-semibold">Michael T.</h4>
+                    <h4 className="font-semibold">Himesh</h4>
                     <div className="flex text-yellow-400">
                       {"★".repeat(4)}{"☆".repeat(1)}
                     </div>
@@ -188,7 +188,7 @@ const Home = () => {
                     <span className="text-purple-700 font-bold text-xl">S</span>
                   </div>
                   <div className="ml-4">
-                    <h4 className="font-semibold">Sarah L.</h4>
+                    <h4 className="font-semibold">Aveesha</h4>
                     <div className="flex text-yellow-400">
                       {"★".repeat(5)}
                     </div>
