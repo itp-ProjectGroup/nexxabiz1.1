@@ -24,8 +24,6 @@ const FinDashboard = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
-    
-
     useEffect(() => {
         fetchOrders();
         fetchPayments();
@@ -70,6 +68,14 @@ const FinDashboard = () => {
         if (activeTab === "paid") return order.pay_status === "Paid";
         if (activeTab === "new") return order.pay_status === "New";
         if (activeTab === "Pending") return order.pay_status === "Pending";
+        if (activeTab === "overdue") {
+            // Check if order is pending AND overdue_date is less than or equal to current date
+            const currentDate = new Date();
+            const overdueDate = order.overdue_date ? new Date(order.overdue_date) : null;
+            return order.pay_status === "Pending" && 
+                  overdueDate && 
+                  overdueDate <= currentDate;
+        }
         return true;
     });
 
@@ -109,7 +115,6 @@ const FinDashboard = () => {
         }, 0);
     };
     
-
     const calculateExpenseTotal = (order) => {
         if (!products || !Array.isArray(order.od_items)) return 0;
     
@@ -126,7 +131,7 @@ const FinDashboard = () => {
     };
 
     useEffect(() => {
-        if (activeTab === "Pending" || activeTab === "paid") {
+        if (activeTab === "Pending" || activeTab === "paid" || activeTab === "overdue") {
             setOrders(prevOrders =>
                 prevOrders.map(order => ({
                     ...order,
@@ -134,12 +139,20 @@ const FinDashboard = () => {
                 }))
             );
         }
-    }, [payments]);
+    }, [payments, activeTab]);
+
+    // Count overdue orders
+    const overdueOrdersCount = orders.filter(order => {
+        const currentDate = new Date();
+        const overdueDate = order.overdue_date ? new Date(order.overdue_date) : null;
+        return order.pay_status === "Pending" && 
+              overdueDate && 
+              overdueDate <= currentDate;
+    }).length;
 
     if (loading) return <p className="text-center text-gray-500">Loading...</p>;
 
     return (
-
         <div className="p-4">
             <ResponsiveGridLayout
                 className="layout mb-6"
@@ -177,14 +190,15 @@ const FinDashboard = () => {
                 <div key="4" data-grid={{ x: 3, y: 0, w: 1, h: 1 }}>
                     <DashboardCard
                         title="Overdue Orders"
-                        value={orders.filter(o => o.pay_status === "Pending").length}
-                        
+                        value={overdueOrdersCount}
+                        disableCurrencyFormatting={true} 
                     />
                 </div>
                 <div key="5" data-grid={{ x: 4, y: 0, w: 2, h: 4 }}>
                     <DashboardCard
                         title="Payment reminders"
                         value={orders.filter(o => o.pay_status === "Pending").length}
+                        disableCurrencyFormatting={true} 
                         
                     />
                 </div>
@@ -222,18 +236,27 @@ const FinDashboard = () => {
 
             {/* Tabs */}
             <div className="flex mb-4 border-b border-gray-600 overflow-x-auto">
-                {["all", "allp", "new", "paid", "Pending"].map((tab) => (
-                    <button 
-                        key={tab}
-                        className={`py-2 px-4 ml-2 whitespace-nowrap ${activeTab === tab ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-400"}`} 
-                        onClick={() => setActiveTab(tab)}
-                    >
-                        {tab === "all" ? "All Order" :
-                        tab === "allp" ? "All Payment" :
-                         tab === "new" ? "New Orders" :
-                         tab === "paid" ? "Paid Order" : "To be paid Orders"}
-                    </button>
-                ))}
+            {["all", "allp", "new", "paid", "Pending", "overdue"].map((tab) => (
+            <button
+                key={tab}
+                className={`py-2 px-4 ml-2 whitespace-nowrap ${
+                activeTab === tab ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-400"
+                }`}
+                onClick={() => setActiveTab(tab)}
+            >
+                {tab === "all"
+                ? "All Orders"
+                : tab === "allp"
+                ? "All Payments"
+                : tab === "new"
+                ? "New Orders"
+                : tab === "paid"
+                ? "Paid Orders"
+                : tab === "Pending"
+                ? "To be Paid Orders"
+                : "Overdue Payments"}
+            </button>
+            ))}
             </div>
 
             {/* Table */}
@@ -272,68 +295,100 @@ const FinDashboard = () => {
                 ) : (
                     <table className="w-full text-left border-collapse">
                     <thead>
-                        <tr className="border-b border-gray-700 text-gray-400 uppercase text-sm text-center">
-                            <th className="py-3 px-4">Order ID</th>
-                            <th className="py-3 px-4">Company Name</th>
-                            <th className="py-3 px-4">Order Status</th>
-                            {activeTab !== "Pending" && (
-                                <th className="py-3 px-4">Payment Status</th>
-                            )}
-                            <th className="py-3 px-4">Total Amount</th>
-                            {activeTab === "Pending" && (
-                                <th className="py-3 px-4">Paid Amount</th>
-                            )}
-                            <th className="py-3 px-4">Action</th>
-                        </tr>
+                      <tr className="border-b border-gray-700 text-gray-400 uppercase text-sm text-center">
+                        <th className="py-3 px-4">Order ID</th>
+                        <th className="py-3 px-4">Company Name</th>
+                        <th className="py-3 px-4">Order Status</th>
+                  
+                        {/* Payment Status only for tabs other than Pending and Overdue */}
+                        {activeTab !== "Pending" && activeTab !== "overdue" && (
+                          <th className="py-3 px-4">Payment Status</th>
+                        )}
+                  
+                        <th className="py-3 px-4">Total Amount</th>
+                  
+                        {/* Show Paid Amount for both Pending and Overdue */}
+                        {(activeTab === "Pending" || activeTab === "overdue") && (
+                          <th className="py-3 px-4">Paid Amount</th>
+                        )}
+
+                        {/* Show Overdue Date only for overdue tab */}
+                        {activeTab === "overdue" && (
+                          <th className="py-3 px-4">Overdue Date</th>
+                        )}
+                  
+                        <th className="py-3 px-4">Action</th>
+                      </tr>
                     </thead>
+                  
                     <tbody>
-                        {filteredOrders.map(order => (
-                            <tr key={order.od_Id} className="border-b border-gray-700 hover:bg-gray-800 text-center">
-                                <td className="py-3 px-4 font-medium text-white">{order.od_Id}</td>
-                                <td className="py-3 px-4 text-gray-300">{order.company_name}</td>
-                                <td className="py-3 px-4">
-                                    <span className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${order.od_status === "Completed" ? "bg-green-600" : "bg-yellow-600"} text-white`}>
-                                        {order.od_status}
-                                    </span>
-                                </td>
-                                {activeTab !== "Pending" && (
-                                    <td className="py-3 px-4">
-                                        <span className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${order.pay_status === "Paid" ? "bg-green-600" : "bg-red-600"} text-white`}>
-                                            {order.pay_status}
-                                        </span>
-                                    </td>
-                                )}
-                                <td className="py-3 px-4 text-gray-300">${calculateOrderTotal(order).toFixed(2)}</td>
-                                {activeTab === "Pending" && (
-                                    <td className="py-3 px-4 text-gray-300">
-                                        ${getPaidAmountForOrder(order.od_Id).toFixed(2)}
-                                    </td>
-                                )}
-                                <td className="py-3 px-4">
-                                    {order.pay_status !== "Paid" ? (
-                                        activeTab === "new" ? (
-                                            <button 
-                                                onClick={() => handleViewClick(order)} 
-                                                className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded"
-                                            >
-                                                View
-                                            </button>
-                                        ) : (
-                                            <button 
-                                                onClick={() => handlePayClick(order)} 
-                                                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                                            >
-                                                Pay
-                                            </button>
-                                        )
-                                    ) : (
-                                        <span className="text-gray-400">Paid</span>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
+                      {filteredOrders.map(order => (
+                        <tr key={order.od_Id} className="border-b border-gray-700 hover:bg-gray-800 text-center">
+                          <td className="py-3 px-4 font-medium text-white">{order.od_Id}</td>
+                          <td className="py-3 px-4 text-gray-300">{order.company_name}</td>
+                          <td className="py-3 px-4">
+                            <span
+                              className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${
+                                order.od_status === "Completed" ? "bg-green-600" : "bg-yellow-600"
+                              } text-white`}
+                            >
+                              {order.od_status}
+                            </span>
+                          </td>
+                  
+                          {/* Payment Status hidden for Pending and Overdue */}
+                          {activeTab !== "Pending" && activeTab !== "overdue" && (
+                            <td className="py-3 px-4">
+                              <span
+                                className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${
+                                  order.pay_status === "Paid" ? "bg-green-600" : "bg-red-600"
+                                } text-white`}
+                              >
+                                {order.pay_status}
+                              </span>
+                            </td>
+                          )}
+                  
+                          <td className="py-3 px-4 text-gray-300">
+                            ${calculateOrderTotal(order).toFixed(2)}
+                          </td>
+                  
+                          {/* Show Paid Amount for both Pending and Overdue */}
+                          {(activeTab === "Pending" || activeTab === "overdue") && (
+                            <td className="py-3 px-4 text-gray-300">
+                              ${getPaidAmountForOrder(order.od_Id).toFixed(2)}
+                            </td>
+                          )}
+
+                          {/* Show Overdue Date only for overdue tab */}
+                          {activeTab === "overdue" && (
+                            <td className="py-3 px-4 text-gray-300">
+                              {order.overdue_date ? new Date(order.overdue_date).toLocaleDateString() : "N/A"}
+                            </td>
+                          )}
+                  
+                          <td className="py-3 px-4">
+                            {order.pay_status !== "Paid" ? (
+                              <button
+                                onClick={() =>
+                                  activeTab === "new"
+                                    ? handleViewClick(order)
+                                    : handlePayClick(order)
+                                }
+                                className={`${
+                                  activeTab === "new" ? "bg-purple-500 hover:bg-purple-700" : "bg-blue-500 hover:bg-blue-700"
+                                } text-white font-bold py-2 px-4 rounded`}
+                              >
+                                {activeTab === "new" ? "View" : "Pay"}
+                              </button>
+                            ) : (
+                              <span className="text-gray-400">Paid</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
-                </table>
+                  </table>
                 )}
             </div>
         </div>    
