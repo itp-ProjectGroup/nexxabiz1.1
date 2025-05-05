@@ -10,8 +10,11 @@ import {
 } from "../redux/features/shop/shopSlice";
 import Loader from "../components/Loader";
 import ProductCard from "./Products/ProductCard";
+import Header2 from "../components/Header2";
+
 
 const Shop = () => {
+ 
   const dispatch = useDispatch();
   const { categories, products, checked, radio } = useSelector(
     (state) => state.shop
@@ -82,6 +85,7 @@ const Shop = () => {
 
   return (
     <>
+      <Header2 />
       <div className="container mx-auto">
         <div className="flex md:flex-row">
           <div className="bg-white p-3 mt-2 mb-2 shadow-md border border-gray-200">

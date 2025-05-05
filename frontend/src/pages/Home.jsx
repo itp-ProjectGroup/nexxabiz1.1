@@ -6,6 +6,7 @@ import Header from "../components/Header";
 import Product from "./Products/Product";
 import HomeHeroSection from "../components/HomeHeroSection";
 
+
 const Home = () => {
   const { keyword } = useParams();
   const { data, isLoading, isError } = useGetProductsQuery({ keyword });

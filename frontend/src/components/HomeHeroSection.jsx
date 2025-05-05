@@ -2,8 +2,8 @@ import React from "react";
 import { FaSearch } from "react-icons/fa";
 
 const NAV_LINKS = [
-  { name: "Home", href: "#" },
-  { name: "Shop", href: "#" },
+  { name: "Home", href: "Home" },
+  { name: "Shop", href: "Shop" },
   { name: "Testimonials", href: "#" },
   { name: "Contact", href: "#" },
 ];
