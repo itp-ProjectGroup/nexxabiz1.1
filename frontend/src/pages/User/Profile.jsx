@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Loader from "../../components/Loader";
 import { useProfileMutation, useLogoutMutation } from "../../redux/api/usersApiSlice";
 import { setCredentials, logout as logoutAction } from "../../redux/features/auth/authSlice";
+import Header2 from "../../components/Header2";
 
 const Profile = () => {
   const [username, setUserName] = useState("");
@@ -62,8 +63,9 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20 pb-12">
-      <div className="container mx-auto px-4 max-w-4xl">
+    <div className="min-h-screen bg-gray-50">
+      <Header2 />
+      <div className="container mx-auto px-4 max-w-4xl pt-20 pb-12">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           {/* Profile Header */}
           <div className="bg-gradient-to-r from-purple-600 to-violet-500 py-8 px-6">
