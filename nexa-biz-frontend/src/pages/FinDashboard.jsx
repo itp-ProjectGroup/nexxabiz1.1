@@ -8,7 +8,7 @@ import "react-resizable/css/styles.css";
 import SetOverdue from "../modal/SetOverdue";
 import PaymentGateway from "../modal/PaymentGateway";
 import PaymentDetails from "../modal/PaymentDetails";
-
+import CashFlowChart from "../components/CashFlowChart";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -110,6 +110,16 @@ const FinDashboard = () => {
     };
     
 
+    const calculateExpenseTotal = (order) => {
+        if (!products || !Array.isArray(order.od_items)) return 0;
+    
+        return order.od_items.reduce((sum, item) => {
+            const product = products.find(p => p.manufacturingID === item.manufacturingID);
+            const price = product?.ManufacturingCost || 0;
+            return sum + price * item.qty;
+        }, 0);
+    };
+
     const handlePaymentSuccess = () => {
         fetchPayments();
         fetchOrders();
@@ -147,51 +157,62 @@ const FinDashboard = () => {
                 </div>
                 <div key="2" data-grid={{ x: 1, y: 0, w: 1, h: 1 }}>
                     <DashboardCard
-                        title="Total Payments"
-                        value={`$${payments.reduce((sum, p) => sum + p.paymentAmount, 0).toFixed(2)}`}
-                        
+                        title="Profit"
+                        value={`$${(
+                            payments.reduce((sum, p) => sum + p.paymentAmount, 0) -
+                            orders.reduce((sum, order) => sum + calculateExpenseTotal(order), 0)
+                          ).toFixed(2)}`}    
                     />
                 </div>
                 <div key="3" data-grid={{ x: 2, y: 0, w: 1, h: 1 }}>
                     <DashboardCard
-                        title="Pending Orders"
-                        value={orders.filter(o => o.pay_status === "Pending").length}
+                        title="Amount due"
+                        value={`$${(
+                            orders.reduce((sum, order) => sum + calculateOrderTotal(order), 0) -
+                            payments.reduce((sum, p) => sum + p.paymentAmount, 0)
+                          ).toFixed(2)}`} 
                         
                     />
                 </div>
                 <div key="4" data-grid={{ x: 3, y: 0, w: 1, h: 1 }}>
                     <DashboardCard
-                        title="Overdue payments"
+                        title="Overdue Orders"
                         value={orders.filter(o => o.pay_status === "Pending").length}
                         
                     />
                 </div>
                 <div key="5" data-grid={{ x: 4, y: 0, w: 2, h: 4 }}>
                     <DashboardCard
-                        title="Overdue payments"
+                        title="Payment reminders"
                         value={orders.filter(o => o.pay_status === "Pending").length}
                         
                     />
                 </div>
                 <div key="6" data-grid={{ x: 0, y: 1, w: 1, h: 1.3 }}>
                     <DashboardCard
-                        title="Overdue payments"
-                        value={orders.filter(o => o.pay_status === "Pending").length}
+                        title="Total Income"
+                        value={`$${payments.reduce((sum, p) => sum + p.paymentAmount, 0).toFixed(2)}`}
                         
                     />
                 </div>
                 <div key="7" data-grid={{ x: 0, y: 2, w: 1, h: 1.3 }}>
                     <DashboardCard
-                        title="Overdue payments"
-                        value={orders.filter(o => o.pay_status === "Pending").length}
+                        title="Total Expense"
+                        value={`$${orders.reduce((sum, order) => sum + calculateExpenseTotal(order), 0).toFixed(2)}`}
                         
                     />
                 </div>
                 <div key="8" data-grid={{ x: 1, y: 1, w: 3, h: 3 }}>
                     <DashboardCard
-                        title="Overdue payments"
-                        value={orders.filter(o => o.pay_status === "Pending").length}
-                        
+                        chart={
+                            <div className="h-full w-full">
+                                <CashFlowChart 
+                                    payments={payments} 
+                                    orders={orders} 
+                                    products={products} 
+                                />
+                            </div>
+                        }
                     />
                 </div>
             </ResponsiveGridLayout>
