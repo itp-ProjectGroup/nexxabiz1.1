@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { FaTrash } from "react-icons/fa";
 import { addToCart, removeFromCart } from "../redux/features/cart/cartSlice";
+import Header2 from "../components/Header2";
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ const Cart = () => {
 
   return (
     <>
+    <Header2 />
       <div className="container flex justify-around items-start flex wrap mx-auto mt-8">
         {cartItems.length === 0 ? (
           <div>
