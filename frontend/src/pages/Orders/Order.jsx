@@ -191,7 +191,7 @@ const Order = () => {
           <span>$ {order.totalPrice}</span>
         </div>
 
-        {!order.isPaid && (
+        {/* {!order.isPaid && (
           <div>
             {loadingPay && <Loader />}{" "}
             {isPending ? (
@@ -200,15 +200,15 @@ const Order = () => {
               <div>
                 <div>
                   <PayPalButtons
-                    createOrder={createOrder}
-                    onApprove={onApprove}
-                    onError={onError}
+                    // createOrder={createOrder}
+                    // onApprove={onApprove}
+                    // onError={onError}
                   ></PayPalButtons>
                 </div>
               </div>
             )}
           </div>
-        )}
+        )} */}
 
         {loadingDeliver && <Loader />}
         {userInfo && userInfo.isAdmin && order.isPaid && !order.isDelivered && (

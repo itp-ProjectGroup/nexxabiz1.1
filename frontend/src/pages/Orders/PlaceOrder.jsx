@@ -35,7 +35,7 @@ const PlaceOrder = () => {
         totalPrice: cart.totalPrice,
       }).unwrap();
       dispatch(clearCartItems());
-      navigate(`/order/${res._id}`);
+      // navigate(`/order/${res._id}`);
     } catch (error) {
       toast.error(error);
     }
@@ -115,14 +115,13 @@ const PlaceOrder = () => {
               <h2 className="text-2xl font-semibold mb-4">Shipping</h2>
               <p>
                 <strong>Address:</strong> {cart.shippingAddress.address},{" "}
-                {cart.shippingAddress.city} {cart.shippingAddress.postalCode},{" "}
-                {cart.shippingAddress.country}
+                {cart.shippingAddress.city} {cart.shippingAddress.postalCode}
               </p>
             </div>
 
             <div>
               <h2 className="text-2xl font-semibold mb-4">Payment Method</h2>
-              <strong>Method:</strong> {cart.paymentMethod}
+              <div><strong>Method:   </strong> <p>Cash On delivery</p></div>
             </div>
           </div>
 

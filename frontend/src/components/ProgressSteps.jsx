@@ -10,7 +10,7 @@ const ProgressSteps = ({ step1, step2, step3 }) => {
         <>
           {step1 && <div className="h-0.5 w-[10rem] bg-green-500"></div>}
           <div className={`${step1 ? "text-green-500" : "text-gray-300"}`}>
-            <span>Shipping</span>
+            <span>Delivery address</span>
             <div className="mt-2 text-lg text-center">✅</div>
           </div>
         </>

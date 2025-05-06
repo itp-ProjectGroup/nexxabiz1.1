@@ -44,10 +44,11 @@ const Shipping = () => {
         <form onSubmit={submitHandler} className="w-[40rem]">
           <h1 className="text-2xl font-semibold mb-4">Shipping</h1>
           <div className="mb-4">
-            <label className="block text-white mb-2">Address</label>
+            <label className="block text-black mb-2">Address</label>
             <input
               type="text"
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded text-black
+"
               placeholder="Enter address"
               value={address}
               required
@@ -55,10 +56,10 @@ const Shipping = () => {
             />
           </div>
           <div className="mb-4">
-            <label className="block text-white mb-2">City</label>
+            <label className="block text-black mb-2">City</label>
             <input
               type="text"
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded text-black"
               placeholder="Enter city"
               value={city}
               required
@@ -66,27 +67,27 @@ const Shipping = () => {
             />
           </div>
           <div className="mb-4">
-            <label className="block text-white mb-2">Postal Code</label>
+            <label className="block text-black mb-2">Postal Code</label>
             <input
               type="text"
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded text-black"
               placeholder="Enter postal code"
               value={postalCode}
               required
               onChange={(e) => setPostalCode(e.target.value)}
             />
           </div>
-          <div className="mb-4">
-            <label className="block text-white mb-2">Country</label>
+          {/* <div className="mb-4">
+            <label className="block text-black mb-2">Country</label>
             <input
               type="text"
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded text-black"
               placeholder="Enter country"
               value={country}
               required
               onChange={(e) => setCountry(e.target.value)}
             />
-          </div>
+          </div> */}
           <div className="mb-4">
             <label className="block text-gray-400">Select Method</label>
             <div className="mt-2">
@@ -100,7 +101,7 @@ const Shipping = () => {
                   onChange={(e) => setPaymentMethod(e.target.value)}
                 />
 
-                <span className="ml-2">PayPal or Credit Card</span>
+                <span className="ml-2">Cash On Delivery</span>
               </label>
             </div>
           </div>
