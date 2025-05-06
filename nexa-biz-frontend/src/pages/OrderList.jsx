@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import DashboardCard from "../components/DashboardCard";
 import { Bar } from 'react-chartjs-2';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -55,6 +57,8 @@ const OrderList = () => {
         od_status: "Processing",
         pay_status: "Pending"
     });
+
+    const [searchOrderId, setSearchOrderId] = useState("");
 
     useEffect(() => {
         axios.get("http://localhost:5000/api/orders")
@@ -481,15 +485,100 @@ const OrderList = () => {
         }));
     };
 
+    // Filter order details based on search
+    const getFilteredOrderDetails = () => {
+        let filtered = orderDetails;
+        
+        // Apply search filter if search term exists
+        if (searchOrderId) {
+            filtered = filtered.filter(detail => 
+                detail.orderId.toLowerCase().includes(searchOrderId.toLowerCase())
+            );
+        }
+        
+        // Apply tab filter
+        return filtered.filter(detail => 
+            orderDetailsTab === "return" ? detail.type === "return" : detail.type === "current"
+        );
+    };
+
+    // Handle search input change
+    const handleSearchChange = (e) => {
+        setSearchOrderId(e.target.value);
+    };
+
+    // Generate PDF report
+    const generatePDFReport = () => {
+        try {
+            const doc = new jsPDF();
+            
+            // Add title
+            doc.setFontSize(16);
+            doc.text('Order Details Report', 14, 15);
+            
+            // Add date
+            doc.setFontSize(10);
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 22);
+            
+            // Add table
+            const tableColumn = ["Order ID", "Company Name", "Items", "Order Status", "Payment Status", "Total Amount"];
+            const tableRows = getFilteredOrderDetails().map(detail => [
+                detail.orderId,
+                detail.companyName,
+                detail.items.map(item => item.name).join(", "),
+                detail.od_status || "Processing",
+                detail.pay_status || "Pending",
+                `$${detail.totalAmount.toFixed(2)}`
+            ]);
+
+            autoTable(doc, {
+                head: [tableColumn],
+                body: tableRows,
+                startY: 30,
+                theme: 'grid',
+                styles: {
+                    fontSize: 8,
+                    cellPadding: 2,
+                },
+                headStyles: {
+                    fillColor: [41, 128, 185],
+                    textColor: 255,
+                    fontStyle: 'bold',
+                },
+                alternateRowStyles: {
+                    fillColor: [245, 245, 245],
+                },
+                columnStyles: {
+                    0: { cellWidth: 25 }, // Order ID
+                    1: { cellWidth: 30 }, // Company Name
+                    2: { cellWidth: 50 }, // Items
+                    3: { cellWidth: 25 }, // Order Status
+                    4: { cellWidth: 25 }, // Payment Status
+                    5: { cellWidth: 25 }, // Total Amount
+                },
+            });
+
+            // Add summary
+            const finalY = doc.lastAutoTable.finalY || 30;
+            doc.setFontSize(10);
+            doc.text(`Total Orders: ${getFilteredOrderDetails().length}`, 14, finalY + 10);
+            doc.text(`Total Amount: $${getFilteredOrderDetails().reduce((sum, detail) => sum + detail.totalAmount, 0).toFixed(2)}`, 14, finalY + 17);
+
+            // Save the PDF
+            doc.save(`order-details-report-${new Date().toISOString().split('T')[0]}.pdf`);
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            alert('Error generating PDF report. Please try again.');
+        }
+    };
+
     if (loading) return <p className="text-center text-gray-500">Loading...</p>;
 
     // Filtered orders based on active tab
     const filteredOrders = activeTab === "paid" ? orders.filter(order => order.pay_status === "Paid") : orders;
     
     // Filtered order details based on active tab
-    const filteredOrderDetails = orderDetailsTab === "return" 
-        ? orderDetails.filter(detail => detail.type === "return")
-        : orderDetails.filter(detail => detail.type === "current");
+    const filteredOrderDetails = getFilteredOrderDetails();
 
     return (
         <div className="p-4">
@@ -797,7 +886,37 @@ const OrderList = () => {
             
             {/* Order Details Section */}
             <div className="max-w-7xl mx-auto mt-10 font-roboto bg-gray-800 text-white p-6 rounded-lg shadow-lg mb-8">
-                <h2 className="text-xl font-bold text-white mb-4">Order Details</h2>
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold text-white">Order Details</h2>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={generatePDFReport}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
+                            </svg>
+                            Download Report
+                        </button>
+                        <div className="relative w-96">
+                            <input
+                                type="text"
+                                placeholder="Search by Order ID"
+                                value={searchOrderId}
+                                onChange={handleSearchChange}
+                                className="w-full bg-gray-700 text-white px-6 py-3 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            {searchOrderId && (
+                                <button
+                                    onClick={() => setSearchOrderId("")}
+                                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                                >
+                                    ✕
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
                 
                 {/* Tabs */}
                 <div className="flex mb-4 border-b border-gray-600">
@@ -829,7 +948,7 @@ const OrderList = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredOrderDetails.map((detail, index) => (
+                            {getFilteredOrderDetails().map((detail, index) => (
                                 <tr key={index} className="border-b border-gray-700 hover:bg-gray-800 text-center">
                                     {editingOrder === detail.orderId ? (
                                         <>
@@ -988,10 +1107,12 @@ const OrderList = () => {
                                     )}
                                 </tr>
                             ))}
-                            {filteredOrderDetails.length === 0 && (
+                            {getFilteredOrderDetails().length === 0 && (
                                 <tr>
-                                    <td colSpan="5" className="py-4 text-center text-gray-400">
-                                        No {orderDetailsTab === "return" ? "return" : "current"} orders found
+                                    <td colSpan="7" className="py-4 text-center text-gray-400">
+                                        {searchOrderId 
+                                            ? "No orders found matching the search criteria" 
+                                            : `No ${orderDetailsTab === "return" ? "return" : "current"} orders found`}
                                     </td>
                                 </tr>
                             )}
