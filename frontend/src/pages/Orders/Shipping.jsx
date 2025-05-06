@@ -7,6 +7,7 @@ import {
 } from "../../redux/features/cart/cartSlice";
 import ProgressSteps from "../../components/ProgressSteps";
 
+
 const Shipping = () => {
   const cart = useSelector((state) => state.cart);
   const { shippingAddress } = cart;
