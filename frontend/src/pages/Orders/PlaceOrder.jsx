@@ -9,6 +9,13 @@ import { useCreateOrderMutation } from "../../redux/api/orderApiSlice";
 import { clearCartItems } from "../../redux/features/cart/cartSlice";
 import jsPDF from "jspdf";
 
+// Simple UUID-like generator for unique od_Id
+const generateOrderId = () => {
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substring(2, 8);
+  return `OD${timestamp}-${random}`;
+};
+
 const PlaceOrder = () => {
   const navigate = useNavigate();
   const cart = useSelector((state) => state.cart);
@@ -22,7 +29,7 @@ const PlaceOrder = () => {
     if (!cart.shippingAddress.address) {
       navigate("/shipping");
     }
-  }, [cart.paymentMethod, cart.shippingAddress.address, navigate]);
+  }, [cart.paymentMethod, cart.shippingAddress, navigate]);
 
   useEffect(() => {
     if (showSuccess) {
@@ -34,26 +41,58 @@ const PlaceOrder = () => {
 
   const placeOrderHandler = async () => {
     try {
-      const res = await createOrder({
-        orderItems: cart.cartItems,
-        shippingAddress: cart.shippingAddress,
-        paymentMethod: cart.paymentMethod,
-        itemsPrice: cart.itemsPrice,
-        shippingPrice: cart.shippingPrice,
-        taxPrice: cart.taxPrice,
-        totalPrice: cart.totalPrice,
-      }).unwrap();
+      const user = JSON.parse(localStorage.getItem("userInfo"));
+      if (!user?._id) {
+        throw new Error("User not authenticated. Please log in.");
+      }
+      if (!cart.cartItems.length) {
+        throw new Error("Your cart is empty. Add items to proceed.");
+      }
+
+      // Log cart items for debugging
+      console.log("Cart items:", cart.cartItems);
+
+      // Filter valid items based on product or _id
+      const validItems = cart.cartItems.filter(item => item.product || item._id);
+      if (validItems.length === 0) {
+        throw new Error("No valid items in cart. Please ensure all items have a valid product ID.");
+      }
+      if (validItems.length < cart.cartItems.length) {
+        toast.warn(`${cart.cartItems.length - validItems.length} invalid item(s) removed from order. Please review your cart.`);
+      }
+
+      const orderPayload = {
+        od_Id: generateOrderId(),
+        company_name: user.company_name || "Unknown Company",
+        od_status: "Processing",
+        od_date: new Date().toISOString(),
+        pay_status: "Pending",
+        overdue_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        od_items: validItems.map(item => ({
+          manufacturingID: item.product || item._id, // Map product or _id to manufacturingID
+          qty: item.qty,
+        })),
+        userID: user._id,
+      };
+
+      const res = await createOrder(orderPayload).unwrap();
       dispatch(clearCartItems());
       setOrderDetails({
-        productName: cart.cartItems[0]?.name,
-        productPrice: cart.cartItems[0]?.price,
-        shippingPrice: cart.shippingPrice,
-        taxPrice: cart.taxPrice,
-        totalPrice: cart.totalPrice,
+        od_Id: res.od_Id,
+        company_name: res.company_name,
+        od_status: res.od_status,
+        od_date: new Date(res.od_date).toLocaleDateString(),
+        pay_status: res.pay_status,
+        overdue_date: new Date(res.overdue_date).toLocaleDateString(),
+        od_items: res.od_items,
+        userID: res.userID,
       });
       setShowSuccess(true);
     } catch (error) {
-      toast.error(error);
+      const errorMessage = error?.data?.message || error.message || "Failed to place order. Please try again.";
+      toast.error(errorMessage);
+      console.error("Order placement error:", error);
+      navigate("/cart"); // Redirect to cart for user to fix issues
     }
   };
 
@@ -63,13 +102,21 @@ const PlaceOrder = () => {
     doc.setFontSize(18);
     doc.text("Order Receipt", 14, 20);
     doc.setFontSize(12);
-    doc.text(`Product Name: ${orderDetails.productName || "-"}`, 14, 40);
-    doc.text(`Product Price: $${orderDetails.productPrice || 0}`, 14, 50);
-    doc.text(`Shipping Price: $${orderDetails.shippingPrice || 0}`, 14, 60);
-    doc.text(`Tax Price: $${orderDetails.taxPrice || 0}`, 14, 70);
-    doc.text(`Total Price: $${orderDetails.totalPrice || 0}`, 14, 80);
+    doc.text(`Order ID: ${orderDetails.od_Id}`, 14, 35);
+    doc.text(`Company Name: ${orderDetails.company_name}`, 14, 45);
+    doc.text(`Order Status: ${orderDetails.od_status}`, 14, 55);
+    doc.text(`Order Date: ${orderDetails.od_date}`, 14, 65);
+    doc.text(`Payment Status: ${orderDetails.pay_status}`, 14, 75);
+    doc.text(`Overdue Date: ${orderDetails.overdue_date}`, 14, 85);
+    doc.text(`User ID: ${orderDetails.userID}`, 14, 95);
+    doc.text("Order Items:", 14, 110);
+    let y = 120;
+    orderDetails.od_items.forEach((item, idx) => {
+      doc.text(`- ${item.manufacturingID} (Qty: ${item.qty})`, 18, y);
+      y += 10;
+    });
     doc.save("order-receipt.pdf");
-    
+
     // Visual feedback after download
     const downloadBtn = document.getElementById("download-btn");
     if (downloadBtn) {
@@ -77,7 +124,7 @@ const PlaceOrder = () => {
       downloadBtn.innerText = "Downloaded!";
       downloadBtn.classList.remove("bg-purple-600", "hover:bg-purple-700");
       downloadBtn.classList.add("bg-green-600", "hover:bg-green-700");
-      
+
       setTimeout(() => {
         downloadBtn.innerText = originalText;
         downloadBtn.classList.remove("bg-green-600", "hover:bg-green-700");
@@ -156,7 +203,7 @@ const PlaceOrder = () => {
                 {cart.totalPrice}
               </li>
             </ul>
-            {error && <Message variant="danger">{error.data.message}</Message>}
+            {error && <Message variant="danger">{error?.data?.message || "An error occurred"}</Message>}
             <div>
               <h2 className="text-2xl font-semibold mb-4">Shipping</h2>
               <p>
@@ -166,12 +213,28 @@ const PlaceOrder = () => {
             </div>
             <div>
               <h2 className="text-2xl font-semibold mb-4">Payment Method</h2>
-              <div><strong>Method:</strong> <p>Cash On delivery</p></div>
+              <div><strong>Method:</strong> <p>Cash On Delivery</p></div>
             </div>
           </div>
           <button
             type="button"
-            className="bg-[#bd7df0] text-white py-2 px-4 rounded-full text-lg w-full mt-4 hover:bg-[#a86de0] transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-1"
+            className={[
+              "bg-[#bd7df0]",
+              "text-white",
+              "py-2",
+              "px-4",
+              "rounded-full",
+              "text-lg",
+              "w-full",
+              "mt-4",
+              "hover:bg-[#a86de0]",
+              "transition-all",
+              "duration-300",
+              "shadow-md",
+              "hover:shadow-lg",
+              "transform",
+              "hover:-translate-y-1"
+            ].join(" ")}
             disabled={cart.cartItems.length === 0}
             onClick={placeOrderHandler}
           >

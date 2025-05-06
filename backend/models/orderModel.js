@@ -2,86 +2,54 @@ import mongoose from "mongoose";
 
 const orderSchema = mongoose.Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "User" },
-    orderItems: [
-      {
-        name: { type: String, required: true },
-        qty: { type: Number, required: true },
-        image: { type: String, required: true },
-        price: { type: Number, required: true },
-        product: {
-          type: mongoose.Schema.Types.ObjectId,
-          required: true,
-          ref: "Product",
-        },
-      },
-    ],
-
-    shippingAddress: {
-      address: { type: String, required: true },
-      city: { type: String, required: true },
-      postalCode: { type: String, required: true },
-      country: { type: String, required: true },
+    od_Id: {
+      type: String,
+      required: true,
+      unique: true, // Ensures od_Id is unique (e.g., "OD001")
     },
-
-    paymentMethod: {
+    company_name: {
       type: String,
       required: true,
     },
-
-    paymentResult: {
-      id: { type: String },
-      status: { type: String },
-      update_time: { type: String },
-      email_address: { type: String },
-    },
-
-    itemsPrice: {
-      type: Number,
+    od_status: {
+      type: String,
       required: true,
-      default: 0.0,
+      default: "Processing",
     },
-
-    taxPrice: {
-      type: Number,
-      required: true,
-      default: 0.0,
-    },
-
-    shippingPrice: {
-      type: Number,
-      required: true,
-      default: 0.0,
-    },
-
-    totalPrice: {
-      type: Number,
-      required: true,
-      default: 0.0,
-    },
-
-    isPaid: {
-      type: Boolean,
-      required: true,
-      default: false,
-    },
-
-    paidAt: {
+    od_date: {
       type: Date,
-    },
-
-    isDelivered: {
-      type: Boolean,
       required: true,
-      default: false,
+      default: Date.now,
     },
-
-    deliveredAt: {
+    pay_status: {
+      type: String,
+      required: true,
+      default: "Pending",
+    },
+    overdue_date: {
       type: Date,
+      required: true,
+    },
+    od_items: [
+      {
+        manufacturingID: {
+          type: String,
+          required: true,
+        },
+        qty: {
+          type: Number,
+          required: true,
+        },
+      },
+    ],
+    userID: {
+      type: String,
+      required: true,
+      ref: "User", // Assuming userID references the User model
     },
   },
   {
-    timestamps: true,
+    timestamps: true, // Adds createdAt and updatedAt fields
   }
 );
 

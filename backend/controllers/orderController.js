@@ -26,49 +26,34 @@ function calcPrices(orderItems) {
   };
 }
 
+// Create Order
 const createOrder = async (req, res) => {
   try {
-    const { orderItems, shippingAddress, paymentMethod } = req.body;
+    const {
+      od_Id,
+      company_name,
+      od_status,
+      od_date,
+      pay_status,
+      overdue_date,
+      od_items,
+      userID,
+    } = req.body;
 
-    if (orderItems && orderItems.length === 0) {
+    if (!od_items || od_items.length === 0) {
       res.status(400);
       throw new Error("No order items");
     }
 
-    const itemsFromDB = await Product.find({
-      _id: { $in: orderItems.map((x) => x._id) },
-    });
-
-    const dbOrderItems = orderItems.map((itemFromClient) => {
-      const matchingItemFromDB = itemsFromDB.find(
-        (itemFromDB) => itemFromDB._id.toString() === itemFromClient._id
-      );
-
-      if (!matchingItemFromDB) {
-        res.status(404);
-        throw new Error(`Product not found: ${itemFromClient._id}`);
-      }
-
-      return {
-        ...itemFromClient,
-        product: itemFromClient._id,
-        price: matchingItemFromDB.price,
-        _id: undefined,
-      };
-    });
-
-    const { itemsPrice, taxPrice, shippingPrice, totalPrice } =
-      calcPrices(dbOrderItems);
-
     const order = new Order({
-      orderItems: dbOrderItems,
-      user: req.user._id,
-      shippingAddress,
-      paymentMethod,
-      itemsPrice,
-      taxPrice,
-      shippingPrice,
-      totalPrice,
+      od_Id,
+      company_name,
+      od_status: od_status || "Processing",
+      od_date: od_date || new Date(),
+      pay_status: pay_status || "Pending",
+      overdue_date,
+      od_items,
+      userID,
     });
 
     const createdOrder = await order.save();
@@ -78,24 +63,42 @@ const createOrder = async (req, res) => {
   }
 };
 
+// Get All Orders
 const getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find({}).populate("user", "id username");
+    const orders = await Order.find({});
     res.json(orders);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
+// Get Orders for a User
 const getUserOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user._id });
+    const orders = await Order.find({ userID: req.user._id });
     res.json(orders);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
+// Find Order by ID
+const findOrderById = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (order) {
+      res.json(order);
+    } else {
+      res.status(404);
+      throw new Error("Order not found");
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Count Total Orders
 const countTotalOrders = async (req, res) => {
   try {
     const totalOrders = await Order.countDocuments();
@@ -105,10 +108,11 @@ const countTotalOrders = async (req, res) => {
   }
 };
 
+// Calculate Total Sales (dummy, as no price fields)
 const calculateTotalSales = async (req, res) => {
   try {
-    const orders = await Order.find();
-    const totalSales = orders.reduce((sum, order) => sum + order.totalPrice, 0);
+    // No totalPrice field in new schema, so just count orders
+    const totalSales = await Order.countDocuments();
     res.json({ totalSales });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -134,24 +138,6 @@ const calcualteTotalSalesByDate = async (req, res) => {
     ]);
 
     res.json(salesByDate);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-const findOrderById = async (req, res) => {
-  try {
-    const order = await Order.findById(req.params.id).populate(
-      "user",
-      "username email"
-    );
-
-    if (order) {
-      res.json(order);
-    } else {
-      res.status(404);
-      throw new Error("Order not found");
-    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
