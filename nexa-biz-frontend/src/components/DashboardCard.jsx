@@ -40,7 +40,14 @@ const formatLargeNumber = (value) => {
   return `${sign}$${absValue.toFixed(2)}`;
 };
 
-const DashboardCard = ({ title, value, chart, disableCurrencyFormatting = false }) => {
+const DashboardCard = ({ 
+  title, 
+  value, 
+  chart, 
+  icon, 
+  description,
+  disableCurrencyFormatting = false 
+}) => {
   let formattedValue = value;
 
   if (!disableCurrencyFormatting && (
@@ -57,10 +64,20 @@ const DashboardCard = ({ title, value, chart, disableCurrencyFormatting = false 
           {chart}
         </div>
       ) : (
-        <>
-          <h3 className="text-lg font-semibold mb-2 text-gray-300 truncate">{title}</h3>
-          <div className="text-2xl md:text-3xl font-bold text-blue-400 break-words">{formattedValue}</div>
-        </>
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-semibold text-gray-300 truncate">{title}</h3>
+            {icon && <span className="text-2xl">{icon}</span>}
+          </div>
+          <div className="text-2xl md:text-3xl font-bold text-blue-400 break-words mb-2">
+            {formattedValue}
+          </div>
+          {description && (
+            <p className="text-sm text-gray-400 mt-auto">
+              {description}
+            </p>
+          )}
+        </div>
       )}
     </div>
   );

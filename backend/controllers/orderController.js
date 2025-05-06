@@ -85,3 +85,41 @@ export const createOrder = async (req, res) => {
         res.status(500).json({ message: "Error creating order", error: error.message });
     }
 };
+
+export const deleteOrder = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedOrder = await Order.findOneAndDelete({ od_Id: id });
+        
+        if (!deletedOrder) {
+            return res.status(404).json({ message: "Order not found" });
+        }
+        
+        res.status(200).json({ message: "Order deleted successfully", deletedOrder });
+    } catch (error) {
+        console.error("Error deleting order:", error);
+        res.status(500).json({ message: "Error deleting order", error: error.message });
+    }
+};
+
+export const updateOrder = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updateData = req.body;
+        
+        const updatedOrder = await Order.findOneAndUpdate(
+            { od_Id: id },
+            updateData,
+            { new: true, runValidators: true }
+        );
+        
+        if (!updatedOrder) {
+            return res.status(404).json({ message: "Order not found" });
+        }
+        
+        res.status(200).json(updatedOrder);
+    } catch (error) {
+        console.error("Error updating order:", error);
+        res.status(500).json({ message: "Error updating order", error: error.message });
+    }
+};
