@@ -32,7 +32,9 @@ const OrderList = () => {
     const [editFormData, setEditFormData] = useState({
         orderId: "",
         companyName: "",
-        items: [{ name: "", quantity: 1, price: 0 }]
+        items: [{ name: "", quantity: 1, price: 0 }],
+        od_status: "Processing",
+        pay_status: "Pending"
     });
 
     useEffect(() => {
@@ -181,6 +183,8 @@ const OrderList = () => {
                 companyName: newOrderData.company_name,
                 items: newOrderData.items,
                 totalAmount: newOrderData.od_Tamount,
+                od_status: newOrderData.od_status,
+                pay_status: newOrderData.pay_status,
                 type: "current"
             }]);
             
@@ -288,7 +292,9 @@ const OrderList = () => {
         setEditFormData({
             orderId: detail.orderId,
             companyName: detail.companyName,
-            items: detail.items
+            items: detail.items,
+            od_status: detail.od_status || "Processing",
+            pay_status: detail.pay_status || "Pending"
         });
     };
 
@@ -296,7 +302,7 @@ const OrderList = () => {
     const handleEditFormChange = (e, index, field) => {
         const { value } = e.target;
         
-        if (field === 'orderId' || field === 'companyName') {
+        if (field === 'orderId' || field === 'companyName' || field === 'od_status' || field === 'pay_status') {
             setEditFormData(prev => ({ ...prev, [field]: value }));
         } else {
             const updatedItems = [...editFormData.items];
@@ -317,6 +323,8 @@ const OrderList = () => {
         const orderData = {
             od_Id: editFormData.orderId,
             company_name: editFormData.companyName,
+            od_status: editFormData.od_status,
+            pay_status: editFormData.pay_status,
             od_Tamount: totalAmount,
             items: editFormData.items.map(item => ({
                 name: item.name,
@@ -345,6 +353,8 @@ const OrderList = () => {
                             companyName: updatedOrder.company_name,
                             items: updatedOrder.items,
                             totalAmount: updatedOrder.od_Tamount,
+                            od_status: updatedOrder.od_status,
+                            pay_status: updatedOrder.pay_status,
                             type: detail.type
                         }
                         : detail
@@ -721,7 +731,7 @@ const OrderList = () => {
                                     <td className="py-3 px-4 font-medium text-white">{order.od_Id}</td>
                                     <td className="py-3 px-4 text-gray-300">{order.company_name}</td>
                                     <td className="py-3 px-4">
-                                        <span className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${order.od_status === "Completed" ? "bg-green-600 text-white" : order.od_status === "Delivered" ? "bg-blue-600 text-white" : order.od_status === "Shipped" ? "bg-yellow-600 text-white" : "bg-orange-600 text-white"}`}>
+                                        <span className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${order.od_status === "Delivered" ? "bg-green-600 text-white" : order.od_status === "Shipped" ? "bg-yellow-600 text-white" : "bg-orange-600 text-white"}`}>
                                             {order.od_status}
                                         </span>
                                     </td>
@@ -774,6 +784,8 @@ const OrderList = () => {
                                 <th className="py-3 px-4">Order ID</th>
                                 <th className="py-3 px-4">Company Name</th>
                                 <th className="py-3 px-4">Items</th>
+                                <th className="py-3 px-4">Order Status</th>
+                                <th className="py-3 px-4">Payment Status</th>
                                 <th className="py-3 px-4">Total Amount</th>
                                 <th className="py-3 px-4">Actions</th>
                             </tr>
@@ -847,6 +859,27 @@ const OrderList = () => {
                                                 </div>
                                             </td>
                                             <td className="py-3 px-4">
+                                                <select
+                                                    value={editFormData.od_status}
+                                                    onChange={(e) => handleEditFormChange(e, null, 'od_status')}
+                                                    className="w-full p-2 rounded bg-gray-700 text-white"
+                                                >
+                                                    <option value="Processing">Processing</option>
+                                                    <option value="Shipped">Shipped</option>
+                                                    <option value="Delivered">Delivered</option>
+                                                </select>
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                <select
+                                                    value={editFormData.pay_status}
+                                                    onChange={(e) => handleEditFormChange(e, null, 'pay_status')}
+                                                    className="w-full p-2 rounded bg-gray-700 text-white"
+                                                >
+                                                    <option value="Pending">Pending</option>
+                                                    <option value="Paid">Paid</option>
+                                                </select>
+                                            </td>
+                                            <td className="py-3 px-4">
                                                 ${calculateTotal(editFormData.items).toFixed(2)}
                                             </td>
                                             <td className="py-3 px-4">
@@ -874,10 +907,27 @@ const OrderList = () => {
                                                 <div className="flex flex-col items-start">
                                                     {detail.items.map((item, idx) => (
                                                         <div key={idx} className="mb-1 text-left">
-                                                            {item.name} - {item.quantity} x ${item.price.toFixed(2)}
+                                                            {item.name}
                                                         </div>
                                                     ))}
                                                 </div>
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                <span className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${
+                                                    detail.od_status === "Delivered" ? "bg-green-600 text-white" : 
+                                                    detail.od_status === "Shipped" ? "bg-yellow-600 text-white" : 
+                                                    "bg-orange-600 text-white"
+                                                }`}>
+                                                    {detail.od_status}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                <span className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${
+                                                    detail.pay_status === "Paid" ? "bg-green-600 text-white" : 
+                                                    "bg-red-600 text-white"
+                                                }`}>
+                                                    {detail.pay_status}
+                                                </span>
                                             </td>
                                             <td className="py-3 px-4 text-gray-300">${detail.totalAmount.toFixed(2)}</td>
                                             <td className="py-3 px-4">
