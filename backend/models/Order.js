@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
 
 const OrderItemSchema = new mongoose.Schema({
-  manufacturingID: { type: String, required: true },
-  qty: { type: Number, required: true, min: 1 },
+  name: { type: String, required: true },
+  quantity: { type: Number, required: true, min: 1 },
+  price: { type: Number, required: true, min: 0 }
 });
 
 const OrderSchema = new mongoose.Schema({
@@ -21,7 +22,7 @@ const OrderSchema = new mongoose.Schema({
   od_Tamount: { type: Number, required: true },
   od_date: { type: Date, default: Date.now },
   overdue_date: { type: Date, default: null },
-  od_items: { type: [OrderItemSchema], default: [] },
+  items: { type: [OrderItemSchema], default: [] }
 });
 
 const Order = mongoose.model("Order", OrderSchema);

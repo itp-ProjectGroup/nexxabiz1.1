@@ -73,3 +73,15 @@ export const updateOrderPaymentStatus = async (req, res) => {
         res.status(500).json({ message: "Server error", error: error.toString() });
     }
 };
+
+export const createOrder = async (req, res) => {
+    try {
+        const orderData = req.body;
+        const newOrder = new Order(orderData);
+        const savedOrder = await newOrder.save();
+        res.status(201).json(savedOrder);
+    } catch (error) {
+        console.error("Error creating order:", error);
+        res.status(500).json({ message: "Error creating order", error: error.message });
+    }
+};
