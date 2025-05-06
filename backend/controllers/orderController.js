@@ -47,4 +47,29 @@ export const getOrderById = async (req, res) => {
     }
 };
 
+export const updateOrderPaymentStatus = async (req, res) => {
+    const { orderId } = req.params;
+    const { pay_status } = req.body;
 
+    if (!pay_status) {
+        return res.status(400).json({ message: "Payment status is required" });
+    }
+
+    try {
+        const order = await Order.findOne({ od_Id: orderId });
+        if (!order) {
+            return res.status(404).json({ message: "Order not found" });
+        }
+
+        order.pay_status = pay_status;
+        await order.save();
+
+        res.status(200).json({ 
+            message: "Order payment status updated successfully", 
+            status: pay_status 
+        });
+    } catch (error) {
+        console.error("Error updating order payment status:", error);
+        res.status(500).json({ message: "Server error", error: error.toString() });
+    }
+};

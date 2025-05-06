@@ -405,6 +405,8 @@ const FinDashboard = () => {
                 isOpen={isPaymentModalOpen} 
                 onClose={handleClosePaymentModal} 
                 onUpdated={handlePaymentSuccess}
+                products={products}
+                payments={payments}
             />
 
             <PaymentDetails 
