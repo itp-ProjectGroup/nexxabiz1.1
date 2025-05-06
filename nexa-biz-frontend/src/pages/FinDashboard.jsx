@@ -80,21 +80,27 @@ const FinDashboard = () => {
         }
     };
 
-    // Enrich orders with company names from users
     useEffect(() => {
         if (orders.length > 0 && users.length > 0) {
+            const shouldUpdate = orders.some(order => {
+                const associatedUser = users.find(user => user.userID === order.userID);
+                return associatedUser && order.company_name !== associatedUser.u_companyName;
+            });
+    
+            if (!shouldUpdate) return;
+    
             const enrichedOrders = orders.map(order => {
-                // Find the user associated with this order
                 const associatedUser = users.find(user => user.userID === order.userID);
                 return {
                     ...order,
-                    // Use u_companyName from the user if available, otherwise fallback to existing company_name
                     company_name: associatedUser?.u_companyName || order.company_name
                 };
             });
+    
             setOrders(enrichedOrders);
         }
-    }, [users]);
+    }, [users, orders]);
+    
 
     // Separate states for date-filtered and tab-filtered data
     const [dateFilteredOrders, setDateFilteredOrders] = useState([]);
@@ -831,8 +837,12 @@ const FinDashboard = () => {
                 isOpen={isPaymentDetailsModalOpen}
                 onClose={() => setIsPaymentDetailsModalOpen(false)}
                 order={orders.find(o => o.od_Id === selectedPayment?.orderId)} 
-                onDelete={fetchPayments}
+                onDelete={async () => {
+                    await fetchPayments();  // Refresh payments list
+                    await fetchOrders();    // Refresh orders so pay_status updates in UI
+                }}
             />
+
         </div>
     );
 };

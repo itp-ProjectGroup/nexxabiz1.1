@@ -18,7 +18,6 @@ const OrderSchema = new mongoose.Schema({
     required: true, 
     enum: ["Paid", "Unpaid", "Pending"] 
   },
-  od_Tamount: { type: Number, required: true },
   od_date: { type: Date, default: Date.now },
   overdue_date: { type: Date, default: null },
   od_items: { type: [OrderItemSchema], default: [] },

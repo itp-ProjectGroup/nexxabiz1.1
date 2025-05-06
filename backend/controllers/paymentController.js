@@ -1,4 +1,5 @@
 import Payment from "../models/Payment.js";
+import Order from "../models/Order.js";
 
 // Controller function to handle payment creation
 export const createPayment = async (req, res) => {
@@ -62,10 +63,24 @@ export const deletePayment = async (req, res) => {
     const { paymentId } = req.params;
 
     try {
+        // Step 1: Find and delete the payment
         const deleted = await Payment.findOneAndDelete({ paymentId });
-        if (!deleted) return res.status(404).json({ message: "Payment not found" });
+        if (!deleted) {
+            return res.status(404).json({ message: "Payment not found" });
+        }
 
-        res.status(200).json({ message: "Payment deleted" });
+        // Step 2: Update the related order's pay_status to 'Pending'
+        const updatedOrder = await Order.findOneAndUpdate(
+            { od_Id: deleted.orderId },
+            { pay_status: "Pending" },
+            { new: true }
+        );
+
+        if (!updatedOrder) {
+            return res.status(404).json({ message: "Related order not found" });
+        }
+
+        res.status(200).json({ message: "Payment deleted, order status updated", updatedOrder });
     } catch (err) {
         res.status(500).json({ message: "Server error", error: err });
     }
