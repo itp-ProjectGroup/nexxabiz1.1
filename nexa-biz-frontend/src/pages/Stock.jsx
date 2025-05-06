@@ -203,6 +203,20 @@ const Stock = () => {
     };
   };
 
+  // Calculate key business metrics
+  const calculateMetrics = () => {
+    // Total count of products (sum of all quantities)
+    const totalProductCount = stockData.reduce((sum, item) => sum + item.quantity, 0);
+
+    // Target revenue (sum of price × quantity for each product)
+    const targetRevenue = stockData.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    return {
+      totalProductCount,
+      targetRevenue
+    };
+  };
+
   if (loading) return (
     <div className="flex justify-center items-center h-64">
       <div className="text-center">
@@ -235,6 +249,7 @@ const Stock = () => {
   const quantities = stockData.map(item => item.quantity);
   const prices = stockData.map(item => item.price);
   const monthlyData = getProductsByMonth();
+  const metrics = calculateMetrics();
 
   const barChartData = {
     labels: productNames,
@@ -367,6 +382,25 @@ const Stock = () => {
       </div>
 
       <h2 className="text-2xl font-bold mb-4 text-white">Stock Management</h2>
+
+      {/* Metric Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="bg-blue-900/80 p-4 rounded-lg border border-blue-800 shadow-lg">
+          <div className="flex flex-col">
+            <h3 className="text-lg font-semibold text-blue-200 mb-1">Total Product Count</h3>
+            <p className="text-3xl font-bold text-white">{metrics.totalProductCount.toLocaleString()}</p>
+            <p className="text-sm text-blue-300 mt-1">Sum of all product quantities</p>
+          </div>
+        </div>
+
+        <div className="bg-green-900/80 p-4 rounded-lg border border-green-800 shadow-lg">
+          <div className="flex flex-col">
+            <h3 className="text-lg font-semibold text-green-200 mb-1">Target Revenue</h3>
+            <p className="text-3xl font-bold text-white">${metrics.targetRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+            <p className="text-sm text-green-300 mt-1">Based on current inventory and prices</p>
+          </div>
+        </div>
+      </div>
 
       <div id="chart-section" className="mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
