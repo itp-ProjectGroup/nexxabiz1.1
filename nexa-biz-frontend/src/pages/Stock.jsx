@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Bar, Line, Pie } from 'react-chartjs-2';
+import { Bar, Line } from 'react-chartjs-2';
+import Papa from 'papaparse';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -60,6 +63,71 @@ const Stock = () => {
 
     fetchStockData();
   }, []);
+
+  // Function to export data as CSV
+  const handleExportCSV = () => {
+    const csvData = stockData.map(item => ({
+      'Product Name': item.productName,
+      'Quantity': item.quantity,
+      'Price': item.price,
+      'Added Date': item.manufacturingDate,
+      'Last Updated': new Date(item.lastUpdated).toLocaleDateString()
+    }));
+
+    const csv = Papa.unparse(csvData);
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "stock_report.csv");
+    document.body.appendChild(link); // Required for Firefox
+    link.click();
+    document.body.removeChild(link); // Clean up
+  };
+
+  // Function to export data as PDF
+  const handleExportPDF = async () => {
+    const doc = new jsPDF('p', 'mm', 'a4');
+
+    const chartSection = document.querySelector("#chart-section");
+    if (!chartSection) {
+      console.error("Chart section not found");
+      return;
+    }
+
+    try {
+      const canvas = await html2canvas(chartSection, { scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+
+      const imgProps = doc.getImageProperties(imgData);
+      const pdfWidth = doc.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      doc.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
+
+      // Add a new page for the table
+      doc.addPage();
+
+      doc.setFontSize(14);
+      doc.text("Stock Data Table", 14, 20);
+
+      let startY = 30;
+
+      stockData.forEach((item, index) => {
+        doc.setFontSize(10);
+        doc.text(
+          `• ${item.productName}, Qty: ${item.quantity}, Price: $${item.price.toFixed(2)}, Added: ${item.manufacturingDate}, Updated: ${new Date(item.lastUpdated).toLocaleDateString()}`,
+          14,
+          startY + index * 7
+        );
+      });
+
+      doc.save("stock_report.pdf");
+    } catch (err) {
+      console.error("Error generating PDF:", err);
+    }
+  };
 
   // Function to group products by month
   const getProductsByMonth = () => {
@@ -202,27 +270,44 @@ const Stock = () => {
 
   return (
     <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Stock Management</h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-2">Stock Quantities</h3>
-          <Bar data={barChartData} options={chartOptions} />
-        </div>
-
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-2">Price Trends</h3>
-          <Line data={lineChartData} options={chartOptions} />
-        </div>
+      <div className="flex gap-4 mb-6">
+        <button
+          onClick={handleExportCSV}
+          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+        >
+          Export CSV
+        </button>
+        <button
+          onClick={handleExportPDF}
+          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
+        >
+          Export PDF
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 mb-8">
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-2">Monthly Product Additions</h3>
-          <Bar
-            data={monthlyChartData}
-            options={monthlyChartOptions}
-          />
+      <h2 className="text-2xl font-bold mb-4">Stock Management</h2>
+
+      <div id="chart-section" className="mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="text-lg font-semibold mb-2">Stock Quantities</h3>
+            <Bar data={barChartData} options={chartOptions} />
+          </div>
+
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="text-lg font-semibold mb-2">Price Trends</h3>
+            <Line data={lineChartData} options={chartOptions} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 mb-8">
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="text-lg font-semibold mb-2">Monthly Product Additions</h3>
+            <Bar
+              data={monthlyChartData}
+              options={monthlyChartOptions}
+            />
+          </div>
         </div>
       </div>
 
@@ -242,11 +327,11 @@ const Stock = () => {
             <tbody>
               {stockData.map((item) => (
                 <tr key={item.id} className="hover:bg-gray-50">
-                  <td className=" py-2 px-4 border-b mr-4 ">{item.productName}</td>
-                  <td className=" py-2 px-4 border-b mr-4 ">{item.quantity}</td>
-                  <td className=" py-2 px-4 border-b mr-4 ">${item.price.toFixed(2)}</td>
-                  <td className=" py-2 px-4 border-b mr-4 ">{item.manufacturingDate}</td>
-                  <td className=" py-2 px-4 border-b mr-4 ">
+                  <td className="py-2 px-4 border-b">{item.productName}</td>
+                  <td className="py-2 px-4 border-b">{item.quantity}</td>
+                  <td className="py-2 px-4 border-b">${item.price.toFixed(2)}</td>
+                  <td className="py-2 px-4 border-b">{item.manufacturingDate}</td>
+                  <td className="py-2 px-4 border-b">
                     {new Date(item.lastUpdated).toLocaleDateString()}
                   </td>
                 </tr>
