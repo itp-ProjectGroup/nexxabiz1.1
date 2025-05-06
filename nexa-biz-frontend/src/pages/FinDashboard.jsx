@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import DashboardCard from "../components/DashboardCard";
-import { FaMoneyBillWave, FaClipboardList } from "react-icons/fa";
+import { FaMoneyBillWave, FaClipboardList, FaFileExport } from "react-icons/fa"; // Added FaFileExport
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import SetOverdue from "../modal/SetOverdue";
@@ -10,7 +10,7 @@ import PaymentGateway from "../modal/PaymentGateway";
 import PaymentDetails from "../modal/PaymentDetails";
 import CashFlowChart from "../components/CashFlowChart";
 import PaymentReminderCard from "../components/PaymentReminderCard";
-import DateRangeFilter from "../components/DateRangeFilter"; // Import the new component
+import DateRangeFilter from "../components/DateRangeFilter";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -28,6 +28,8 @@ const FinDashboard = () => {
     const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
     const [filteredOrders, setFilteredOrders] = useState([]);
     const [filteredPayments, setFilteredPayments] = useState([]);
+    const [exportType, setExportType] = useState(''); // State for export type modal
+    const [showExportOptions, setShowExportOptions] = useState(false); // State to control export options dropdown
 
     useEffect(() => {
         fetchOrders();
@@ -146,6 +148,171 @@ const FinDashboard = () => {
         // This is the fix: We need to set filteredPayments when tab changes to "allp"
         setFilteredPayments(dateFilteredPayments);
     }, [dateFilteredOrders, dateFilteredPayments, activeTab]);
+
+    // Function to generate export data
+    const exportData = (format) => {
+        setShowExportOptions(false); // Close dropdown after selection
+        
+        // Determine which data to export based on active tab
+        let dataToExport = [];
+        let filename = "";
+        let headers = [];
+        
+        if (activeTab === "allp") {
+            filename = `payment_report_${new Date().toISOString().split('T')[0]}`;
+            headers = ["Payment ID", "Order ID", "Method", "Date", "Amount"];
+            
+            dataToExport = filteredPayments.map(payment => ({
+                "Payment ID": payment.paymentId,
+                "Order ID": payment.orderId,
+                "Method": payment.paymentMethod,
+                "Date": new Date(payment.createdAt).toLocaleDateString(),
+                "Amount": `$${payment.paymentAmount.toFixed(2)}`
+            }));
+        } else {
+            // For order tabs
+            filename = `order_report_${activeTab}_${new Date().toISOString().split('T')[0]}`;
+            
+            // Determine headers based on activeTab
+            headers = ["Order ID", "Company Name", "Order Status"];
+            
+            if (activeTab !== "Pending" && activeTab !== "overdue") {
+                headers.push("Payment Status");
+            }
+            
+            headers.push("Total Amount");
+            
+            if (activeTab === "Pending" || activeTab === "overdue") {
+                headers.push("Paid Amount");
+            }
+            
+            if (activeTab === "overdue") {
+                headers.push("Overdue Date");
+            }
+            
+            // Map order data based on the tab
+            dataToExport = filteredOrders.map(order => {
+                const data = {
+                    "Order ID": order.od_Id,
+                    "Company Name": order.company_name,
+                    "Order Status": order.od_status
+                };
+                
+                if (activeTab !== "Pending" && activeTab !== "overdue") {
+                    data["Payment Status"] = order.pay_status;
+                }
+                
+                data["Total Amount"] = `$${calculateOrderTotal(order).toFixed(2)}`;
+                
+                if (activeTab === "Pending" || activeTab === "overdue") {
+                    data["Paid Amount"] = `$${getPaidAmountForOrder(order.od_Id).toFixed(2)}`;
+                }
+                
+                if (activeTab === "overdue") {
+                    data["Overdue Date"] = order.overdue_date ? new Date(order.overdue_date).toLocaleDateString() : "N/A";
+                }
+                
+                return data;
+            });
+        }
+        
+        // Export based on selected format
+        if (format === "csv") {
+            exportToCSV(dataToExport, headers, filename);
+        } else if (format === "pdf") {
+            exportToPDF(dataToExport, headers, filename);
+        }
+    };
+    
+    // Function to export data as CSV
+    const exportToCSV = (data, headers, filename) => {
+        // Create CSV content
+        let csvContent = headers.join(",") + "\n";
+        
+        data.forEach(item => {
+            const row = headers.map(header => {
+                // Wrap values in quotes to handle commas in the data
+                let value = item[header] || "";
+                // Escape quotes by doubling them
+                value = String(value).replace(/"/g, '""');
+                return `"${value}"`;
+            });
+            csvContent += row.join(",") + "\n";
+        });
+        
+        // Create blob and download
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `${filename}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+    
+    // Function to export data as PDF
+    const exportToPDF = (data, headers, filename) => {
+        // For PDF export, we'll use a simple approach that works in the browser
+        // In a real-world scenario, you might want to use a library like jsPDF or pdfmake
+        
+        // Create a printable HTML page
+        const printWindow = window.open('', '_blank');
+        
+        // Create PDF content as an HTML table
+        let htmlContent = `
+            <html>
+            <head>
+                <title>${filename}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background-color: #f2f2f2; }
+                    h1 { text-align: center; }
+                    .no-print { margin: 20px 0; text-align: center; }
+                    @media print {
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>${filename.replace(/_/g, ' ').toUpperCase()}</h1>
+                <table>
+                    <thead>
+                        <tr>
+                            ${headers.map(header => `<th>${header}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        // Add data rows
+        data.forEach(item => {
+            htmlContent += '<tr>';
+            headers.forEach(header => {
+                htmlContent += `<td>${item[header] || ''}</td>`;
+            });
+            htmlContent += '</tr>';
+        });
+        
+        // Close the table and add print instructions
+        htmlContent += `
+                    </tbody>
+                </table>
+                <div class="no-print">
+                    <p>Click the button below to print or save as PDF</p>
+                    <button onclick="window.print()">Print / Save as PDF</button>
+                </div>
+            </body>
+            </html>
+        `;
+        
+        // Write to the new window and trigger print
+        printWindow.document.open();
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+    };
 
     const handleDateFilterChange = (filter) => {
         setDateFilter(filter);
@@ -329,7 +496,43 @@ const FinDashboard = () => {
                             </span>
                         </div>
                     )}
-                    <DateRangeFilter onFilterChange={handleDateFilterChange} />
+                    <div className="flex items-center">
+                        <DateRangeFilter onFilterChange={handleDateFilterChange} />
+                        
+                        {/* Export Button and Dropdown */}
+                        <div className="relative ml-2">
+                            <button 
+                                onClick={() => setShowExportOptions(!showExportOptions)}
+                                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center"
+                            >
+                                <FaFileExport className="mr-2" /> Export
+                            </button>
+                            
+                            {/* Export Options Dropdown */}
+                            {showExportOptions && (
+                                <div className="absolute right-0 mt-2 w-48 bg-gray-700 rounded-md shadow-lg z-10">
+                                    <ul className="py-1">
+                                        <li>
+                                            <button 
+                                                onClick={() => exportData("csv")}
+                                                className="block px-4 py-2 text-sm text-white hover:bg-gray-600 w-full text-left"
+                                            >
+                                                Export as CSV
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button 
+                                                onClick={() => exportData("pdf")}
+                                                className="block px-4 py-2 text-sm text-white hover:bg-gray-600 w-full text-left"
+                                            >
+                                                Export as PDF
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
 
