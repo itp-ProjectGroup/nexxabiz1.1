@@ -2,7 +2,26 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import DashboardCard from "../components/DashboardCard";
+import { Bar } from 'react-chartjs-2';
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend
+} from 'chart.js';
 // Removed React Grid Layout imports as we're using a simpler grid approach
+
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend
+);
 
 const OrderList = () => {
     const [orders, setOrders] = useState([]);
@@ -75,6 +94,82 @@ const OrderList = () => {
     // Calculate return orders count
     const calculateReturnOrders = () => {
         return orderDetails.filter(detail => detail.type === "return").length;
+    };
+
+    // Calculate total amount for current orders
+    const calculateCurrentOrdersAmount = () => {
+        return orderDetails
+            .filter(detail => detail.type === "current")
+            .reduce((total, detail) => total + detail.totalAmount, 0);
+    };
+
+    // Calculate total amount for return orders
+    const calculateReturnOrdersAmount = () => {
+        return orderDetails
+            .filter(detail => detail.type === "return")
+            .reduce((total, detail) => total + detail.totalAmount, 0);
+    };
+
+    // Chart data
+    const chartData = {
+        labels: ['Current Orders', 'Return Orders'],
+        datasets: [
+            {
+                label: 'Order Amounts',
+                data: [calculateCurrentOrdersAmount(), calculateReturnOrdersAmount()],
+                backgroundColor: [
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(255, 99, 132, 0.6)'
+                ],
+                borderColor: [
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(255, 99, 132, 1)'
+                ],
+                borderWidth: 1
+            }
+        ]
+    };
+
+    const chartOptions = {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'top',
+                labels: {
+                    color: 'white'
+                }
+            },
+            title: {
+                display: true,
+                text: 'Order Summary',
+                color: 'white',
+                font: {
+                    size: 16
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    color: 'white',
+                    callback: function(value) {
+                        return '$' + value.toFixed(2);
+                    }
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            },
+            x: {
+                ticks: {
+                    color: 'white'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            }
+        }
     };
 
     // Add new item field to Add Order form
@@ -661,30 +756,35 @@ const OrderList = () => {
             </div>
             
             {/* Statistics Cards */}
-            <div className="flex gap-6 mb-6">
-                <div className="w-45 h-38">
-                    <DashboardCard
-                        title="Total Orders"
-                        value={calculateTotalOrders()}
-                        icon="📦"
-                        description="Total number of orders in the system"
-                        disableCurrencyFormatting={true}
-                    />
+            <div className="flex flex-col mb-6">
+                <div className="flex gap-6 mb-0">
+                    <div className="w-45 h-38">
+                        <DashboardCard
+                            title="Total Orders"
+                            value={calculateTotalOrders()}
+                            icon="📦"
+                            description="Total number of orders in the system"
+                            disableCurrencyFormatting={true}
+                        />
+                    </div>
+                    
+                    <div className="w-47 h-38">
+                        <DashboardCard
+                            title="Return Orders"
+                            value={calculateReturnOrders()}
+                            icon="↩️"
+                            description="Total number of return orders"
+                            disableCurrencyFormatting={true}
+                        />
+                    </div>
+
+                    {/* Order Summary Chart */}
+                    <div className="flex-1 bg-gray-800 p-4 rounded-lg shadow-lg">
+                        <Bar data={chartData} options={chartOptions} />
+                    </div>
                 </div>
-                
-                <div className="w-47 h-38">
-                    <DashboardCard
-                        title="Return Orders"
-                        value={calculateReturnOrders()}
-                        icon="↩️"
-                        description="Total number of return orders"
-                        disableCurrencyFormatting={true}
-                    />
-                </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-6">
-                <div className="w-98 h-36">
+
+                <div className="w-98 h-36 -mt-40">
                     <DashboardCard
                         title="Success Rate"
                         value={`${((calculateTotalOrders() - calculateReturnOrders()) / calculateTotalOrders() * 100).toFixed(1)}%`}
