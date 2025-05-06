@@ -210,17 +210,17 @@ const PaymentGateway = ({ order, isOpen, onClose, onUpdated, products, payments 
                 <div className="mb-4">
                     <div className="flex justify-between mb-1 text-sm">
                         <span className="text-gray-400">Order ID</span>
-                        <span className="font-medium">{order.od_Id}</span>
+                        <span className="font-medium text-white">{order.od_Id}</span>
                     </div>
                     <div className="flex justify-between mb-1 text-sm">
                         <span className="text-gray-400">Company</span>
-                        <span className="font-medium truncate max-w-[65%]">{order.company_name}</span>
+                        <span className="font-medium truncate max-w-[65%] text-white">{order.company_name}</span>
                     </div>
                 </div>
 
                 {/* Payment Progress */}
                 <div className="mb-4">
-                    <div className="flex justify-between mb-1 text-xs">
+                    <div className="flex justify-between mb-1 text-xs text-gray-400">
                         <span>Payment Progress</span>
                         <span>{completionPercentage.toFixed(0)}%</span>
                     </div>
@@ -234,11 +234,11 @@ const PaymentGateway = ({ order, isOpen, onClose, onUpdated, products, payments 
                     <div className="grid grid-cols-2 gap-2 mt-3">
                         <div className="bg-gray-800 p-2 rounded-lg">
                             <p className="text-gray-400 text-xs">Order Total</p>
-                            <p className="text-base font-bold">${orderTotal.toFixed(2)}</p>
+                            <p className="text-base font-bold text-white">${orderTotal.toFixed(2)}</p>
                         </div>
                         <div className="bg-gray-800 p-2 rounded-lg">
                             <p className="text-gray-400 text-xs">Amount Paid</p>
-                            <p className="text-base font-bold">${paidAmount.toFixed(2)}</p>
+                            <p className="text-base font-bold text-white">${paidAmount.toFixed(2)}</p>
                         </div>
                     </div>
                     
@@ -315,7 +315,7 @@ const PaymentGateway = ({ order, isOpen, onClose, onUpdated, products, payments 
                         <div className="space-y-3">
                             <div>
                                 <label className="block text-xs font-medium text-gray-300 mb-1">Payment Method</label>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-2 gap-2 text-white">
                                     {[
                                         {value: 'Credit Card', icon: <CreditCard size={16} />, label: 'Credit Card'},
                                         {value: 'Bank Transfer', icon: <Building2 size={16} />, label: 'Bank Transfer'},
@@ -368,20 +368,20 @@ const PaymentGateway = ({ order, isOpen, onClose, onUpdated, products, payments 
                     {activeStep === 3 && (
                         <div className="space-y-3">
                             <div className="bg-gray-800 rounded-lg p-3">
-                                <h3 className="text-sm font-medium mb-2">Payment Summary</h3>
+                                <h3 className="text-sm font-medium mb-2 text-white">Payment Summary</h3>
                                 
                                 <div className="space-y-1.5 text-sm">
                                     <div className="flex justify-between">
                                         <span className="text-gray-400">Payment ID</span>
-                                        <span className="text-xs">{paymentId}</span>
+                                        <span className="text-xs text-gray-400">{paymentId}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-400">Amount</span>
-                                        <span className="font-medium">${parseFloat(paymentAmount).toFixed(2)}</span>
+                                        <span className="font-medium text-gray-400">${parseFloat(paymentAmount).toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="text-gray-400">Method</span>
-                                        <div className="flex items-center">
+                                        <div className="flex items-center text-gray-400">
                                             {getPaymentMethodIcon(paymentMethod)}
                                             <span>{paymentMethod}</span>
                                         </div>
