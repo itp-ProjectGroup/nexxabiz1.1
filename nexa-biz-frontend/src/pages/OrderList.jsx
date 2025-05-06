@@ -624,7 +624,7 @@ const OrderList = () => {
 
             {/* Dashboard Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div className="h-36">
+                <div className="w-98 h-36">
                     <DashboardCard
                         title="Total Sales"
                         value={`$${calculateTotalSales().toFixed(2)}`}
@@ -661,8 +661,8 @@ const OrderList = () => {
             </div>
             
             {/* Statistics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div className="h-36">
+            <div className="flex gap-6 mb-6">
+                <div className="w-45 h-38">
                     <DashboardCard
                         title="Total Orders"
                         value={calculateTotalOrders()}
@@ -672,7 +672,7 @@ const OrderList = () => {
                     />
                 </div>
                 
-                <div className="h-36">
+                <div className="w-47 h-38">
                     <DashboardCard
                         title="Return Orders"
                         value={calculateReturnOrders()}
@@ -681,8 +681,10 @@ const OrderList = () => {
                         disableCurrencyFormatting={true}
                     />
                 </div>
-                
-                <div className="h-36">
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-6">
+                <div className="w-98 h-36">
                     <DashboardCard
                         title="Success Rate"
                         value={`${((calculateTotalOrders() - calculateReturnOrders()) / calculateTotalOrders() * 100).toFixed(1)}%`}
