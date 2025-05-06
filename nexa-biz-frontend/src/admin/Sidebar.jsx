@@ -123,6 +123,35 @@ const Sidebar = () => {
                     </Link>
                 </li>
 
+                {/* Product management */}
+                <li>
+    <Link
+        to="/admin/products"
+        className={`block p-2 relative transition-all duration-300 group ${
+            isActive("/admin/products")
+                ? "text-blue-400 font-medium"
+                : "text-gray-300 hover:text-white"
+        }`}
+    >
+        {isActive("/admin/products") && !isCollapsed && (
+            <span className="absolute left-0 top-0 h-full w-1 bg-blue-400"></span>
+        )}
+        {!isActive("/admin/products") && !isCollapsed && (
+            <span className="absolute left-0 top-0 h-full w-0 bg-blue-400/20 transition-all duration-300 group-hover:w-full rounded-md"></span>
+        )}
+        <div className="relative z-10">
+            <span className={`flex items-center ${isCollapsed ? "justify-center" : "justify-between"}`}>
+                {!isCollapsed && <span>Products</span>}
+                {/* Box icon (Product icon) */}
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 min-w-6 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 2a1 1 0 00-1 1v2H3a1 1 0 100 2h1v13a2 2 0 002 2h12a2 2 0 002-2V7h1a1 1 0 100-2h-2V3a1 1 0 00-1-1H6zm1 3V4h10v1H7zm2 5a1 1 0 112 0v2a1 1 0 11-2 0v-2zm6 0a1 1 0 112 0v2a1 1 0 11-2 0v-2z" />
+                </svg>
+            </span>
+        </div>
+    </Link>
+</li>
+
+
                 {/* order management */}
                 <li>
                     <Link 

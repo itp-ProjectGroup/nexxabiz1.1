@@ -389,7 +389,7 @@ const PaymentGateway = ({ order, isOpen, onClose, onUpdated, products, payments 
                                     {remark && (
                                         <div className="flex justify-between">
                                             <span className="text-gray-400">Remark</span>
-                                            <span className="text-right max-w-[60%] text-xs truncate">{remark}</span>
+                                            <span className="text-right max-w-[60%] text-xs truncate text-gray-400">{remark}</span>
                                         </div>
                                     )}
                                 </div>
