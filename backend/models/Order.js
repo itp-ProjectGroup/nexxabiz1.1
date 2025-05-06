@@ -22,6 +22,7 @@ const OrderSchema = new mongoose.Schema({
   od_date: { type: Date, default: Date.now },
   overdue_date: { type: Date, default: null },
   od_items: { type: [OrderItemSchema], default: [] },
+  userID: { type: String, required: true }, // <- New field added here
 });
 
 const Order = mongoose.model("Order", OrderSchema);

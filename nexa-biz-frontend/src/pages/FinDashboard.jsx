@@ -18,6 +18,7 @@ const FinDashboard = () => {
     const [orders, setOrders] = useState([]);
     const [payments, setPayments] = useState([]);
     const [products, setProducts] = useState([]);
+    const [users, setUsers] = useState([]); // Added state for users
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("all");
     const [selectedPayment, setSelectedPayment] = useState(null);
@@ -35,7 +36,17 @@ const FinDashboard = () => {
         fetchOrders();
         fetchPayments();
         fetchProducts();
+        fetchUsers(); // Added function call to fetch users
     }, []);
+
+    const fetchUsers = async () => {
+        try {
+            const response = await axios.get("http://localhost:5000/api/users");
+            setUsers(response.data);
+        } catch (error) {
+            console.error("Error fetching users:", error);
+        }
+    };
 
     const fetchProducts = async () => {
         try {
@@ -65,6 +76,22 @@ const FinDashboard = () => {
             setLoading(false);
         }
     };
+
+    // Enrich orders with company names from users
+    useEffect(() => {
+        if (orders.length > 0 && users.length > 0) {
+            const enrichedOrders = orders.map(order => {
+                // Find the user associated with this order
+                const associatedUser = users.find(user => user.userID === order.userID);
+                return {
+                    ...order,
+                    // Use u_companyName from the user if available, otherwise fallback to existing company_name
+                    company_name: associatedUser?.u_companyName || order.company_name
+                };
+            });
+            setOrders(enrichedOrders);
+        }
+    }, [users]);
 
     // Separate states for date-filtered and tab-filtered data
     const [dateFilteredOrders, setDateFilteredOrders] = useState([]);
