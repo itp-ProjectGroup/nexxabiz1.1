@@ -147,333 +147,332 @@ const ProductForm = () => {
   };
 
   return (
-    <div className='max-w-4xl p-6 mx-auto bg-indigo-600 rounded-md shadow-md dark:bg-gray-800 mt-20'>
-    <h1 className="text-xl font-bold text-white capitalize dark:text-white">Add New Product</h1>
+    <div className="max-w-4xl mx-auto p-6 bg-gray-800 rounded-lg shadow-lg">
+      <h1 className="text-2xl font-bold text-white mb-6">Add New Product</h1>
 
-    {/* Tab Navigation */}
-    <div className="flex border-b border-gray-200 dark:border-gray-700 mt-4">
-      <button
-        className={`py-2 px-4 font-medium ${activeTab === 'details' ? 'text-white border-b-2 border-white' : 'text-gray-300'}`}
-        onClick={() => setActiveTab('details')}
-      >
-        Product Details
-      </button>
-      <button
-        className={`py-2 px-4 font-medium ${activeTab === 'pricing' ? 'text-white border-b-2 border-white' : 'text-gray-300'}`}
-        onClick={() => setActiveTab('pricing')}
-      >
-        Pricing
-      </button>
-      <button
-        className={`py-2 px-4 font-medium ${activeTab === 'images' ? 'text-white border-b-2 border-white' : 'text-gray-300'}`}
-        onClick={() => setActiveTab('images')}
-      >
-        Images
-      </button>
-    </div>
+      {/* Tab Navigation */}
+      <div className="flex border-b border-gray-700 mb-6">
+        <button
+          className={`py-2 px-4 font-medium text-sm ${activeTab === 'details' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-white'}`}
+          onClick={() => setActiveTab('details')}
+        >
+          Product Details
+        </button>
+        <button
+          className={`py-2 px-4 font-medium text-sm ${activeTab === 'pricing' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-white'}`}
+          onClick={() => setActiveTab('pricing')}
+        >
+          Pricing
+        </button>
+        <button
+          className={`py-2 px-4 font-medium text-sm ${activeTab === 'images' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-white'}`}
+          onClick={() => setActiveTab('images')}
+        >
+          Images
+        </button>
+      </div>
 
-    {message && (
-      <p className={`mt-2 p-2 text-center text-white ${message.type === "success" ? "bg-green-500" : "bg-red-500"}`}>
-        {message.text}
-      </p>
-    )}
-
-    <form onSubmit={handleSubmit} className="product-form">
-      {/* Details Tab */}
-      {activeTab === 'details' && (
-        <div className="grid grid-cols-1 gap-6 mt-4 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <label className='text-white dark:text-gray-200' htmlFor="productName">Product Name:</label>
-            <input
-              className='block w-full px-4 py-2 mt-2 text-gray-700 bg-white border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none focus:ring'
-              type="text"
-              id="productName"
-              name="productName"
-              value={product.productName}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div>
-            <label className='text-white dark:text-gray-200' htmlFor="manufacturingDate">Manufacturing Date:</label>
-            <input
-              className='block w-full px-4 py-2 mt-2 text-gray-700 bg-white border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none focus:ring'
-              type="date"
-              id="manufacturingDate"
-              name="manufacturingDate"
-              value={product.manufacturingDate}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          {/* Size Selector */}
-          <div>
-            <label className='text-white dark:text-gray-200'>By Size:</label>
-            <select
-              className="block w-full px-4 py-2 mt-2 text-gray-700 bg-white border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none focus:ring"
-              value={product.size}
-              onChange={(e) => handleChange(e)}
-              name="size"
-            >
-              <option value="">Select size</option>
-              {sizeOptions.map((size, index) => (
-                <option key={index} value={size}>{size}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Theme Selector */}
-          <div>
-            <label className='text-white dark:text-gray-200'>By Theme:</label>
-            <select
-              className="block w-full px-4 py-2 mt-2 text-gray-700 bg-white border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none focus:ring"
-              value={product.theme}
-              onChange={(e) => handleChange(e)}
-              name="theme"
-            >
-              <option value="">Select theme</option>
-              {themeOptions.map((theme, index) => (
-                <option key={index} value={theme}>{theme}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Material Selector */}
-          <div>
-            <label className='text-white dark:text-gray-200'>By Material:</label>
-            <select
-              className="block w-full px-4 py-2 mt-2 text-gray-700 bg-white border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none focus:ring"
-              value={product.material}
-              onChange={(e) => handleChange(e)}
-              name="material"
-            >
-              <option value="">Select material</option>
-              {materialOptions.map((material, index) => (
-                <option key={index} value={material}>{material}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Color Selector */}
-          <div>
-            <label className='text-white dark:text-gray-200'>By Color:</label>
-            <select
-              className="block w-full px-4 py-2 mt-2 text-gray-700 bg-white border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none focus:ring"
-              value={product.color}
-              onChange={(e) => handleChange(e)}
-              name="color"
-            >
-              <option value="">Select color</option>
-              {colorOptions.map((color, index) => (
-                <option key={index} value={color}>{color}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Function Selector */}
-          <div>
-            <label className='text-white dark:text-gray-200'>By Function:</label>
-            <select
-              className="block w-full px-4 py-2 mt-2 text-gray-700 bg-white border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none focus:ring"
-              value={product.function}
-              onChange={(e) => handleChange(e)}
-              name="function"
-            >
-              <option value="">Select function</option>
-              {functionOptions.map((func, index) => (
-                <option key={index} value={func}>{func}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Brand Selector */}
-          <div>
-            <label className='text-white dark:text-gray-200'>By Brand or Collection:</label>
-            <select
-              className="block w-full px-4 py-2 mt-2 text-gray-700 bg-white border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none focus:ring"
-              value={product.brand}
-              onChange={(e) => handleChange(e)}
-              name="brand"
-            >
-              <option value="">Select brand/collection</option>
-              {brandOptions.map((brand, index) => (
-                <option key={index} value={brand}>{brand}</option>
-              ))}
-            </select>
-          </div>
+      {message && (
+        <div className={`mb-6 p-3 rounded-md ${message.type === "success" ? "bg-green-800 text-green-100" : "bg-red-800 text-red-100"}`}>
+          {message.text}
         </div>
       )}
 
-      {/* Pricing Tab */}
-      {activeTab === 'pricing' && (
-        <div className="grid grid-cols-1 gap-6 mt-4 sm:grid-cols-2">
-          <div>
-            <label className='text-white dark:text-gray-200' htmlFor="ManufacturingCost">Manufacturing Cost:</label>
-            <input
-              className='block w-full px-4 py-2 mt-2 text-gray-700 bg-white border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none focus:ring'
-              type="number"
-              id="ManufacturingCost"
-              name="ManufacturingCost"
-              value={product.ManufacturingCost}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-              required
-            />
-            {errors.ManufacturingCost && (
-              <p className="mt-1 text-sm text-red-300">{errors.ManufacturingCost}</p>
-            )}
-          </div>
-
-          <div>
-            <label className='text-white dark:text-gray-200' htmlFor="sellingPrice">Selling Price:</label>
-            <input
-              className='block w-full px-4 py-2 mt-2 text-gray-700 bg-white border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none focus:ring'
-              type="number"
-              id="sellingPrice"
-              name="sellingPrice"
-              value={product.sellingPrice}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-              required
-            />
-            {errors.sellingPrice && (
-              <p className="mt-1 text-sm text-red-300">{errors.sellingPrice}</p>
-            )}
-          </div>
-
-          <div className="sm:col-span-2">
-            <label className='text-white dark:text-gray-200'>Promotions:</label>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {promotionOptions.map(discount => (
-                <button
-                  key={discount}
-                  type="button"
-                  className={`px-3 py-1 rounded-md ${product.promotions.includes(discount)
-                    ? 'bg-green-500 text-white'
-                    : 'bg-gray-200 text-gray-800'}`}
-                  onClick={() => handlePromotionSelect(discount)}
-                >
-                  {discount}%
-                </button>
-              ))}
+      <form onSubmit={handleSubmit}>
+        {/* Details Tab */}
+        {activeTab === 'details' && (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-gray-300 mb-1" htmlFor="productName">Product Name:</label>
+              <input
+                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
+                type="text"
+                id="productName"
+                name="productName"
+                value={product.productName}
+                onChange={handleChange}
+                required
+              />
             </div>
-            {product.promotions.length > 0 && (
-              <p className="mt-2 text-sm text-white">
-                Selected: {product.promotions.join('%, ')}%
-              </p>
-            )}
-          </div>
 
-          <div>
-            <label className='text-white dark:text-gray-200' htmlFor="lowStockLevel">Low Stock Level:</label>
-            <input
-              className='block w-full px-4 py-2 mt-2 text-gray-700 bg-white border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none focus:ring'
-              type="number"
-              id="lowStockLevel"
-              name="lowStockLevel"
-              value={product.lowStockLevel}
-              onChange={handleChange}
-              min="0"
-              required
-            />
-            {errors.lowStockLevel && (
-              <p className="mt-1 text-sm text-red-300">{errors.lowStockLevel}</p>
-            )}
-          </div>
-          <div>
-          <label className='text-white dark:text-gray-200' htmlFor="quantity">Quantity:</label>
-            <input
-              className= 'block w-full px-4 py-2 mt-2 text-gray-700 bg-white border border-gray-300 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none focus:ring'
-              id="quantity"
-              name="quantity"
-              value={product.quantity}
-              onChange={handleChange}
-              min="0"
-              required
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1" htmlFor="manufacturingDate">Manufacturing Date:</label>
+              <input
+                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
+                type="date"
+                id="manufacturingDate"
+                name="manufacturingDate"
+                value={product.manufacturingDate}
+                onChange={handleChange}
+                required
+              />
             </div>
-        </div>
 
-      )}
-
-      {/* Images Tab */}
-      {activeTab === 'images' && (
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-white" htmlFor="images">Upload Images:</label>
-          <div className='space-y-1 text-center border-2 border-dashed border-gray-300 p-4 rounded-lg mt-2'>
-            <svg className="mx-auto h-12 w-12 text-white" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-              <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <div className='flex text-sm text-gray-600'>
-              <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
-                <span className="">Upload a file</span>
-                <input
-                  id="file-upload"
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
-              </label>
-              <p className="pl-1 text-white">or drag and drop</p>
+            {/* Size Selector */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">By Size:</label>
+              <select
+                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
+                value={product.size}
+                onChange={(e) => handleChange(e)}
+                name="size"
+              >
+                <option value="">Select size</option>
+                {sizeOptions.map((size, index) => (
+                  <option key={index} value={size}>{size}</option>
+                ))}
+              </select>
             </div>
-            <p className="text-xs text-white">
-              (PNG, JPG, GIF up to 10MB)
-            </p>
-            {product.images.length > 0 && (
-              <div className="mt-2 p-2 bg-gray-700 rounded-md">
-                <h3 className="text-white text-sm font-semibold">Selected Files:</h3>
-                <ul className="text-gray-300 text-xs">
-                  {product.images.map((file, index) => (
-                    <li key={index} className="truncate">{file.name}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
-      <div className='flex justify-between mt-6'>
-        {activeTab !== 'details' && (
-          <button
-            type="button"
-            className='px-6 py-2 leading-5 text-white transition-colors duration-200 transform bg-gray-500 rounded-md hover:bg-gray-700 focus:outline-none'
-            onClick={() => setActiveTab(activeTab === 'pricing' ? 'details' : 'pricing')}
-          >
-            Previous
-          </button>
+            {/* Theme Selector */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">By Theme:</label>
+              <select
+                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
+                value={product.theme}
+                onChange={(e) => handleChange(e)}
+                name="theme"
+              >
+                <option value="">Select theme</option>
+                {themeOptions.map((theme, index) => (
+                  <option key={index} value={theme}>{theme}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Material Selector */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">By Material:</label>
+              <select
+                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
+                value={product.material}
+                onChange={(e) => handleChange(e)}
+                name="material"
+              >
+                <option value="">Select material</option>
+                {materialOptions.map((material, index) => (
+                  <option key={index} value={material}>{material}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Color Selector */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">By Color:</label>
+              <select
+                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
+                value={product.color}
+                onChange={(e) => handleChange(e)}
+                name="color"
+              >
+                <option value="">Select color</option>
+                {colorOptions.map((color, index) => (
+                  <option key={index} value={color}>{color}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Function Selector */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">By Function:</label>
+              <select
+                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
+                value={product.function}
+                onChange={(e) => handleChange(e)}
+                name="function"
+              >
+                <option value="">Select function</option>
+                {functionOptions.map((func, index) => (
+                  <option key={index} value={func}>{func}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Brand Selector */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">By Brand or Collection:</label>
+              <select
+                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
+                value={product.brand}
+                onChange={(e) => handleChange(e)}
+                name="brand"
+              >
+                <option value="">Select brand/collection</option>
+                {brandOptions.map((brand, index) => (
+                  <option key={index} value={brand}>{brand}</option>
+                ))}
+              </select>
+            </div>
+          </div>
         )}
 
-{activeTab !== 'images' ? (
-    <button
-      type="button"
-      className='px-6 py-2 leading-5 text-white transition-colors duration-200 transform bg-blue-500 rounded-md hover:bg-blue-700 focus:outline-none ml-auto'
-      onClick={() => {
-        if (activeTab === 'details') setActiveTab('pricing');
-        if (activeTab === 'pricing') setActiveTab('images');
-      }}
-    >
-      Next
-    </button>
-  ) : (
-    <button
-      type="submit"
-      className='px-6 py-2 leading-5 text-white transition-colors duration-200 transform bg-pink-500 rounded-md hover:bg-pink-700 focus:outline-none ml-auto'
-    >
-      Add Product
-    </button>
-  )}
-      </div>
-    </form>
-  </div>
-);
+        {/* Pricing Tab */}
+        {activeTab === 'pricing' && (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1" htmlFor="ManufacturingCost">Manufacturing Cost:</label>
+              <input
+                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
+                type="number"
+                id="ManufacturingCost"
+                name="ManufacturingCost"
+                value={product.ManufacturingCost}
+                onChange={handleChange}
+                min="0"
+                step="0.01"
+                required
+              />
+              {errors.ManufacturingCost && (
+                <p className="mt-1 text-sm text-red-400">{errors.ManufacturingCost}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1" htmlFor="sellingPrice">Selling Price:</label>
+              <input
+                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
+                type="number"
+                id="sellingPrice"
+                name="sellingPrice"
+                value={product.sellingPrice}
+                onChange={handleChange}
+                min="0"
+                step="0.01"
+                required
+              />
+              {errors.sellingPrice && (
+                <p className="mt-1 text-sm text-red-400">{errors.sellingPrice}</p>
+              )}
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-gray-300 mb-1">Promotions:</label>
+              <div className="flex flex-wrap gap-2">
+                {promotionOptions.map(discount => (
+                  <button
+                    key={discount}
+                    type="button"
+                    className={`px-3 py-1 rounded-md text-sm ${product.promotions.includes(discount)
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                    onClick={() => handlePromotionSelect(discount)}
+                  >
+                    {discount}%
+                  </button>
+                ))}
+              </div>
+              {product.promotions.length > 0 && (
+                <p className="mt-2 text-sm text-gray-300">
+                  Selected: {product.promotions.join('%, ')}%
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1" htmlFor="lowStockLevel">Low Stock Level:</label>
+              <input
+                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
+                type="number"
+                id="lowStockLevel"
+                name="lowStockLevel"
+                value={product.lowStockLevel}
+                onChange={handleChange}
+                min="0"
+                required
+              />
+              {errors.lowStockLevel && (
+                <p className="mt-1 text-sm text-red-400">{errors.lowStockLevel}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1" htmlFor="quantity">Quantity:</label>
+              <input
+                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
+                id="quantity"
+                name="quantity"
+                value={product.quantity}
+                onChange={handleChange}
+                min="0"
+                required
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Images Tab */}
+        {activeTab === 'images' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Upload Images:</label>
+            <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center bg-gray-700 hover:border-gray-500 transition-colors">
+              <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <div className="flex justify-center text-sm text-gray-400 mt-2">
+                <label htmlFor="file-upload" className="relative cursor-pointer bg-gray-800 rounded-md font-medium text-blue-400 hover:text-blue-300">
+                  <span>Upload a file</span>
+                  <input
+                    id="file-upload"
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="sr-only"
+                  />
+                </label>
+                <p className="pl-1 text-gray-400">or drag and drop</p>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                (PNG, JPG, GIF up to 10MB)
+              </p>
+              {product.images.length > 0 && (
+                <div className="mt-4 p-3 bg-gray-800 rounded-md">
+                  <h3 className="text-gray-300 text-sm font-medium">Selected Files:</h3>
+                  <ul className="text-gray-400 text-xs mt-1">
+                    {product.images.map((file, index) => (
+                      <li key={index} className="truncate">{file.name}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-between mt-8">
+          {activeTab !== 'details' && (
+            <button
+              type="button"
+              className="px-4 py-2 text-sm font-medium text-white bg-gray-600 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              onClick={() => setActiveTab(activeTab === 'pricing' ? 'details' : 'pricing')}
+            >
+              Previous
+            </button>
+          )}
+
+          {activeTab !== 'images' ? (
+            <button
+              type="button"
+              className="ml-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onClick={() => {
+                if (activeTab === 'details') setActiveTab('pricing');
+                if (activeTab === 'pricing') setActiveTab('images');
+              }}
+            >
+              Next
+            </button>
+          ) : (
+            <button
+              type="submit"
+              className="ml-auto px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              Add Product
+            </button>
+          )}
+        </div>
+      </form>
+    </div>
+  );
 };
 
 export default ProductForm;
