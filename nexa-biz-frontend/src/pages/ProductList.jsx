@@ -31,8 +31,6 @@ const ProductList = () => {
         fetchProducts();
     }, []);
 
-
-
     const handleSearch = (searchTerm) => {
         const filtered = products.filter((product) =>
             product.manufacturingID.toLowerCase().includes(searchTerm.toLowerCase())
@@ -82,7 +80,6 @@ const ProductList = () => {
     };
 
     const handleDelete = async (productId) => {
-
         const isConfirmed = window.confirm('Are you sure you want to delete this product?');
         if (!isConfirmed) return;
 
@@ -94,7 +91,6 @@ const ProductList = () => {
             setProducts(updatedProducts);
             setFilteredProducts(updatedProducts);
 
-
             alert('Product deleted successfully');
         } catch (err) {
             console.error('Error deleting product:', err);
@@ -103,86 +99,106 @@ const ProductList = () => {
     };
 
     if (loading) {
-        return <div>Loading...</div>;
+        return (
+            <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+        );
     }
 
     if (error) {
-        return <div>Error: {error}</div>;
+        return (
+            <div className="p-4 bg-red-100 border-l-4 border-red-500 text-red-700">
+                <p className="font-medium">Error:</p>
+                <p>{error}</p>
+            </div>
+        );
     }
 
     return (
-        <div className='p-6 dark:bg-gray-800 min-h-screen'>
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-white">Product List</h1>
-                <input
-                    type="text"
-                    placeholder="Search by Manufacturing ID"
-                    className="p-2 rounded-lg dark:bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    onChange={(e) => handleSearch(e.target.value)}
-                />
+        <div className='p-6 min-h-screen'>
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-2xl font-bold text-gray-100">Product List</h1>
+                <div className="relative">
+                    <input
+                        type="text"
+                        placeholder="Search by Manufacturing ID"
+                        className="p-2 pl-8 rounded-lg bg-gray-700/50 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        onChange={(e) => handleSearch(e.target.value)}
+                    />
+                    <svg
+                        className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
             </div>
 
             {/* Edit Product Modal */}
             {editingProduct && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md">
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
+                    <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md border border-gray-700 shadow-xl">
                         <h2 className="text-xl font-bold text-white mb-4">Edit Product</h2>
                         <form onSubmit={handleEditSubmit}>
                             <div className="mb-4">
-                                <label className="block text-white mb-2">Product Name</label>
+                                <label className="block text-gray-300 mb-2 text-sm font-medium">Product Name</label>
                                 <input
                                     type="text"
                                     name="productName"
                                     value={editFormData.productName}
                                     onChange={handleEditFormChange}
-                                    className="w-full p-2 rounded dark:bg-gray-700 text-white"
+                                    className="w-full p-2 rounded bg-gray-700/80 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     required
                                 />
                             </div>
                             <div className="mb-4">
-                                <label className="block text-white mb-2">Manufacturing Cost</label>
+                                <label className="block text-gray-300 mb-2 text-sm font-medium">Manufacturing Cost</label>
                                 <input
                                     type="number"
                                     name="ManufacturingCost"
                                     value={editFormData.ManufacturingCost}
                                     onChange={handleEditFormChange}
-                                    className="w-full p-2 rounded dark:bg-gray-700 text-white"
+                                    className="w-full p-2 rounded bg-gray-700/80 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     required
                                 />
                             </div>
                             <div className="mb-4">
-                                <label className="block text-white mb-2">Selling Price</label>
+                                <label className="block text-gray-300 mb-2 text-sm font-medium">Selling Price</label>
                                 <input
                                     type="number"
                                     name="sellingPrice"
                                     value={editFormData.sellingPrice}
                                     onChange={handleEditFormChange}
-                                    className="w-full p-2 rounded dark:bg-gray-700 text-white"
+                                    className="w-full p-2 rounded bg-gray-700/80 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     required
                                 />
                             </div>
                             <div className="mb-4">
-                                <label className="block text-white mb-2">Low Stock Level</label>
+                                <label className="block text-gray-300 mb-2 text-sm font-medium">Low Stock Level</label>
                                 <input
                                     type="number"
                                     name="lowStockLevel"
                                     value={editFormData.lowStockLevel}
                                     onChange={handleEditFormChange}
-                                    className="w-full p-2 rounded dark:bg-gray-700 text-white"
+                                    className="w-full p-2 rounded bg-gray-700/80 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     required
                                 />
                             </div>
-                            <div className="flex justify-end space-x-2">
+                            <div className="flex justify-end space-x-3">
                                 <button
                                     type="button"
                                     onClick={() => setEditingProduct(null)}
-                                    className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                                    className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors duration-200 text-sm font-medium"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
                                 >
                                     Save Changes
                                 </button>
@@ -193,54 +209,76 @@ const ProductList = () => {
             )}
 
             {filteredProducts.length === 0 ? (
-                <p className="text-gray-400">No products found.</p>
+                <div className="flex flex-col items-center justify-center text-center py-12">
+                    <svg className="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 14h.01M10.343 5.657a11 11 0 011.414 0M12 3a9 9 0 10.001 18.001A9 9 0 0012 3z"></path>
+                    </svg>
+                    <p className="text-gray-400 text-lg">No products found.</p>
+                    <p className="text-gray-500 mt-2">Try a different search term or add new products.</p>
+                </div>
             ) : (
-                <div className="overflow-x-auto">
-                    <table className="min-w-full dark:bg-gray-900 rounded-lg overflow-hidden">
-                        <thead className="bg-blue-700">
+                <div className="overflow-x-auto rounded-xl bg-black/20 backdrop-blur-md shadow-md">
+                    <table className="min-w-full text-left text-sm text-gray-300">
+                        <thead>
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Manufacturing ID</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Product Name</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Manufacturing Cost</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Selling Price</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Low Stock Level</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Images</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Actions</th>
+                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-300 uppercase tracking-wider border-b border-gray-700/30">Manufacturing ID</th>
+                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-300 uppercase tracking-wider border-b border-gray-700/30">Product Name</th>
+                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-300 uppercase tracking-wider border-b border-gray-700/30">Manufacturing Cost</th>
+                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-300 uppercase tracking-wider border-b border-gray-700/30">Selling Price</th>
+                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-300 uppercase tracking-wider border-b border-gray-700/30">Low Stock Level</th>
+                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-300 uppercase tracking-wider border-b border-gray-700/30">Images</th>
+                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-300 uppercase tracking-wider border-b border-gray-700/30">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-blue-700">
+                        <tbody className="divide-y divide-gray-700/30">
                             {filteredProducts.map((product) => (
-                                <tr key={product._id} className="hover:bg-blue-750">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{product.manufacturingID}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{product.productName}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">${product.ManufacturingCost}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">${product.sellingPrice}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{product.lowStockLevel}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                <tr
+                                    key={product._id}
+                                    className="transition-colors duration-150 hover:bg-gray-700/20"
+                                >
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200">{product.manufacturingID}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200 font-medium">{product.productName}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200">${product.ManufacturingCost}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200">${product.sellingPrice}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200">{product.lowStockLevel}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200">
                                         {product.images && product.images.length > 0 ? (
-                                            product.images.map((image, index) => (
-                                                <img
-                                                    key={index}
-                                                    src={image}
-                                                    alt={`Product ${index}`}
-                                                    className="h-10 w-10 object-cover rounded inline-block mr-1"
-                                                />
-                                            ))
-                                        ) : 'No images'}
+                                            <div className="flex space-x-1">
+                                                {product.images.map((image, index) => (
+                                                    <img
+                                                        key={index}
+                                                        src={image}
+                                                        alt={`Product ${index}`}
+                                                        className="h-10 w-10 object-cover rounded-md border border-gray-600"
+                                                    />
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <span className="text-gray-400 italic">No images</span>
+                                        )}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                                        <button
-                                            className="bg-yellow-500 text-white px-3 py-1 rounded-md mr-2 hover:bg-yellow-600"
-                                            onClick={() => handleEdit(product._id)}
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600"
-                                            onClick={() => handleDelete(product._id)}
-                                        >
-                                            Delete
-                                        </button>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                        <div className="flex space-x-2">
+                                            <button
+                                                className="bg-yellow-500/80 hover:bg-yellow-600 text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-200 flex items-center
+"
+                                                onClick={() => handleEdit(product._id)}
+                                            >
+                                                <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                </svg>
+                                                Edit
+                                            </button>
+                                            <button
+                                                className="bg-red-500/80 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-200 flex items-center"
+                                                onClick={() => handleDelete(product._id)}
+                                            >
+                                                <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                </svg>
+                                                Delete
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
