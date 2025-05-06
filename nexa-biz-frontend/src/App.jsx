@@ -4,7 +4,7 @@ import Register from "./pages/Register";
 import CustomerList from "./pages/CustomerList";
 import CustomerProfile from "./pages/CustomerProfile";
 import OrderList from "./pages/OrderList";
-import FinDashboard from "./pages/FinDashboard";
+import FinDashboard from "./pages/finDashboard";
 import HeroSection from "./pages/HeroSection";
 import AdminLayout from "./admin/adminLayout";
 

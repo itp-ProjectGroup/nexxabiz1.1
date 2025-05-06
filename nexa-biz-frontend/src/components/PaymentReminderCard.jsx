@@ -3,15 +3,6 @@ import { useState, useEffect } from 'react';
 const PaymentReminderCard = ({ orders, calculateOrderTotal }) => {
   const [reminderOrders, setReminderOrders] = useState([]);
 
-  // CSS for hiding scrollbars
-  const hideScrollbarStyle = {
-    scrollbarWidth: 'none',  // Firefox
-    msOverflowStyle: 'none', // IE and Edge
-    '&::-webkit-scrollbar': { 
-      display: 'none'        // Chrome, Safari, newer Edge
-    }
-  };
-
   useEffect(() => {
     if (!orders || !Array.isArray(orders)) return;
 
@@ -67,12 +58,12 @@ const PaymentReminderCard = ({ orders, calculateOrderTotal }) => {
             msOverflowStyle: 'none' 
           }}
         >
-          {/* This style hides the scrollbar in WebKit browsers */}
-          <style jsx>{`
+          {/* Apply CSS to hide scrollbar for WebKit browsers */}
+          <style dangerouslySetInnerHTML={{ __html: `
             div::-webkit-scrollbar {
               display: none;
             }
-          `}</style>
+          `}} />
           
           <div className="space-y-3 mt-1">
             {reminderOrders.map((order) => (

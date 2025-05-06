@@ -40,7 +40,7 @@ const PaymentDetails = ({ payment, isOpen, onClose, order, onEdit, onDelete }) =
                                     <h3 className="text-lg font-semibold mb-1 text-purple-400">Order Info</h3>
                                     <p><span className="font-medium">Company:</span> {order.company_name}</p>
                                     <p><span className="font-medium">Status:</span> {order.od_status}</p>
-                                    <p><span className="font-medium">Total:</span> ${order.od_Tamount.toFixed(2)}</p>
+                                    <p><span className="font-medium">Total:</span> ${order.od_Tamount ? order.od_Tamount.toFixed(2) : '0.00'}</p>
                                 </div>
                             )}
 
@@ -50,21 +50,23 @@ const PaymentDetails = ({ payment, isOpen, onClose, order, onEdit, onDelete }) =
                                 <p><span className="font-medium">Payment ID:</span> {payment.paymentId}</p>
                                 <p><span className="font-medium">Order ID:</span> {payment.orderId}</p>
                                 <p><span className="font-medium">Method:</span> {payment.paymentMethod}</p>
-                                <p><span className="font-medium">Amount:</span> ${payment.paymentAmount.toFixed(2)}</p>
-                                <p><span className="font-medium">Date:</span> {new Date(payment.createdAt).toLocaleDateString()}</p>
-                                <p><span className="font-medium">Remark:</span> {payment.remark}</p>
+                                <p><span className="font-medium">Amount:</span> ${payment.paymentAmount ? payment.paymentAmount.toFixed(2) : '0.00'}</p>
+                                <p><span className="font-medium">Date:</span> {payment.createdAt ? new Date(payment.createdAt).toLocaleDateString() : 'N/A'}</p>
+                                <p><span className="font-medium">Remark:</span> {payment.remark || 'N/A'}</p>
                             </div>
                         </div>
 
                         <div className="mt-6 border-t border-gray-700 pt-0" />
                         
                         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-                            <button
-                                onClick={onEdit}
-                                className="w-24 px-4 py-2 text-white bg-teal-500 rounded-lg hover:bg-teal-700 transition-colors duration-300"
-                            >
-                                Edit
-                            </button>
+                            {onEdit && (
+                                <button
+                                    onClick={onEdit}
+                                    className="w-24 px-4 py-2 text-white bg-teal-500 rounded-lg hover:bg-teal-700 transition-colors duration-300"
+                                >
+                                    Edit
+                                </button>
+                            )}
                             <button
                                 onClick={async () => {
                                     const confirmDelete = window.confirm("Are you sure you want to delete this payment?");

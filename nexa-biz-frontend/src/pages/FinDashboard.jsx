@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import DashboardCard from "../components/DashboardCard";
@@ -10,6 +10,7 @@ import PaymentGateway from "../modal/PaymentGateway";
 import PaymentDetails from "../modal/PaymentDetails";
 import CashFlowChart from "../components/CashFlowChart";
 import PaymentReminderCard from "../components/PaymentReminderCard";
+import DateRangeFilter from "../components/DateRangeFilter"; // Import the new component
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -24,6 +25,9 @@ const FinDashboard = () => {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
+    const [filteredOrders, setFilteredOrders] = useState([]);
+    const [filteredPayments, setFilteredPayments] = useState([]);
 
     useEffect(() => {
         fetchOrders();
@@ -60,25 +64,97 @@ const FinDashboard = () => {
         }
     };
 
+    // Separate states for date-filtered and tab-filtered data
+    const [dateFilteredOrders, setDateFilteredOrders] = useState([]);
+    const [dateFilteredPayments, setDateFilteredPayments] = useState([]);
+    
+    // Apply date filter to orders and payments
+    useEffect(() => {
+        // Filter orders based on date
+        let tempFilteredOrders = orders;
+        if (dateFilter.startDate || dateFilter.endDate) {
+            tempFilteredOrders = orders.filter(order => {
+                const orderDate = new Date(order.od_date);
+                let passesFilter = true;
+                
+                if (dateFilter.startDate) {
+                    const startDate = new Date(dateFilter.startDate);
+                    passesFilter = passesFilter && orderDate >= startDate;
+                }
+                
+                if (dateFilter.endDate) {
+                    const endDate = new Date(dateFilter.endDate);
+                    // Set time to end of day for inclusive filtering
+                    endDate.setHours(23, 59, 59, 999);
+                    passesFilter = passesFilter && orderDate <= endDate;
+                }
+                
+                return passesFilter;
+            });
+        }
+        
+        // Store date-filtered orders (before tab filtering)
+        setDateFilteredOrders(tempFilteredOrders);
+        
+        // Filter payments based on date
+        let tempFilteredPayments = payments;
+        if (dateFilter.startDate || dateFilter.endDate) {
+            tempFilteredPayments = payments.filter(payment => {
+                const paymentDate = new Date(payment.createdAt);
+                let passesFilter = true;
+                
+                if (dateFilter.startDate) {
+                    const startDate = new Date(dateFilter.startDate);
+                    passesFilter = passesFilter && paymentDate >= startDate;
+                }
+                
+                if (dateFilter.endDate) {
+                    const endDate = new Date(dateFilter.endDate);
+                    // Set time to end of day for inclusive filtering
+                    endDate.setHours(23, 59, 59, 999);
+                    passesFilter = passesFilter && paymentDate <= endDate;
+                }
+                
+                return passesFilter;
+            });
+        }
+        
+        // Store date-filtered payments
+        setDateFilteredPayments(tempFilteredPayments);
+    }, [orders, payments, dateFilter]);
+    
+    // Apply tab filter after date filter
+    useEffect(() => {
+        // Apply tab filter to the date-filtered orders
+        const tabFilteredOrders = dateFilteredOrders.filter(order => {
+            if (activeTab === "paid") return order.pay_status === "Paid";
+            if (activeTab === "new") return order.pay_status === "New";
+            if (activeTab === "Pending") return order.pay_status === "Pending";
+            if (activeTab === "overdue") {
+                const currentDate = new Date();
+                const overdueDate = order.overdue_date ? new Date(order.overdue_date) : null;
+                return order.pay_status === "Pending" && 
+                      overdueDate && 
+                      overdueDate <= currentDate;
+            }
+            return true; // For "all" tab
+        });
+        
+        setFilteredOrders(tabFilteredOrders);
+        
+        // Update filteredPayments when activeTab changes
+        // This is the fix: We need to set filteredPayments when tab changes to "allp"
+        setFilteredPayments(dateFilteredPayments);
+    }, [dateFilteredOrders, dateFilteredPayments, activeTab]);
+
+    const handleDateFilterChange = (filter) => {
+        setDateFilter(filter);
+    };
+
     const handlePaymentActionClick = (payment) => {
         setSelectedPayment(payment);
         setIsPaymentDetailsModalOpen(true);
     };
-
-    const filteredOrders = orders.filter(order => {
-        if (activeTab === "paid") return order.pay_status === "Paid";
-        if (activeTab === "new") return order.pay_status === "New";
-        if (activeTab === "Pending") return order.pay_status === "Pending";
-        if (activeTab === "overdue") {
-            // Check if order is pending AND overdue_date is less than or equal to current date
-            const currentDate = new Date();
-            const overdueDate = order.overdue_date ? new Date(order.overdue_date) : null;
-            return order.pay_status === "Pending" && 
-                  overdueDate && 
-                  overdueDate <= currentDate;
-        }
-        return true;
-    });
 
     const handleViewClick = (order) => {
         setSelectedOrder(order);
@@ -101,7 +177,9 @@ const FinDashboard = () => {
     };
 
     const getPaidAmountForOrder = (orderId) => {
-        const orderPayments = payments.filter(payment => payment.orderId === orderId);
+        // Use date-filtered payments when calculating paid amount
+        // This ensures consistent values regardless of tab selection
+        const orderPayments = dateFilteredPayments.filter(payment => payment.orderId === orderId);
         const totalPaidAmount = orderPayments.reduce((sum, payment) => sum + payment.paymentAmount, 0);
         return totalPaidAmount;
     };
@@ -133,23 +211,41 @@ const FinDashboard = () => {
 
     useEffect(() => {
         if (activeTab === "Pending" || activeTab === "paid" || activeTab === "overdue") {
-            setOrders(prevOrders =>
+            setFilteredOrders(prevOrders =>
                 prevOrders.map(order => ({
                     ...order,
                     paidAmount: getPaidAmountForOrder(order.od_Id),
                 }))
             );
         }
-    }, [payments, activeTab]);
+    }, [dateFilteredPayments, activeTab]);
+    
+    // Enhance date-filtered orders with paid amount information
+    useEffect(() => {
+        setDateFilteredOrders(prevOrders =>
+            prevOrders.map(order => ({
+                ...order,
+                paidAmount: getPaidAmountForOrder(order.od_Id),
+            }))
+        );
+    }, [dateFilteredPayments]);
 
-    // Count overdue orders
-    const overdueOrdersCount = orders.filter(order => {
+    // Count overdue orders based on date-filtered data (not tab-filtered)
+    const overdueOrdersCount = dateFilteredOrders.filter(order => {
         const currentDate = new Date();
         const overdueDate = order.overdue_date ? new Date(order.overdue_date) : null;
         return order.pay_status === "Pending" && 
               overdueDate && 
               overdueDate <= currentDate;
     }).length;
+
+    // Calculate metrics based on date-filtered data (not tab-filtered)
+    // This ensures consistent dashboard metrics regardless of active tab
+    const totalSales = dateFilteredOrders.reduce((sum, order) => sum + calculateOrderTotal(order), 0);
+    const totalIncome = dateFilteredPayments.reduce((sum, p) => sum + p.paymentAmount, 0);
+    const totalExpense = dateFilteredOrders.reduce((sum, order) => sum + calculateExpenseTotal(order), 0);
+    const profit = totalIncome - totalExpense;
+    const amountDue = totalSales - totalIncome;
 
     if (loading) return <p className="text-center text-gray-500">Loading...</p>;
 
@@ -166,26 +262,19 @@ const FinDashboard = () => {
                 <div key="1" data-grid={{ x: 0, y: 0, w: 1, h: 1.4 }}>
                 <DashboardCard
                     title="Total Sales"
-                    value={`$${orders.reduce((sum, order) => sum + calculateOrderTotal(order), 0).toFixed(2)}`}
+                    value={`$${totalSales.toFixed(2)}`}
                 />
                 </div>
                 <div key="2" data-grid={{ x: 1, y: 0, w: 1, h: 1 }}>
                     <DashboardCard
                         title="Profit"
-                        value={`$${(
-                            payments.reduce((sum, p) => sum + p.paymentAmount, 0) -
-                            orders.reduce((sum, order) => sum + calculateExpenseTotal(order), 0)
-                          ).toFixed(2)}`}    
+                        value={`$${profit.toFixed(2)}`}
                     />
                 </div>
                 <div key="3" data-grid={{ x: 2, y: 0, w: 1, h: 1 }}>
                     <DashboardCard
                         title="Amount due"
-                        value={`$${(
-                            orders.reduce((sum, order) => sum + calculateOrderTotal(order), 0) -
-                            payments.reduce((sum, p) => sum + p.paymentAmount, 0)
-                          ).toFixed(2)}`} 
-                        
+                        value={`$${amountDue.toFixed(2)}`}
                     />
                 </div>
                 <div key="4" data-grid={{ x: 3, y: 0, w: 1, h: 1 }}>
@@ -197,22 +286,20 @@ const FinDashboard = () => {
                 </div>
                 <div key="5" data-grid={{ x: 4, y: 0, w: 2, h: 4 }}>
                     <PaymentReminderCard 
-                        orders={orders} 
+                        orders={dateFilteredOrders} 
                         calculateOrderTotal={calculateOrderTotal}
                     />
                 </div>
                 <div key="6" data-grid={{ x: 0, y: 1, w: 1, h: 1.3 }}>
                     <DashboardCard
                         title="Total Income"
-                        value={`$${payments.reduce((sum, p) => sum + p.paymentAmount, 0).toFixed(2)}`}
-                        
+                        value={`$${totalIncome.toFixed(2)}`}
                     />
                 </div>
                 <div key="7" data-grid={{ x: 0, y: 2, w: 1, h: 1.3 }}>
                     <DashboardCard
                         title="Total Expense"
-                        value={`$${orders.reduce((sum, order) => sum + calculateExpenseTotal(order), 0).toFixed(2)}`}
-                        
+                        value={`$${totalExpense.toFixed(2)}`}
                     />
                 </div>
                 <div key="8" data-grid={{ x: 1, y: 1, w: 3, h: 3 }}>
@@ -220,8 +307,8 @@ const FinDashboard = () => {
                         chart={
                             <div className="h-full w-full">
                                 <CashFlowChart 
-                                    payments={payments} 
-                                    orders={orders} 
+                                    payments={dateFilteredPayments} 
+                                    orders={dateFilteredOrders} 
                                     products={products} 
                                 />
                             </div>
@@ -231,7 +318,20 @@ const FinDashboard = () => {
             </ResponsiveGridLayout>
 
         <div className="mt-4 w-full mx-auto font-roboto bg-gray-800 text-white p-6 rounded-lg shadow-lg">
-            <h2 className="text-xl font-bold text-white mb-4">Payment Records</h2>
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-white">Payment Records</h2>
+                <div className="flex items-center">
+                    {(dateFilter.startDate || dateFilter.endDate) && (
+                        <div className="mr-4 px-3 py-1 bg-blue-500 rounded text-sm flex items-center">
+                            <span>
+                                {dateFilter.startDate ? new Date(dateFilter.startDate).toLocaleDateString() : 'Any'} - 
+                                {dateFilter.endDate ? new Date(dateFilter.endDate).toLocaleDateString() : 'Any'}
+                            </span>
+                        </div>
+                    )}
+                    <DateRangeFilter onFilterChange={handleDateFilterChange} />
+                </div>
+            </div>
 
             {/* Tabs */}
             <div className="flex mb-4 border-b border-gray-600 overflow-x-auto">
@@ -273,7 +373,7 @@ const FinDashboard = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {payments.map(payment => (
+                            {filteredPayments.map(payment => (
                                 <tr key={payment.paymentId} className="border-b border-gray-700 hover:bg-gray-800 text-center">
                                     <td className="py-3 px-4 font-medium text-white">{payment.paymentId}</td>
                                     <td className="py-3 px-4 text-gray-300">{payment.orderId}</td>
