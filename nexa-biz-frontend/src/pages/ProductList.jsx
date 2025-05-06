@@ -14,7 +14,6 @@ const ProductList = () => {
         lowStockLevel: ''
     });
 
-    // Fetch products from the backend
     useEffect(() => {
         const fetchProducts = async () => {
             try {
@@ -65,7 +64,6 @@ const ProductList = () => {
                 editFormData
             );
 
-            // Update the products list
             const updatedProducts = products.map(product =>
                 product._id === editingProduct._id ? response.data.product : product
             );
@@ -86,7 +84,6 @@ const ProductList = () => {
         try {
             await axios.delete(`http://localhost:5000/api/products/${productId}`);
 
-            // Update state to remove the deleted product
             const updatedProducts = products.filter(product => product._id !== productId);
             setProducts(updatedProducts);
             setFilteredProducts(updatedProducts);
@@ -101,29 +98,33 @@ const ProductList = () => {
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                <p className="mt-4 text-gray-300">Loading products...</p>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="p-4 bg-red-100 border-l-4 border-red-500 text-red-700">
-                <p className="font-medium">Error:</p>
-                <p>{error}</p>
+            <div className="p-4">
+                <div className="bg-red-900/80 border border-red-800 text-red-200 px-4 py-3 rounded relative" role="alert">
+                    <strong className="font-bold">Error!</strong>
+                    <span className="block sm:inline"> {error}</span>
+                    <p className="mt-2 text-sm text-red-300">Please check your connection and try again.</p>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className='p-6 min-h-screen'>
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="text-2xl font-bold text-gray-100">Product List</h1>
+        <div className="p-4 bg-gray-900 text-gray-100 min-h-screen">
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold text-white">Product List</h1>
                 <div className="relative">
                     <input
                         type="text"
                         placeholder="Search by Manufacturing ID"
-                        className="p-2 pl-8 rounded-lg bg-gray-700/50 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="p-2 pl-8 rounded-lg bg-gray-800/80 text-white placeholder-gray-400 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         onChange={(e) => handleSearch(e.target.value)}
                     />
                     <svg
@@ -138,10 +139,9 @@ const ProductList = () => {
                 </div>
             </div>
 
-            {/* Edit Product Modal */}
             {editingProduct && (
                 <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
-                    <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md border border-gray-700 shadow-xl">
+                    <div className="bg-gray-800/90 p-6 rounded-lg w-full max-w-md border border-gray-700 shadow-xl">
                         <h2 className="text-xl font-bold text-white mb-4">Edit Product</h2>
                         <form onSubmit={handleEditSubmit}>
                             <div className="mb-4">
@@ -192,7 +192,7 @@ const ProductList = () => {
                                 <button
                                     type="button"
                                     onClick={() => setEditingProduct(null)}
-                                    className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors duration-200 text-sm font-medium"
+                                    className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors duration-200 text-sm font-medium"
                                 >
                                     Cancel
                                 </button>
@@ -209,39 +209,39 @@ const ProductList = () => {
             )}
 
             {filteredProducts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center text-center py-12">
-                    <svg className="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <div className="flex flex-col items-center justify-center text-center py-12 bg-gray-900/80 rounded-lg border border-gray-800">
+                    <svg className="w-16 h-16 text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 14h.01M10.343 5.657a11 11 0 011.414 0M12 3a9 9 0 10.001 18.001A9 9 0 0012 3z"></path>
                     </svg>
                     <p className="text-gray-400 text-lg">No products found.</p>
                     <p className="text-gray-500 mt-2">Try a different search term or add new products.</p>
                 </div>
             ) : (
-                <div className="overflow-x-auto rounded-xl bg-black/20 backdrop-blur-md shadow-md">
+                <div className="overflow-x-auto rounded-lg border border-gray-800 bg-gray-900/80 shadow">
                     <table className="min-w-full text-left text-sm text-gray-300">
-                        <thead>
+                        <thead className="border-b border-gray-800">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-300 uppercase tracking-wider border-b border-gray-700/30">Manufacturing ID</th>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-300 uppercase tracking-wider border-b border-gray-700/30">Product Name</th>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-300 uppercase tracking-wider border-b border-gray-700/30">Manufacturing Cost</th>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-300 uppercase tracking-wider border-b border-gray-700/30">Selling Price</th>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-300 uppercase tracking-wider border-b border-gray-700/30">Low Stock Level</th>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-300 uppercase tracking-wider border-b border-gray-700/30">Images</th>
-                                <th className="px-6 py-3 text-left text-xs font-bold text-gray-300 uppercase tracking-wider border-b border-gray-700/30">Actions</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Manufacturing ID</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Product Name</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Manufacturing Cost</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Selling Price</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Low Stock Level</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Images</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-700/30">
+                        <tbody className="divide-y divide-gray-800">
                             {filteredProducts.map((product) => (
                                 <tr
                                     key={product._id}
-                                    className="transition-colors duration-150 hover:bg-gray-700/20"
+                                    className="hover:bg-gray-800/50 transition-colors duration-150"
                                 >
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200">{product.manufacturingID}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200 font-medium">{product.productName}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200">${product.ManufacturingCost}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200">${product.sellingPrice}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200">{product.lowStockLevel}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-200">
+                                    <td className="px-6 py-4 whitespace-nowrap text-gray-200">{product.manufacturingID}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-100">{product.productName}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-green-400">${product.ManufacturingCost}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-blue-400">${product.sellingPrice}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-amber-400">{product.lowStockLevel}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
                                         {product.images && product.images.length > 0 ? (
                                             <div className="flex space-x-1">
                                                 {product.images.map((image, index) => (
@@ -249,19 +249,18 @@ const ProductList = () => {
                                                         key={index}
                                                         src={image}
                                                         alt={`Product ${index}`}
-                                                        className="h-10 w-10 object-cover rounded-md border border-gray-600"
+                                                        className="h-10 w-10 object-cover rounded-md border border-gray-700"
                                                     />
                                                 ))}
                                             </div>
                                         ) : (
-                                            <span className="text-gray-400 italic">No images</span>
+                                            <span className="text-gray-500 italic">No images</span>
                                         )}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                    <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex space-x-2">
                                             <button
-                                                className="bg-yellow-500/80 hover:bg-yellow-600 text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-200 flex items-center
-"
+                                                className="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-200 flex items-center"
                                                 onClick={() => handleEdit(product._id)}
                                             >
                                                 <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -270,7 +269,7 @@ const ProductList = () => {
                                                 Edit
                                             </button>
                                             <button
-                                                className="bg-red-500/80 hover:bg-red-600 text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-200 flex items-center"
+                                                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-200 flex items-center"
                                                 onClick={() => handleDelete(product._id)}
                                             >
                                                 <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
