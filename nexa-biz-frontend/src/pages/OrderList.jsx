@@ -65,6 +65,16 @@ const OrderList = () => {
         return orders.reduce((total, order) => total + (order.od_Tamount || 0), 0);
     };
 
+    // Calculate total orders count
+    const calculateTotalOrders = () => {
+        return orders.length;
+    };
+
+    // Calculate return orders count
+    const calculateReturnOrders = () => {
+        return orderDetails.filter(detail => detail.type === "return").length;
+    };
+
     // Add new item field to Add Order form
     const addItemField = () => {
         setNewOrder({
@@ -637,6 +647,39 @@ const OrderList = () => {
                             <span className="text-3xl text-red-400">↩</span>
                         </div>
                     </div>
+                </div>
+            </div>
+            
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="h-36">
+                    <DashboardCard
+                        title="Total Orders"
+                        value={calculateTotalOrders()}
+                        icon="📦"
+                        description="Total number of orders in the system"
+                        disableCurrencyFormatting={true}
+                    />
+                </div>
+                
+                <div className="h-36">
+                    <DashboardCard
+                        title="Return Orders"
+                        value={calculateReturnOrders()}
+                        icon="↩️"
+                        description="Total number of return orders"
+                        disableCurrencyFormatting={true}
+                    />
+                </div>
+                
+                <div className="h-36">
+                    <DashboardCard
+                        title="Success Rate"
+                        value={`${((calculateTotalOrders() - calculateReturnOrders()) / calculateTotalOrders() * 100).toFixed(1)}%`}
+                        icon="📈"
+                        description="Percentage of successful orders"
+                        disableCurrencyFormatting={true}
+                    />
                 </div>
             </div>
             
