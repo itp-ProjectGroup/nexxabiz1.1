@@ -11,6 +11,7 @@ import PaymentDetails from "../modal/PaymentDetails";
 import CashFlowChart from "../components/CashFlowChart";
 import PaymentReminderCard from "../components/PaymentReminderCard";
 import DateRangeFilter from "../components/DateRangeFilter";
+import FinSearchBar from "../components/FinSearchBar";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -31,6 +32,8 @@ const FinDashboard = () => {
     const [filteredPayments, setFilteredPayments] = useState([]);
     const [exportType, setExportType] = useState(''); // State for export type modal
     const [showExportOptions, setShowExportOptions] = useState(false); // State to control export options dropdown
+    const [searchQuery, setSearchQuery] = useState('');
+    const [allFilteredData, setAllFilteredData] = useState({orders: [],payments: []});
 
     useEffect(() => {
         fetchOrders();
@@ -424,6 +427,80 @@ const FinDashboard = () => {
         );
     }, [dateFilteredPayments]);
 
+
+
+
+        // First, update allFilteredData when dateFilteredOrders or dateFilteredPayments change
+        useEffect(() => {
+            // Only update reference data when date filters change, not during search
+            if (!searchQuery) {
+                setAllFilteredData({
+                    orders: dateFilteredOrders,
+                    payments: dateFilteredPayments
+                });
+            }
+        }, [dateFilteredOrders, dateFilteredPayments, searchQuery]);
+        
+        // Separate effect for managing filtered data based on search and tabs
+        useEffect(() => {
+            if (!searchQuery) {
+                // If no search query, apply only tab filters to date-filtered data
+                setFilteredOrders(
+                    dateFilteredOrders.filter(order => {
+                        if (activeTab === "paid") return order.pay_status === "Paid";
+                        if (activeTab === "new") return order.pay_status === "New";
+                        if (activeTab === "Pending") return order.pay_status === "Pending";
+                        if (activeTab === "overdue") {
+                            const currentDate = new Date();
+                            const overdueDate = order.overdue_date ? new Date(order.overdue_date) : null;
+                            return order.pay_status === "Pending" && 
+                                overdueDate && 
+                                overdueDate <= currentDate;
+                        }
+                        return true; // For "all" tab
+                    })
+                );
+                setFilteredPayments(dateFilteredPayments);
+            } else {
+                // Apply search filter to orders
+                const matchingOrders = allFilteredData.orders.filter(order => {
+                    // Filter by customer name
+                    const customerNameMatch = order.company_name && 
+                        order.company_name.toLowerCase().includes(searchQuery.toLowerCase());
+                    
+                    // Apply tab filters
+                    let tabCondition = true;
+                    if (activeTab === "paid") tabCondition = order.pay_status === "Paid";
+                    if (activeTab === "new") tabCondition = order.pay_status === "New";
+                    if (activeTab === "Pending") tabCondition = order.pay_status === "Pending";
+                    if (activeTab === "overdue") {
+                        const currentDate = new Date();
+                        const overdueDate = order.overdue_date ? new Date(order.overdue_date) : null;
+                        tabCondition = order.pay_status === "Pending" && 
+                            overdueDate && 
+                            overdueDate <= currentDate;
+                    }
+                    
+                    return customerNameMatch && (activeTab === "all" || tabCondition);
+                });
+                
+                // Find related order IDs to filter payments
+                const matchingOrderIds = new Set(matchingOrders.map(order => order.od_Id));
+                
+                // Apply search filter to payments based on related orders
+                const matchingPayments = allFilteredData.payments.filter(payment => 
+                    matchingOrderIds.has(payment.orderId)
+                );
+                
+                setFilteredOrders(matchingOrders);
+                setFilteredPayments(matchingPayments);
+            }
+        }, [searchQuery, activeTab, allFilteredData]);
+
+    const handleSearch = (query) => {
+        setSearchQuery(query);
+    };
+
     // Count overdue orders based on date-filtered data (not tab-filtered)
     const overdueOrdersCount = dateFilteredOrders.filter(order => {
         const currentDate = new Date();
@@ -514,6 +591,15 @@ const FinDashboard = () => {
         <div className="mt-4 w-full mx-auto font-roboto bg-gray-800 text-white p-6 rounded-lg shadow-lg">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-white">Payment Records</h2>
+
+                 {/* Search Bar */}
+            <div className="mb-4 flex justify-center">
+                <FinSearchBar 
+                    data={[...orders, ...payments]} 
+                    onSearch={handleSearch} 
+                    placeholder="Search by customer name..."
+                />
+            </div>
                 <div className="flex items-center">
                     {(dateFilter.startDate || dateFilter.endDate) && (
                         <div className="mr-4 px-3 py-1 bg-blue-500 rounded text-sm flex items-center">
@@ -563,6 +649,7 @@ const FinDashboard = () => {
                 </div>
             </div>
 
+           
             {/* Tabs */}
             <div className="flex mb-4 border-b border-gray-600 overflow-x-auto">
             {["all", "allp", "new", "paid", "Pending", "overdue"].map((tab) => (
