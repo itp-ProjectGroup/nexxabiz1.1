@@ -87,41 +87,95 @@ const Stock = () => {
   const handleExportPDF = async () => {
     const doc = new jsPDF('p', 'mm', 'a4');
 
-    const chartSection = document.querySelector("#chart-section");
-    if (!chartSection) {
-      console.error("Chart section not found");
-      return;
-    }
-
     try {
-      const canvas = await html2canvas(chartSection, { scale: 2 });
-      const imgData = canvas.toDataURL('image/png');
+      // Add title to the PDF
+      doc.setFontSize(18);
+      doc.setTextColor(0, 0, 0);
+      doc.text("Stock Report", 105, 15, { align: "center" });
 
-      const imgProps = doc.getImageProperties(imgData);
-      const pdfWidth = doc.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-      doc.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
-
-      doc.addPage();
-
+      // Create simple stock table directly in PDF instead of using html2canvas
       doc.setFontSize(14);
-      doc.text("Stock Data Table", 14, 20);
+      doc.text("Stock Details", 14, 30);
 
-      let startY = 30;
+      // Table headers
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
 
-      stockData.forEach((item, index) => {
-        doc.setFontSize(10);
-        doc.text(
-          `• ${item.productName}, Qty: ${item.quantity}, Price: $${item.price.toFixed(2)}, Added: ${item.manufacturingDate}, Updated: ${new Date(item.lastUpdated).toLocaleDateString()}`,
-          14,
-          startY + index * 7
-        );
+      const headers = ["Product Name", "Quantity", "Price", "Added Date", "Last Updated"];
+      const columnWidths = [60, 25, 25, 40, 40];
+      let yPos = 40;
+
+      // Draw header row
+      let xPos = 10;
+      headers.forEach((header, i) => {
+        doc.text(header, xPos, yPos);
+        xPos += columnWidths[i];
       });
+
+      yPos += 5;
+      doc.line(10, yPos, 200, yPos); // Horizontal line after headers
+
+      // Draw data rows
+      stockData.forEach((item, index) => {
+        yPos += 10;
+
+        // Check if we need a new page
+        if (yPos > 280) {
+          doc.addPage();
+          yPos = 20;
+        }
+
+        xPos = 10;
+
+        // Cell 1: Product Name
+        doc.text(item.productName.substring(0, 25), xPos, yPos);
+        xPos += columnWidths[0];
+
+        // Cell 2: Quantity
+        doc.text(item.quantity.toString(), xPos, yPos);
+        xPos += columnWidths[1];
+
+        // Cell 3: Price
+        doc.text(`$${item.price.toFixed(2)}`, xPos, yPos);
+        xPos += columnWidths[2];
+
+        // Cell 4: Added Date
+        const addedDate = new Date(item.manufacturingDate).toLocaleDateString();
+        doc.text(addedDate, xPos, yPos);
+        xPos += columnWidths[3];
+
+        // Cell 5: Updated Date
+        const updatedDate = new Date(item.lastUpdated).toLocaleDateString();
+        doc.text(updatedDate, xPos, yPos);
+      });
+
+      // Add summary information
+      yPos += 20;
+
+      // Check if we need a new page for summary
+      if (yPos > 260) {
+        doc.addPage();
+        yPos = 20;
+      }
+
+      doc.setFontSize(12);
+      doc.text(`Total Products: ${stockData.length}`, 14, yPos);
+      yPos += 10;
+
+      const totalQuantity = stockData.reduce((sum, item) => sum + item.quantity, 0);
+      doc.text(`Total Quantity: ${totalQuantity}`, 14, yPos);
+      yPos += 10;
+
+      const totalValue = stockData.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      doc.text(`Total Inventory Value: $${totalValue.toFixed(2)}`, 14, yPos);
+      yPos += 10;
+
+      doc.text(`Report Generated: ${new Date().toLocaleString()}`, 14, yPos);
 
       doc.save("stock_report.pdf");
     } catch (err) {
       console.error("Error generating PDF:", err);
+      alert("Failed to generate PDF. Please try again.");
     }
   };
 
@@ -338,36 +392,6 @@ const Stock = () => {
               <Bar data={monthlyChartData} options={monthlyChartOptions} />
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className="mt-8">
-        <h3 className="text-xl font-semibold mb-4 text-white">Stock Details</h3>
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-gray-900/80 border border-gray-800">
-            <thead>
-              <tr className="bg-gray-800">
-                <th className="py-2 px-4 border-b border-gray-700 text-gray-300">Product Name</th>
-                <th className="py-2 px-4 border-b border-gray-700 text-gray-300">Quantity</th>
-                <th className="py-2 px-4 border-b border-gray-700 text-gray-300">Price</th>
-                <th className="py-2 px-4 border-b border-gray-700 text-gray-300">Added Date</th>
-                <th className="py-2 px-4 border-b border-gray-700 text-gray-300">Last Updated</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stockData.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-800/50 transition-colors">
-                  <td className="py-2 px-4 border-b border-gray-800 text-gray-200">{item.productName}</td>
-                  <td className="py-2 px-4 border-b border-gray-800 text-gray-200">{item.quantity}</td>
-                  <td className="py-2 px-4 border-b border-gray-800 text-gray-200">${item.price.toFixed(2)}</td>
-                  <td className="py-2 px-4 border-b border-gray-800 text-gray-200">{item.manufacturingDate}</td>
-                  <td className="py-2 px-4 border-b border-gray-800 text-gray-200">
-                    {new Date(item.lastUpdated).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
     </div>
