@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import axios from 'axios';
-import './ProductForm.css';
 
 const ProductForm = () => {
   const [product, setProduct] = useState({
@@ -8,7 +7,7 @@ const ProductForm = () => {
     ManufacturingCost: '',
     sellingPrice: '',
     lowStockLevel: '',
-    quantity:'',
+    quantity: '',
     images: [],
     size: '',
     theme: '',
@@ -22,8 +21,8 @@ const ProductForm = () => {
   const [message, setMessage] = useState('');
   const [errors, setErrors] = useState({});
   const [activeTab, setActiveTab] = useState('details');
+  const inputRefs = useRef({});
 
-  // Dropdown options
   const sizeOptions = ['Small', 'Medium', 'Large', 'Giant'];
   const themeOptions = ['Birthday', 'Valentine\'s Day', 'Graduation', 'Get Well Soon'];
   const materialOptions = ['Plush', 'Cotton', 'Fleece', 'Eco-friendly / Recycled materials'];
@@ -32,14 +31,48 @@ const ProductForm = () => {
   const brandOptions = ['Branded teddy bears', 'Handmade collection', 'Limited Edition'];
   const promotionOptions = [10, 20, 30, 40, 50];
 
+  const validateField = (name, value) => {
+    const newErrors = {};
+    if (!value && inputRefs.current[name]?.required) {
+      newErrors[name] = `${name.replace(/([A-Z])/g, ' $1').trim()} is required`;
+    } else if (name === 'productName' && value.length < 3) {
+      newErrors[name] = 'Product name must be at least 3 characters';
+    } else if (['ManufacturingCost', 'sellingPrice', 'lowStockLevel', 'quantity'].includes(name)) {
+      if (isNaN(value) || value === '') {
+        newErrors[name] = `${name.replace(/([A-Z])/g, ' $1').trim()} must be a valid number`;
+      } else if (parseFloat(value) < 0) {
+        newErrors[name] = `${name.replace(/([A-Z])/g, ' $1').trim()} cannot be negative`;
+      } else if (name === 'sellingPrice' && product.ManufacturingCost && parseFloat(value) <= parseFloat(product.ManufacturingCost)) {
+        newErrors[name] = 'Selling price must be higher than manufacturing cost';
+      }
+    }
+    return newErrors[name] || '';
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProduct((prev) => ({
       ...prev,
       [name]: value
     }));
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+    const error = validateField(name, value);
+    setErrors(prev => ({ ...prev, [name]: error }));
+  };
+
+  const handleFocus = (e) => {
+    const { name } = e.target;
+    const fields = Object.keys(inputRefs.current);
+    const currentIndex = fields.indexOf(name);
+
+    for (let i = 0; i < currentIndex; i++) {
+      const prevField = fields[i];
+      const prevValue = product[prevField];
+      const error = validateField(prevField, prevValue);
+      if (error) {
+        setErrors(prev => ({ ...prev, [prevField]: error }));
+        inputRefs.current[prevField]?.focus();
+        return;
+      }
     }
   };
 
@@ -47,13 +80,6 @@ const ProductForm = () => {
     setProduct((prev) => ({
       ...prev,
       images: Array.from(e.target.files)
-    }));
-  };
-
-  const handleMultiSelect = (name, value) => {
-    setProduct(prev => ({
-      ...prev,
-      [name]: value
     }));
   };
 
@@ -68,19 +94,10 @@ const ProductForm = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (product.sellingPrice < 0) {
-      newErrors.sellingPrice = 'Selling price cannot be negative';
-    }
-    if (product.ManufacturingCost < 0) {
-      newErrors.ManufacturingCost = 'Manufacturing cost cannot be negative';
-    }
-    if (product.sellingPrice && product.ManufacturingCost &&
-        parseFloat(product.sellingPrice) <= parseFloat(product.ManufacturingCost)) {
-      newErrors.sellingPrice = 'Selling price must be higher than manufacturing cost';
-    }
-    if (product.lowStockLevel < 0) {
-      newErrors.lowStockLevel = 'Low stock level cannot be negative';
-    }
+    Object.keys(inputRefs.current).forEach(name => {
+      const error = validateField(name, product[name]);
+      if (error) newErrors[name] = error;
+    });
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -94,38 +111,27 @@ const ProductForm = () => {
     }
 
     const formData = new FormData();
-    formData.append('productName', product.productName);
-    formData.append('ManufacturingCost', product.ManufacturingCost);
-    formData.append('sellingPrice', product.sellingPrice);
-    formData.append('lowStockLevel', product.lowStockLevel);
-    formData.append('quantity', product.quantity);
-    formData.append('size', product.size);
-    formData.append('theme', product.theme);
-    formData.append('material', product.material);
-    formData.append('color', product.color);
-    formData.append('function', product.function);
-    formData.append('brand', product.brand);
-    formData.append('promotions', JSON.stringify(product.promotions));
-    formData.append('manufacturingDate', product.manufacturingDate);
-
-    product.images.forEach((image) => {
-      formData.append('images', image);
+    Object.entries(product).forEach(([key, value]) => {
+      if (key === 'images') {
+        value.forEach((image) => formData.append('images', image));
+      } else if (key === 'promotions') {
+        formData.append(key, JSON.stringify(value));
+      } else {
+        formData.append(key, value);
+      }
     });
 
     try {
       const response = await axios.post('http://localhost:5000/api/products', formData, {
-        headers: {
-          'content-type': 'multipart/form-data'
-        }
+        headers: { 'content-type': 'multipart/form-data' }
       });
-
       setMessage({ text: response.data.message, type: "success" });
       setProduct({
         productName: '',
         ManufacturingCost: '',
         sellingPrice: '',
         lowStockLevel: '',
-        quantity:'',
+        quantity: '',
         images: [],
         size: '',
         theme: '',
@@ -136,6 +142,7 @@ const ProductForm = () => {
         promotions: [],
         manufacturingDate: new Date().toISOString().split('T')[0]
       });
+      setErrors({});
       setTimeout(() => setMessage(null), 3000);
     } catch (error) {
       setMessage({
@@ -150,29 +157,17 @@ const ProductForm = () => {
     <div className="max-w-4xl mx-auto p-6 bg-gray-800 rounded-lg shadow-lg">
       <h1 className="text-2xl font-bold text-white mb-6">Add New Product</h1>
 
-      {/* Tab Navigation */}
       <div className="flex border-b border-gray-700 mb-6">
-        <button
-          type="button"
-          className={`py-2 px-4 font-medium text-sm ${activeTab === 'details' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-white'}`}
-          onClick={() => setActiveTab('details')}
-        >
-          Product Details
-        </button>
-        <button
-          type="button"
-          className={`py-2 px-4 font-medium text-sm ${activeTab === 'pricing' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-white'}`}
-          onClick={() => setActiveTab('pricing')}
-        >
-          Pricing
-        </button>
-        <button
-          type="button"
-          className={`py-2 px-4 font-medium text-sm ${activeTab === 'images' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-white'}`}
-          onClick={() => setActiveTab('images')}
-        >
-          Images
-        </button>
+        {['details', 'pricing', 'images'].map(tab => (
+          <button
+            key={tab}
+            type="button"
+            className={`py-2 px-4 font-medium text-sm ${activeTab === tab ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-white'}`}
+            onClick={() => setActiveTab(tab)}
+          >
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
       </div>
 
       {message && (
@@ -181,8 +176,7 @@ const ProductForm = () => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} id="productForm">
-        {/* Details Tab */}
+      <form id="productForm">
         {activeTab === 'details' && (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div className="sm:col-span-2">
@@ -194,8 +188,11 @@ const ProductForm = () => {
                 name="productName"
                 value={product.productName}
                 onChange={handleChange}
+                onFocus={handleFocus}
+                ref={el => inputRefs.current.productName = el}
                 required
               />
+              {errors.productName && <p className="mt-1 text-sm text-red-400">{errors.productName}</p>}
             </div>
 
             <div>
@@ -207,146 +204,61 @@ const ProductForm = () => {
                 name="manufacturingDate"
                 value={product.manufacturingDate}
                 onChange={handleChange}
+                onFocus={handleFocus}
+                ref={el => inputRefs.current.manufacturingDate = el}
                 required
               />
+              {errors.manufacturingDate && <p className="mt-1 text-sm text-red-400">{errors.manufacturingDate}</p>}
             </div>
 
-            {/* Size Selector */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">By Size:</label>
-              <select
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
-                value={product.size}
-                onChange={(e) => handleChange(e)}
-                name="size"
-              >
-                <option value="">Select size</option>
-                {sizeOptions.map((size, index) => (
-                  <option key={index} value={size}>{size}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Theme Selector */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">By Theme:</label>
-              <select
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
-                value={product.theme}
-                onChange={(e) => handleChange(e)}
-                name="theme"
-              >
-                <option value="">Select theme</option>
-                {themeOptions.map((theme, index) => (
-                  <option key={index} value={theme}>{theme}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Material Selector */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">By Material:</label>
-              <select
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
-                value={product.material}
-                onChange={(e) => handleChange(e)}
-                name="material"
-              >
-                <option value="">Select material</option>
-                {materialOptions.map((material, index) => (
-                  <option key={index} value={material}>{material}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Color Selector */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">By Color:</label>
-              <select
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
-                value={product.color}
-                onChange={(e) => handleChange(e)}
-                name="color"
-              >
-                <option value="">Select color</option>
-                {colorOptions.map((color, index) => (
-                  <option key={index} value={color}>{color}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Function Selector */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">By Function:</label>
-              <select
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
-                value={product.function}
-                onChange={(e) => handleChange(e)}
-                name="function"
-              >
-                <option value="">Select function</option>
-                {functionOptions.map((func, index) => (
-                  <option key={index} value={func}>{func}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Brand Selector */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">By Brand or Collection:</label>
-              <select
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
-                value={product.brand}
-                onChange={(e) => handleChange(e)}
-                name="brand"
-              >
-                <option value="">Select brand/collection</option>
-                {brandOptions.map((brand, index) => (
-                  <option key={index} value={brand}>{brand}</option>
-                ))}
-              </select>
-            </div>
+            {['size', 'theme', 'material', 'color', 'function', 'brand'].map(field => (
+              <div key={field}>
+                <label className="block text-sm font-medium text-gray-300 mb-1">{`By ${field.charAt(0).toUpperCase() + field.slice(1)}:`}</label>
+                <select
+                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
+                  value={product[field]}
+                  onChange={handleChange}
+                  onFocus={handleFocus}
+                  name={field}
+                  ref={el => inputRefs.current[field] = el}
+                >
+                  <option value="">Select {field}</option>
+                  {(field === 'size' ? sizeOptions :
+                    field === 'theme' ? themeOptions :
+                    field === 'material' ? materialOptions :
+                    field === 'color' ? colorOptions :
+                    field === 'function' ? functionOptions :
+                    brandOptions).map((option, index) => (
+                      <option key={index} value={option}>{option}</option>
+                    ))}
+                </select>
+                {errors[field] && <p className="mt-1 text-sm text-red-400">{errors[field]}</p>}
+              </div>
+            ))}
           </div>
         )}
 
-        {/* Pricing Tab */}
         {activeTab === 'pricing' && (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1" htmlFor="ManufacturingCost">Manufacturing Cost:</label>
-              <input
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
-                type="number"
-                id="ManufacturingCost"
-                name="ManufacturingCost"
-                value={product.ManufacturingCost}
-                onChange={handleChange}
-                min="0"
-                step="0.01"
-                required
-              />
-              {errors.ManufacturingCost && (
-                <p className="mt-1 text-sm text-red-400">{errors.ManufacturingCost}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1" htmlFor="sellingPrice">Selling Price:</label>
-              <input
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
-                type="number"
-                id="sellingPrice"
-                name="sellingPrice"
-                value={product.sellingPrice}
-                onChange={handleChange}
-                min="0"
-                step="0.01"
-                required
-              />
-              {errors.sellingPrice && (
-                <p className="mt-1 text-sm text-red-400">{errors.sellingPrice}</p>
-              )}
-            </div>
+            {['ManufacturingCost', 'sellingPrice', 'lowStockLevel', 'quantity'].map(field => (
+              <div key={field}>
+                <label className="block text-sm font-medium text-gray-300 mb-1" htmlFor={field}>{field.replace(/([A-Z])/g, ' $1').trim()}:</label>
+                <input
+                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
+                  type="number"
+                  id={field}
+                  name={field}
+                  value={product[field]}
+                  onChange={handleChange}
+                  onFocus={handleFocus}
+                  min="0"
+                  step={field === 'ManufacturingCost' || field === 'sellingPrice' ? "0.01" : "1"}
+                  ref={el => inputRefs.current[field] = el}
+                  required
+                />
+                {errors[field] && <p className="mt-1 text-sm text-red-400">{errors[field]}</p>}
+              </div>
+            ))}
 
             <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-300 mb-1">Promotions:</label>
@@ -370,45 +282,15 @@ const ProductForm = () => {
                 </p>
               )}
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1" htmlFor="lowStockLevel">Low Stock Level:</label>
-              <input
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
-                type="number"
-                id="lowStockLevel"
-                name="lowStockLevel"
-                value={product.lowStockLevel}
-                onChange={handleChange}
-                min="0"
-                required
-              />
-              {errors.lowStockLevel && (
-                <p className="mt-1 text-sm text-red-400">{errors.lowStockLevel}</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1" htmlFor="quantity">Quantity:</label>
-              <input
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:ring-blue-500 focus:border-blue-500"
-                id="quantity"
-                name="quantity"
-                value={product.quantity}
-                onChange={handleChange}
-                min="0"
-                required
-              />
-            </div>
           </div>
         )}
 
-        {/* Images Tab */}
         {activeTab === 'images' && (
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">Upload Images:</label>
             <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center bg-gray-700 hover:border-gray-500 transition-colors">
               <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656  halogenL28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
                   strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               <div className="flex justify-center text-sm text-gray-400 mt-2">
@@ -458,16 +340,21 @@ const ProductForm = () => {
               type="button"
               className="ml-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               onClick={() => {
-                if (activeTab === 'details') setActiveTab('pricing');
-                if (activeTab === 'pricing') setActiveTab('images');
+                if (validateForm()) {
+                  setActiveTab(activeTab === 'details' ? 'pricing' : 'images');
+                } else {
+                  const firstErrorField = Object.keys(errors).find(key => errors[key]);
+                  if (firstErrorField) inputRefs.current[firstErrorField]?.focus();
+                }
               }}
             >
               Next
             </button>
           ) : (
             <button
-              type="submit"
+              type="button"
               className="ml-auto px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+              onClick={handleSubmit}
             >
               Add Product
             </button>
