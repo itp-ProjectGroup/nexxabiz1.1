@@ -30,6 +30,7 @@ ChartJS.register(
 
 const Stock = () => {
   const [stockData, setStockData] = useState([]);
+  const [returnCount, setReturnCount] = useState(0); // New state for return count
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -52,15 +53,37 @@ const Stock = () => {
         }));
 
         setStockData(transformedData);
-        setLoading(false);
       } catch (err) {
         console.error('Error fetching stock data:', err);
         setError(`Failed to fetch stock data: ${err.message}`);
-        setLoading(false);
       }
     };
 
-    fetchStockData();
+    const fetchReturns = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/returns');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        // Calculate total return count by summing quantities in od_items
+        const totalReturns = data.reduce((sum, returnItem) => {
+          const itemQuantities = returnItem.od_items.reduce((itemSum, item) => itemSum + item.qty, 0);
+          return sum + itemQuantities;
+        }, 0);
+        setReturnCount(totalReturns);
+      } catch (err) {
+        console.error('Error fetching return data:', err);
+        setError(`Failed to fetch return data: ${err.message}`);
+      }
+    };
+
+    const fetchData = async () => {
+      await Promise.all([fetchStockData(), fetchReturns()]);
+      setLoading(false);
+    };
+
+    fetchData();
   }, []);
 
   const handleExportCSV = () => {
@@ -88,24 +111,17 @@ const Stock = () => {
     const doc = new jsPDF('p', 'mm', 'a4');
 
     try {
-      // Add title to the PDF
       doc.setFontSize(18);
       doc.setTextColor(0, 0, 0);
       doc.text("Stock Report", 105, 15, { align: "center" });
 
-      // Create simple stock table directly in PDF instead of using html2canvas
       doc.setFontSize(14);
       doc.text("Stock Details", 14, 30);
-
-      // Table headers
-      doc.setFontSize(10);
-      doc.setTextColor(0, 0, 0);
 
       const headers = ["Product Name", "Quantity", "Price", "Added Date", "Last Updated"];
       const columnWidths = [60, 25, 25, 40, 40];
       let yPos = 40;
 
-      // Draw header row
       let xPos = 10;
       headers.forEach((header, i) => {
         doc.text(header, xPos, yPos);
@@ -113,46 +129,30 @@ const Stock = () => {
       });
 
       yPos += 5;
-      doc.line(10, yPos, 200, yPos); // Horizontal line after headers
+      doc.line(10, yPos, 200, yPos);
 
-      // Draw data rows
       stockData.forEach((item, index) => {
         yPos += 10;
-
-        // Check if we need a new page
         if (yPos > 280) {
           doc.addPage();
           yPos = 20;
         }
 
         xPos = 10;
-
-        // Cell 1: Product Name
         doc.text(item.productName.substring(0, 25), xPos, yPos);
         xPos += columnWidths[0];
-
-        // Cell 2: Quantity
         doc.text(item.quantity.toString(), xPos, yPos);
         xPos += columnWidths[1];
-
-        // Cell 3: Price
         doc.text(`$${item.price.toFixed(2)}`, xPos, yPos);
         xPos += columnWidths[2];
-
-        // Cell 4: Added Date
         const addedDate = new Date(item.manufacturingDate).toLocaleDateString();
         doc.text(addedDate, xPos, yPos);
         xPos += columnWidths[3];
-
-        // Cell 5: Updated Date
         const updatedDate = new Date(item.lastUpdated).toLocaleDateString();
         doc.text(updatedDate, xPos, yPos);
       });
 
-      // Add summary information
       yPos += 20;
-
-      // Check if we need a new page for summary
       if (yPos > 260) {
         doc.addPage();
         yPos = 20;
@@ -161,15 +161,14 @@ const Stock = () => {
       doc.setFontSize(12);
       doc.text(`Total Products: ${stockData.length}`, 14, yPos);
       yPos += 10;
-
       const totalQuantity = stockData.reduce((sum, item) => sum + item.quantity, 0);
       doc.text(`Total Quantity: ${totalQuantity}`, 14, yPos);
       yPos += 10;
-
       const totalValue = stockData.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       doc.text(`Total Inventory Value: $${totalValue.toFixed(2)}`, 14, yPos);
       yPos += 10;
-
+      doc.text(`Total Returns: ${returnCount}`, 14, yPos);
+      yPos += 10;
       doc.text(`Report Generated: ${new Date().toLocaleString()}`, 14, yPos);
 
       doc.save("stock_report.pdf");
@@ -186,7 +185,6 @@ const Stock = () => {
     ];
 
     const monthlyCounts = {};
-
     monthNames.forEach(month => {
       monthlyCounts[month] = 0;
     });
@@ -203,17 +201,13 @@ const Stock = () => {
     };
   };
 
-  // Calculate key business metrics
   const calculateMetrics = () => {
-    // Total count of products (sum of all quantities)
     const totalProductCount = stockData.reduce((sum, item) => sum + item.quantity, 0);
-
-    // Target revenue (sum of price × quantity for each product)
     const targetRevenue = stockData.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
     return {
       totalProductCount,
-      targetRevenue
+      targetRevenue,
+      returnCount
     };
   };
 
@@ -260,7 +254,7 @@ const Stock = () => {
         backgroundColor: 'rgba(59, 130, 246, 0.7)',
         borderColor: 'rgba(59, 130, 246, 1)',
         borderWidth: 1,
-        hoverBackgroundColor: 'rgba(59, 130, 246, 0.9)',
+        hoverWBackgroundColor: 'rgba(59, 130, 246, 0.9)',
       },
     ],
   };
@@ -384,7 +378,7 @@ const Stock = () => {
       <h2 className="text-2xl font-bold mb-4 text-white">Stock Management</h2>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-blue-900/80 p-4 rounded-lg border border-blue-800 shadow-lg">
           <div className="flex flex-col">
             <h3 className="text-lg font-semibold text-blue-200 mb-1">Total Product Count</h3>
@@ -398,6 +392,14 @@ const Stock = () => {
             <h3 className="text-lg font-semibold text-green-200 mb-1">Target Revenue</h3>
             <p className="text-3xl font-bold text-white">${metrics.targetRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
             <p className="text-sm text-green-300 mt-1">Based on current inventory and prices</p>
+          </div>
+        </div>
+
+        <div className="bg-amber-900/80 p-4 rounded-lg border border-amber-800 shadow-lg">
+          <div className="flex flex-col">
+            <h3 className="text-lg font-semibold text-amber-200 mb-1">Total Returns</h3>
+            <p className="text-3xl font-bold text-white">{metrics.returnCount.toLocaleString()}</p>
+            <p className="text-sm text-amber-300 mt-1">Total quantity of returned products</p>
           </div>
         </div>
       </div>
