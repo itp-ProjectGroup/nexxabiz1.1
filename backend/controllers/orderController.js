@@ -51,26 +51,42 @@ export const updateOrderPaymentStatus = async (req, res) => {
     const { orderId } = req.params;
     const { pay_status } = req.body;
 
+    console.log("Received request to update payment status.");
+    console.log("Order ID from params:", orderId);
+    console.log("New payment status from body:", pay_status);
+
     if (!pay_status) {
         return res.status(400).json({ message: "Payment status is required" });
     }
 
     try {
+        // Debug log to check if orderId is being passed correctly
+        console.log("Searching for order with od_Id:", orderId);
+
+        // Make sure 'od_Id' matches the field in your MongoDB documents
         const order = await Order.findOne({ od_Id: orderId });
+
         if (!order) {
+            console.error("Order not found for ID:", orderId);
             return res.status(404).json({ message: "Order not found" });
         }
 
+        // Update and save payment status
         order.pay_status = pay_status;
         await order.save();
 
-        res.status(200).json({ 
-            message: "Order payment status updated successfully", 
-            status: pay_status 
+        console.log("Order updated successfully:", order);
+
+        return res.status(200).json({
+            message: "Order payment status updated successfully",
+            status: pay_status
         });
     } catch (error) {
         console.error("Error updating order payment status:", error);
-        res.status(500).json({ message: "Server error", error: error.toString() });
+        return res.status(500).json({
+            message: "Server error",
+            error: error.message || error.toString()
+        });
     }
 };
 

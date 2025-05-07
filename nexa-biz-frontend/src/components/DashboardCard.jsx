@@ -64,20 +64,18 @@ const DashboardCard = ({
           {chart}
         </div>
       ) : (
-        <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold text-gray-300 truncate">{title}</h3>
-            {icon && <span className="text-2xl">{icon}</span>}
-          </div>
-          <div className="text-2xl md:text-3xl font-bold text-blue-400 break-words mb-2">
-            {formattedValue}
-          </div>
-          {description && (
-            <p className="text-sm text-gray-400 mt-auto">
-              {description}
-            </p>
-          )}
+        <>
+          <h3 className="text-lg font-semibold mb-2 text-gray-300 truncate">{title}</h3>
+          <div
+  className={`text-2xl md:text-3xl font-bold break-words ${
+            (typeof value === 'string' && value.includes('-')) || (typeof value === 'number' && value < 0)
+              ? 'text-red-500'
+              : 'text-blue-400'
+          }`}
+        >
+          {formattedValue}
         </div>
+        </>
       )}
     </div>
   );

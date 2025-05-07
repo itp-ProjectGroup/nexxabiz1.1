@@ -29,10 +29,10 @@ const OrderSchema = new mongoose.Schema({
     required: true, 
     enum: ["Paid", "Unpaid", "Pending"] 
   },
-  od_Tamount: { type: Number, required: true },
   od_date: { type: Date, default: Date.now },
   overdue_date: { type: Date, default: null },
-  items: { type: [OrderItemSchema], default: [] }
+  od_items: { type: [OrderItemSchema], default: [] },
+  userID: { type: String, required: true }, // <- New field added here
 });
 
 const Order = mongoose.model("Order", OrderSchema);
