@@ -128,6 +128,17 @@ const Header = () => {
                 {isProductsTab ? (
                     <div className="ml-6 w-full max-w-md">
                     <nav className="flex space-x-8">
+                    <NavLink
+                        to="/admin/products/stock"
+                        className={({ isActive }) =>
+                          `text-lg transition-opacity duration-200 ${
+                            isActive ? 'text-blue-500 font-bold opacity-100' : 'text-gray-300 opacity-75'
+                          }`
+                        }
+                      >
+                        Stock Levels
+                      </NavLink>
+                      
                       <NavLink
                         to="/admin/products/add"
                         className={({ isActive }) =>
@@ -148,16 +159,7 @@ const Header = () => {
                       >
                         View Products
                       </NavLink>
-                      <NavLink
-                        to="/admin/products/stock"
-                        className={({ isActive }) =>
-                          `text-lg transition-opacity duration-200 ${
-                            isActive ? 'text-blue-500 font-bold opacity-100' : 'text-gray-300 opacity-75'
-                          }`
-                        }
-                      >
-                        Stock Levels
-                      </NavLink>
+
                     </nav>
                   </div>
 

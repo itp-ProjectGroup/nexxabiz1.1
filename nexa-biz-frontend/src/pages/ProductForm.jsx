@@ -153,18 +153,21 @@ const ProductForm = () => {
       {/* Tab Navigation */}
       <div className="flex border-b border-gray-700 mb-6">
         <button
+          type="button" 
           className={`py-2 px-4 font-medium text-sm ${activeTab === 'details' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-white'}`}
           onClick={() => setActiveTab('details')}
         >
           Product Details
         </button>
         <button
+          type="button"
           className={`py-2 px-4 font-medium text-sm ${activeTab === 'pricing' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-white'}`}
           onClick={() => setActiveTab('pricing')}
         >
           Pricing
         </button>
         <button
+          type="button"
           className={`py-2 px-4 font-medium text-sm ${activeTab === 'images' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-white'}`}
           onClick={() => setActiveTab('images')}
         >
@@ -178,7 +181,7 @@ const ProductForm = () => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} id="productForm">
         {/* Details Tab */}
         {activeTab === 'details' && (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
