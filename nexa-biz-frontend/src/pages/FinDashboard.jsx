@@ -24,6 +24,7 @@ const FinDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("all");
     const [selectedPayment, setSelectedPayment] = useState(null);
+    const [selectedProduct, setSelectedProduct] = useState(null);
     const [isPaymentDetailsModalOpen, setIsPaymentDetailsModalOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,12 +32,13 @@ const FinDashboard = () => {
     const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
     const [filteredOrders, setFilteredOrders] = useState([]);
     const [filteredPayments, setFilteredPayments] = useState([]);
+    const [filteredReturns, setFilteredReturns] = useState([]);
     const [exportType, setExportType] = useState('');
     const [showExportOptions, setShowExportOptions] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [allFilteredData, setAllFilteredData] = useState({orders: [], payments: []});
     const [dateFilteredOrders, setDateFilteredOrders] = useState([]);
     const [dateFilteredPayments, setDateFilteredPayments] = useState([]);
+    const [dateFilteredReturns, setDateFilteredReturns] = useState([]);
 
     useEffect(() => {
         fetchOrders();
@@ -44,7 +46,16 @@ const FinDashboard = () => {
         fetchProducts();
         fetchUsers();
         fetchReturns();
+
+        // Handle payment update
+    
     }, []);
+
+    const handlePaymentUpdate = async () => {
+        // Fetch the latest payments and orders to refresh the state
+        await fetchPayments();
+        await fetchOrders();
+    };
 
     const fetchUsers = async () => {
         try {
@@ -58,9 +69,12 @@ const FinDashboard = () => {
     const fetchReturns = async () => {
         try {
             const response = await axios.get("http://localhost:5000/api/returns");
-            setReturns(response.data);
+            const returnsData = response.data;
+            console.log("Fetched returns:", returnsData); // Debug log
+            setReturns(returnsData);
         } catch (error) {
             console.error("Error fetching returns:", error);
+            setReturns([]); // Set empty array on error
         }
     };
 
@@ -116,6 +130,9 @@ const FinDashboard = () => {
 
     useEffect(() => {
         let tempFilteredOrders = orders;
+        let tempFilteredPayments = payments;
+        let tempFilteredReturns = returns;
+
         if (dateFilter.startDate || dateFilter.endDate) {
             tempFilteredOrders = orders.filter(order => {
                 const orderDate = new Date(order.od_date);
@@ -134,12 +151,7 @@ const FinDashboard = () => {
                 
                 return passesFilter;
             });
-        }
-        
-        setDateFilteredOrders(tempFilteredOrders);
-        
-        let tempFilteredPayments = payments;
-        if (dateFilter.startDate || dateFilter.endDate) {
+
             tempFilteredPayments = payments.filter(payment => {
                 const paymentDate = new Date(payment.createdAt);
                 let passesFilter = true;
@@ -157,10 +169,30 @@ const FinDashboard = () => {
                 
                 return passesFilter;
             });
+
+            tempFilteredReturns = returns.filter(ret => {
+                const returnDate = ret.ret_date ? new Date(ret.ret_date) : null;
+                let passesFilter = true;
+                
+                if (dateFilter.startDate) {
+                    const startDate = new Date(dateFilter.startDate);
+                    passesFilter = passesFilter && returnDate && returnDate >= startDate;
+                }
+                
+                if (dateFilter.endDate) {
+                    const endDate = new Date(dateFilter.endDate);
+                    endDate.setHours(23, 59, 59, 999);
+                    passesFilter = passesFilter && returnDate && returnDate <= endDate;
+                }
+                
+                return passesFilter || !returnDate;
+            });
         }
         
+        setDateFilteredOrders(tempFilteredOrders);
         setDateFilteredPayments(tempFilteredPayments);
-    }, [orders, payments, dateFilter]);
+        setDateFilteredReturns(tempFilteredReturns);
+    }, [orders, payments, returns, dateFilter]);
 
     useEffect(() => {
         const tabFilteredOrders = dateFilteredOrders.filter(order => {
@@ -179,7 +211,8 @@ const FinDashboard = () => {
         
         setFilteredOrders(tabFilteredOrders);
         setFilteredPayments(dateFilteredPayments);
-    }, [dateFilteredOrders, dateFilteredPayments, activeTab]);
+        setFilteredReturns(dateFilteredReturns);
+    }, [dateFilteredOrders, dateFilteredPayments, dateFilteredReturns, activeTab]);
 
     const exportData = (format) => {
         setShowExportOptions(false);
@@ -203,7 +236,7 @@ const FinDashboard = () => {
             filename = `return_report_${new Date().toISOString().split('T')[0]}`;
             headers = ["Return ID", "User ID", "Payment Status", "Total Amount"];
             
-            dataToExport = returns.map(ret => ({
+            dataToExport = filteredReturns.map(ret => ({
                 "Return ID": ret.ret_Id,
                 "User ID": ret.userID,
                 "Payment Status": ret.pay_status,
@@ -427,15 +460,6 @@ const FinDashboard = () => {
 
     useEffect(() => {
         if (!searchQuery) {
-            setAllFilteredData({
-                orders: dateFilteredOrders,
-                payments: dateFilteredPayments
-            });
-        }
-    }, [dateFilteredOrders, dateFilteredPayments, searchQuery]);
-        
-    useEffect(() => {
-        if (!searchQuery) {
             setFilteredOrders(
                 dateFilteredOrders.filter(order => {
                     if (activeTab === "paid") return order.pay_status === "Paid";
@@ -452,8 +476,9 @@ const FinDashboard = () => {
                 })
             );
             setFilteredPayments(dateFilteredPayments);
+            setFilteredReturns(dateFilteredReturns);
         } else {
-            const matchingOrders = allFilteredData.orders.filter(order => {
+            const matchingOrders = dateFilteredOrders.filter(order => {
                 const customerNameMatch = order.company_name && 
                     order.company_name.toLowerCase().includes(searchQuery.toLowerCase());
                 
@@ -474,14 +499,23 @@ const FinDashboard = () => {
             
             const matchingOrderIds = new Set(matchingOrders.map(order => order.od_Id));
             
-            const matchingPayments = allFilteredData.payments.filter(payment => 
+            const matchingPayments = dateFilteredPayments.filter(payment => 
                 matchingOrderIds.has(payment.orderId)
             );
+
+            const matchingReturns = dateFilteredReturns.filter(ret => {
+                const user = users.find(u => u.userID === ret.userID);
+                const companyNameMatch = user?.u_companyName?.toLowerCase().includes(searchQuery.toLowerCase());
+                const returnIdMatch = ret.ret_Id.toString().toLowerCase().includes(searchQuery.toLowerCase());
+                const statusMatch = ret.pay_status.toLowerCase().includes(searchQuery.toLowerCase());
+                return companyNameMatch || returnIdMatch || statusMatch;
+            });
             
             setFilteredOrders(matchingOrders);
             setFilteredPayments(matchingPayments);
+            setFilteredReturns(matchingReturns);
         }
-    }, [searchQuery, activeTab, allFilteredData]);
+    }, [searchQuery, activeTab, dateFilteredOrders, dateFilteredPayments, dateFilteredReturns, users]);
 
     const handleSearch = (query) => {
         setSearchQuery(query);
@@ -549,7 +583,7 @@ const FinDashboard = () => {
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold text-white">Payment Records</h2>
                     <div className="flex items-center">
-                        <div className="mb-4 flex justify-center mr-4">
+                        <div className="mb-2 flex justify-center mr-40 ">
                             <FinSearchBar 
                                 data={[...orders, ...payments, ...returns]} 
                                 onSearch={handleSearch} 
@@ -669,7 +703,7 @@ const FinDashboard = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {returns.map(ret => (
+                                {filteredReturns.map(ret => (
                                     <tr key={ret.ret_Id} className="border-b border-gray-700 hover:bg-gray-800 text-center">
                                         <td className="py-3 px-4 font-medium text-white">{ret.ret_Id}</td>
                                         <td className="py-3 px-4 text-gray-300">{ret.userID}</td>
@@ -792,6 +826,9 @@ const FinDashboard = () => {
                     await fetchPayments();
                     await fetchOrders();
                 }}
+                onUpdate={handlePaymentUpdate} // Add this line to fix the issue
+                products={products}
+                payments={payments}
             />
         </div>
     );

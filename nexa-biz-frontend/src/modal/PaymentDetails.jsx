@@ -3,14 +3,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { useState, useEffect } from "react";
 
-const PaymentDetails = ({ payment, isOpen, onClose, order, onEdit, onDelete }) => {
+const PaymentDetails = ({ payment, isOpen, onClose, order, onDelete, products, payments, onUpdate }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editedPayment, setEditedPayment] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [refreshKey, setRefreshKey] = useState(0); // Add a refresh key for forcing re-render
+    const [refreshKey, setRefreshKey] = useState(0);
+    const [remainingBalance, setRemainingBalance] = useState(0);
+    const [fadeIn, setFadeIn] = useState(false);
 
     useEffect(() => {
-        // Reset the form when a new payment is loaded
+        if (order) {
+            calculateRemainingBalance();
+            setFadeIn(true);
+        }
+    }, [order, products, payments]);
+
+    useEffect(() => {
         if (payment) {
             setEditedPayment({
                 paymentMethod: payment.paymentMethod || "",
@@ -19,11 +27,10 @@ const PaymentDetails = ({ payment, isOpen, onClose, order, onEdit, onDelete }) =
                 createdAt: payment.createdAt ? new Date(payment.createdAt).toISOString().split('T')[0] : ""
             });
         }
-        // Reset edit mode when modal is closed
         if (!isOpen) {
             setIsEditing(false);
         }
-    }, [payment, isOpen, refreshKey]); // Add refreshKey dependency
+    }, [payment, isOpen, refreshKey]);
 
     if (!payment || !isOpen) return null;
 
@@ -31,17 +38,34 @@ const PaymentDetails = ({ payment, isOpen, onClose, order, onEdit, onDelete }) =
         const { name, value } = e.target;
         setEditedPayment(prev => ({
             ...prev,
-            [name]: name === "paymentAmount" ? parseFloat(value) : value
+            [name]: name === "paymentAmount" ? parseFloat(value) || 0 : value
         }));
     };
 
     const handleSaveChanges = async () => {
         setIsSubmitting(true);
         try {
-            // Create payload with only the fields that should be updated
+            const orderTotal = calculateOrderTotal(order);
+            const newPaymentAmount = parseFloat(editedPayment.paymentAmount) || 0;
+
+            // Calculate total paid amount excluding the current payment's original amount
+            const otherPaymentsTotal = payments
+                .filter(p => p.paymentId !== payment.paymentId && p.orderId === order.od_Id)
+                .reduce((sum, p) => sum + (p.paymentAmount || 0), 0);
+            
+            // Total paid amount after applying the new payment amount
+            const totalPaidWithNewAmount = otherPaymentsTotal + newPaymentAmount;
+
+            // Validate that the total paid amount does not exceed orderTotal
+            if (totalPaidWithNewAmount > orderTotal) {
+                alert("Error: The total payment amount cannot exceed the order total.");
+                setIsSubmitting(false);
+                return;
+            }
+
             const payload = {
                 paymentMethod: editedPayment.paymentMethod,
-                paymentAmount: parseFloat(editedPayment.paymentAmount),
+                paymentAmount: newPaymentAmount,
                 remark: editedPayment.remark,
                 createdAt: editedPayment.createdAt ? new Date(editedPayment.createdAt).toISOString() : undefined
             };
@@ -50,16 +74,16 @@ const PaymentDetails = ({ payment, isOpen, onClose, order, onEdit, onDelete }) =
                 `http://localhost:5000/api/payments/${payment.paymentId}`,
                 payload
             );
-            
-            // Force refresh the component with new data
-            setRefreshKey(prev => prev + 1);
-            setIsEditing(false);
-            
-            // Call the parent's refresh function if available
-            if (typeof onDelete === "function") {
-                onDelete(); // Use onDelete as a refresh trigger
+
+            // Call onUpdate to notify parent of the updated payment
+            if (typeof onUpdate === "function") {
+                onUpdate(response.data); // Pass the updated payment data
             }
-            
+
+            // Recalculate remaining balance
+            calculateRemainingBalance();
+
+            setIsEditing(false);
             alert("Payment updated successfully");
         } catch (error) {
             console.error("Error updating payment:", error);
@@ -75,9 +99,9 @@ const PaymentDetails = ({ payment, isOpen, onClose, order, onEdit, onDelete }) =
             try {
                 await axios.delete(`http://localhost:5000/api/payments/${payment.paymentId}`);
                 alert("Payment deleted successfully.");
-                onClose(); // Close the modal
+                onClose();
                 if (typeof onDelete === "function") {
-                    onDelete(); // Let parent refresh payments
+                    onDelete();
                 }
             } catch (error) {
                 console.error("Error deleting payment:", error);
@@ -86,19 +110,56 @@ const PaymentDetails = ({ payment, isOpen, onClose, order, onEdit, onDelete }) =
         }
     };
 
-    // Function to manually refresh the payment data
+    const calculateOrderTotal = (order) => {
+        if (!products || !Array.isArray(products) || !order || !Array.isArray(order.od_items)) return 0;
+    
+        return order.od_items.reduce((sum, item) => {
+            const product = products.find(p => p.manufacturingID === item.manufacturingID);
+            const price = product?.sellingPrice || 0;
+            return sum + price * item.qty;
+        }, 0);
+    };
+
+    const getPaidAmountForOrder = (orderId) => {
+        if (!payments || !Array.isArray(payments)) return 0;
+        const orderPayments = payments.filter(payment => payment.orderId === orderId);
+        const totalPaidAmount = orderPayments.reduce((sum, payment) => sum + (payment.paymentAmount || 0), 0);
+        return totalPaidAmount;
+    };
+
+    const calculateRemainingBalance = () => {
+        if (!order) return;
+        
+        const orderTotal = calculateOrderTotal(order);
+        const paidAmount = getPaidAmountForOrder(order.od_Id);
+        const remaining = orderTotal - paidAmount;
+        
+        setRemainingBalance(remaining);
+    };
+
     const refreshPaymentData = async () => {
         try {
             const response = await axios.get(`http://localhost:5000/api/payments/${payment.paymentId}`);
             if (response.data) {
-                // This assumes your API can get a single payment by ID
-                // You may need to adjust this logic based on your actual API design
                 setRefreshKey(prev => prev + 1);
             }
         } catch (error) {
             console.error("Error refreshing payment data:", error);
         }
     };
+
+    const getStatusColor = (status) => {
+        switch(status?.toLowerCase()) {
+            case 'paid': return 'bg-green-500';
+            case 'partially paid': return 'bg-yellow-500';
+            case 'pending': return 'bg-red-400';
+            default: return 'bg-gray-500';
+        }
+    };
+
+    const orderTotal = calculateOrderTotal(order);
+    const paidAmount = getPaidAmountForOrder(order.od_Id);
+    const completionPercentage = orderTotal ? (paidAmount / orderTotal) * 100 : 0;
 
     return (
         <AnimatePresence>
@@ -116,9 +177,8 @@ const PaymentDetails = ({ payment, isOpen, onClose, order, onEdit, onDelete }) =
                         exit={{ scale: 0.9, opacity: 0 }}
                         transition={{ type: "spring", stiffness: 200, damping: 20 }}
                     >
-                        {/* Header */}
                         <div className="flex justify-between items-center mb-4 border-b border-gray-600 pb-2">
-                            <h2 className="text-2xl font-bold tracking-wide text-white">
+                            <h2 className="text-xl font-bold tracking-wide text-white">
                                 {isEditing ? "✏️ Edit Payment" : "🧾 Payment Details"}
                             </h2>
                             <div className="flex items-center space-x-2">
@@ -128,7 +188,7 @@ const PaymentDetails = ({ payment, isOpen, onClose, order, onEdit, onDelete }) =
                                         className="hover:text-green-400 transition-colors duration-200"
                                         aria-label="Refresh"
                                     >
-                                        <RefreshCw size={20} />
+                                        <RefreshCw size={18} />
                                     </button>
                                 )}
                                 <button
@@ -136,25 +196,56 @@ const PaymentDetails = ({ payment, isOpen, onClose, order, onEdit, onDelete }) =
                                     className="hover:text-red-400 transition-colors duration-200"
                                     aria-label="Close"
                                 >
-                                    <X size={24} />
+                                    <X size={20} />
                                 </button>
                             </div>
                         </div>
 
-                        <div className="space-y-4 text-sm sm:text-base leading-relaxed">
-                            {/* Order Info First */}
+                        <div className="space-y-4 text-xs sm:text-sm leading-relaxed">
                             {order && (
                                 <div>
-                                    <h3 className="text-lg font-semibold mb-1 text-purple-400">Order Info</h3>
+                                    <h3 className="text-base font-semibold mb-1 text-purple-400">Order Info</h3>
                                     <p><span className="font-medium">Company:</span> {order.company_name}</p>
                                     <p><span className="font-medium">Status:</span> {order.od_status}</p>
-                                    <p><span className="font-medium">Total:</span> ${order.od_Tamount ? order.od_Tamount.toFixed(2) : '0.00'}</p>
+                                    
+                                    <div className="mt-3 mb-2">
+                                        <div className="flex justify-between mb-1 text-xs text-gray-400">
+                                            <span>Payment Progress</span>
+                                            <span>{completionPercentage.toFixed(0)}%</span>
+                                        </div>
+                                        <div className="w-full bg-gray-700 rounded-full h-1.5">
+                                            <div 
+                                                className="bg-gradient-to-r from-blue-500 to-purple-500 h-1.5 rounded-full transition-all duration-500"
+                                                style={{ width: `${completionPercentage}%` }}
+                                            ></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-2 mt-3">
+                                        <div className="bg-gray-800 p-2 rounded-lg">
+                                            <p className="text-gray-400 text-xs">Order Total</p>
+                                            <p className="text-sm font-bold text-white">${orderTotal.toFixed(2)}</p>
+                                        </div>
+                                        <div className="bg-gray-800 p-2 rounded-lg">
+                                            <p className="text-gray-400 text-xs">Amount Paid</p>
+                                            <p className="text-sm font-bold text-white">${paidAmount.toFixed(2)}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex justify-between items-center mt-3 bg-blue-900 bg-opacity-30 p-2 rounded-lg border border-blue-700">
+                                        <div>
+                                            <p className="text-blue-300 text-xs">Remaining Balance</p>
+                                            <p className="text-sm font-bold text-white">${remainingBalance.toFixed(2)}</p>
+                                        </div>
+                                        <div className={`${getStatusColor(order.pay_status)} px-2 py-0.5 rounded-full text-white text-xs`}>
+                                            {order.pay_status || 'Pending'}
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
-                            {/* Payment Info After */}
                             <div className="pt-4 border-t border-gray-700">
-                                <h3 className="text-lg font-semibold mb-1 text-teal-400">Payment Info</h3>
+                                <h3 className="text-base font-semibold mb-1 text-teal-400">Payment Info</h3>
                                 
                                 <p><span className="font-medium">Payment ID:</span> {payment.paymentId}</p>
                                 <p><span className="font-medium">Order ID:</span> {payment.orderId}</p>
@@ -162,55 +253,57 @@ const PaymentDetails = ({ payment, isOpen, onClose, order, onEdit, onDelete }) =
                                 {isEditing ? (
                                     <>
                                         <div className="mt-3 space-y-3">
-                                            <div>
-                                                <label className="block text-sm font-medium mb-1 text-gray-300">Payment Method</label>
+                                        <div className="flex gap-4 flex-wrap">
+                                            <div className="flex-1 min-w-[120px]">
+                                                <label className="block text-xs font-medium mb-1 text-gray-300">Payment Method</label>
                                                 <select
                                                     name="paymentMethod"
                                                     value={editedPayment.paymentMethod}
                                                     onChange={handleInputChange}
-                                                    className="w-full p-2 bg-gray-700 rounded border border-gray-600 text-white"
+                                                    className="w-full p-1.5 bg-gray-700 rounded border border-gray-600 text-white text-xs"
                                                 >
                                                     <option value="Cash">Cash</option>
                                                     <option value="Credit Card">Credit Card</option>
                                                     <option value="Bank Transfer">Bank Transfer</option>
+                                                    <option value="Cheque">Cheque</option>
                                                     <option value="PayPal">PayPal</option>
                                                     <option value="Other">Other</option>
                                                 </select>
                                             </div>
                                             
-                                            <div className="flex gap-4">
-                                                <div className="flex-1">
-                                                    <label className="block text-sm font-medium mb-1 text-gray-300">Amount</label>
-                                                    <input
-                                                        type="number"
-                                                        name="paymentAmount"
-                                                        value={editedPayment.paymentAmount}
-                                                        onChange={handleInputChange}
-                                                        step="0.01"
-                                                        className="w-full p-2 bg-gray-700 rounded border border-gray-600 text-white"
-                                                    />
-                                                </div>
-                                                
-                                                <div className="flex-1">
-                                                    <label className="block text-sm font-medium mb-1 text-gray-300">Date</label>
-                                                    <input
-                                                        type="date"
-                                                        name="createdAt"
-                                                        value={editedPayment.createdAt}
-                                                        onChange={handleInputChange}
-                                                        className="w-full p-2 bg-gray-700 rounded border border-gray-600 text-white"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium mb-1 text-gray-300">Remark</label>
-                                                <textarea
-                                                    name="remark"
-                                                    value={editedPayment.remark}
+                                            <div className="flex-1 min-w-[100px]">
+                                                <label className="block text-xs font-medium mb-1 text-gray-300">Amount</label>
+                                                <input
+                                                    type="number"
+                                                    name="paymentAmount"
+                                                    value={editedPayment.paymentAmount}
                                                     onChange={handleInputChange}
-                                                    className="w-full p-2 bg-gray-700 rounded border border-gray-600 text-white h-20"
+                                                    step="0.01"
+                                                    min="0"
+                                                    className="w-full p-1.5 bg-gray-700 rounded border border-gray-600 text-white text-xs"
                                                 />
                                             </div>
+                                            
+                                            <div className="flex-1 min-w-[100px]">
+                                                <label className="block text-xs font-medium mb-1 text-gray-300">Date</label>
+                                                <input
+                                                    type="date"
+                                                    name="createdAt"
+                                                    value={editedPayment.createdAt}
+                                                    onChange={handleInputChange}
+                                                    className="w-full p-1.5 bg-gray-700 rounded border border-gray-600 text-white text-xs"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium mb-1 text-gray-300">Remark</label>
+                                            <textarea
+                                                name="remark"
+                                                value={editedPayment.remark}
+                                                onChange={handleInputChange}
+                                                className="w-full p-1.5 bg-gray-700 rounded border border-gray-600 text-white text-xs h-16"
+                                            />
+                                        </div>
                                         </div>
                                     </>
                                 ) : (
@@ -232,17 +325,17 @@ const PaymentDetails = ({ payment, isOpen, onClose, order, onEdit, onDelete }) =
                                     <button
                                         onClick={handleSaveChanges}
                                         disabled={isSubmitting}
-                                        className={`flex items-center gap-1 px-4 py-2 text-white bg-teal-500 rounded-lg ${isSubmitting ? 'opacity-70 cursor-not-allowed' : 'hover:bg-teal-600'} transition-colors duration-300`}
+                                        className={`flex items-center gap-1 px-3 py-1.5 text-white bg-teal-500 rounded-lg text-xs ${isSubmitting ? 'opacity-70 cursor-not-allowed' : 'hover:bg-teal-600'} transition-colors duration-300`}
                                     >
-                                        {isSubmitting ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+                                        {isSubmitting ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
                                         {isSubmitting ? 'Saving...' : 'Save'}
                                     </button>
                                     <button
                                         onClick={() => setIsEditing(false)}
                                         disabled={isSubmitting}
-                                        className="flex items-center gap-1 px-4 py-2 text-white bg-gray-600 rounded-lg hover:bg-gray-700 transition-colors duration-300"
+                                        className="flex items-center gap-1 px-3 py-1.5 text-white bg-gray-600 rounded-lg hover:bg-gray-700 transition-colors duration-300 text-xs"
                                     >
-                                        <X size={16} />
+                                        <X size={14} />
                                         Cancel
                                     </button>
                                 </>
@@ -250,16 +343,16 @@ const PaymentDetails = ({ payment, isOpen, onClose, order, onEdit, onDelete }) =
                                 <>
                                     <button
                                         onClick={() => setIsEditing(true)}
-                                        className="flex items-center gap-1 px-4 py-2 text-white bg-teal-500 rounded-lg hover:bg-teal-600 transition-colors duration-300"
+                                        className="flex items-center gap-1 px-3 py-1.5 text-white bg-teal-500 rounded-lg hover:bg-teal-600 transition-colors duration-300 text-xs"
                                     >
-                                        <Edit2 size={16} />
+                                        <Edit2 size={14} />
                                         Edit
                                     </button>
                                     <button
                                         onClick={handleDeletePayment}
-                                        className="flex items-center gap-1 px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors duration-300"
+                                        className="flex items-center gap-1 px-3 py-1.5 text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors duration-300 text-xs"
                                     >
-                                        <Trash2 size={16} />
+                                        <Trash2 size={14} />
                                         Delete
                                     </button>
                                 </>
