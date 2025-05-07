@@ -8,7 +8,16 @@ const ProductSchema = new mongoose.Schema({
   lowStockLevel: { type: Number, default: 0 },
   quantity: { type: Number, required: true },
   manufacturingDate: { type: Date, required: true },
-  images: { type: [String], default: [] },
+  images: {
+    type: [String],
+    required: true,
+    validate: {
+      validator: function (arr) {
+        return Array.isArray(arr) && arr.length > 0;
+      },
+      message: 'At least one image is required.'
+    }
+  },
   size: { type: String },
   theme: { type: String },
   material: { type: String },
