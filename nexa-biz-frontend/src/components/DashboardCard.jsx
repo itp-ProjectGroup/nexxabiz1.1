@@ -46,7 +46,8 @@ const DashboardCard = ({
   chart, 
   icon, 
   description,
-  disableCurrencyFormatting = false 
+  disableCurrencyFormatting = false,
+  onClick 
 }) => {
   let formattedValue = value;
 
@@ -58,7 +59,10 @@ const DashboardCard = ({
   }
 
   return (
-    <div className="bg-gray-800 text-white p-4 rounded-lg shadow-lg h-full border border-gray-700 transition-all hover:shadow-xl overflow-hidden">
+    <div 
+      onClick={onClick}
+      className={`cursor-pointer bg-gray-800 text-white p-4 rounded-lg shadow-lg h-full border border-gray-700 transition-all hover:shadow-xl overflow-hidden`}
+    >
       {chart ? (
         <div className="h-full w-full">
           {chart}
@@ -67,14 +71,14 @@ const DashboardCard = ({
         <>
           <h3 className="text-lg font-semibold mb-2 text-gray-300 truncate">{title}</h3>
           <div
-  className={`text-2xl md:text-3xl font-bold break-words ${
-            (typeof value === 'string' && value.includes('-')) || (typeof value === 'number' && value < 0)
-              ? 'text-red-500'
-              : 'text-blue-400'
-          }`}
-        >
-          {formattedValue}
-        </div>
+            className={`text-2xl md:text-3xl font-bold break-words ${
+              (typeof value === 'string' && value.includes('-')) || (typeof value === 'number' && value < 0)
+                ? 'text-red-500'
+                : 'text-blue-400'
+            }`}
+          >
+            {formattedValue}
+          </div>
         </>
       )}
     </div>

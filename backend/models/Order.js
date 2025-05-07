@@ -1,22 +1,22 @@
 import mongoose from "mongoose";
 
+// Updated order item schema based on sample JSON
 const OrderItemSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  quantity: { type: Number, required: true, min: 1 },
-  price: { type: Number, required: true, min: 0 }
+  manufacturingID: { type: String, required: true },
+  qty: { type: Number, required: true, min: 1 }
 });
 
 const OrderSchema = new mongoose.Schema({
   od_Id: { type: String, required: true, unique: true },
   company_name: { type: String, required: true },
-  "user ID": { 
+  userID: { 
     type: String, 
     required: true,
     validate: {
       validator: function(v) {
-        return /^UID\d{5}$/.test(v);
+        return /^UID\d{6}$/.test(v); // matches UID followed by 6 digits
       },
-      message: props => `${props.value} is not a valid User ID! Must be in format UID00000`
+      message: props => `${props.value} is not a valid User ID! Must be in format UID000000`
     }
   },
   od_status: { 
@@ -27,12 +27,11 @@ const OrderSchema = new mongoose.Schema({
   pay_status: { 
     type: String, 
     required: true, 
-    enum: ["Paid", "Unpaid", "Pending"] 
+    enum: ["Paid", "Unpaid", "Pending", "New"] // Added "New" since it's in the JSON
   },
   od_date: { type: Date, default: Date.now },
   overdue_date: { type: Date, default: null },
-  od_items: { type: [OrderItemSchema], default: [] },
-  userID: { type: String, required: true }, // <- New field added here
+  od_items: { type: [OrderItemSchema], default: [] }
 });
 
 const Order = mongoose.model("Order", OrderSchema);
