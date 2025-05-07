@@ -936,7 +936,7 @@ const OrderList = () => {
                     </div>
 
                     {/* Order Summary Chart */}
-                    <div className="flex-1 bg-gray-800 p-4 rounded-lg shadow-lg">
+                    <div className="flex-1 bg-gray-800 p-4 rounded-2xl shadow-lg">
                         <Bar data={chartData} options={chartOptions} />
                     </div>
                 </div>
@@ -1257,3 +1257,5 @@ const OrderList = () => {
 };
 
 export default OrderList;
+
+
