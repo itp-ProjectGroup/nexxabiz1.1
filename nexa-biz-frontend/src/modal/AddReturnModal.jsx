@@ -2,9 +2,9 @@ import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 
-const AddOrderModal = ({ isOpen, onClose, onSubmit, users, products, orders }) => {
+const AddReturnModal = ({ isOpen, onClose, onSubmit, users, products, returns }) => {
     const [formData, setFormData] = useState({
-        od_date: new Date().toISOString().split('T')[0],
+        ret_date: new Date().toISOString().split('T')[0],
         userID: '',
         customerName: '',
         od_items: [{ manufacturingID: '', productName: '', qty: 1 }]
@@ -71,16 +71,16 @@ const AddOrderModal = ({ isOpen, onClose, onSubmit, users, products, orders }) =
         };
     }, [isOpen]);
 
-    // Generate unique order ID
-    const generateOrderId = () => {
-        const lastOrder = orders.sort((a, b) => {
-            const numA = parseInt(a.od_Id.replace('OD', '')) || 0;
-            const numB = parseInt(b.od_Id.replace('OD', '')) || 0;
+    // Generate unique return ID
+    const generateReturnId = () => {
+        const lastReturn = returns.sort((a, b) => {
+            const numA = parseInt(a.ret_Id.replace('RID', '')) || 0;
+            const numB = parseInt(b.ret_Id.replace('RID', '')) || 0;
             return numB - numA;
         })[0];
         
-        const lastNumber = lastOrder ? parseInt(lastOrder.od_Id.replace('OD', '')) : 0;
-        return `OD${String(lastNumber + 1).padStart(3, '0')}`;
+        const lastNumber = lastReturn ? parseInt(lastReturn.ret_Id.replace('RID', '')) : 0;
+        return `RID${String(lastNumber + 1).padStart(6, '0')}`;
     };
 
     const handleInputChange = (e) => {
@@ -182,8 +182,6 @@ const AddOrderModal = ({ isOpen, onClose, onSubmit, users, products, orders }) =
             return;
         }
         
-        
-        
         const allProductsSelected = formData.od_items.every(item => item.manufacturingID);
         if (!allProductsSelected) {
             alert("Please select valid products from the suggestions for all items");
@@ -191,35 +189,32 @@ const AddOrderModal = ({ isOpen, onClose, onSubmit, users, products, orders }) =
         }
         
         try {
-            const newOrder = {
-                od_Id: generateOrderId(),
-                company_name: formData.customerName,
+            const newReturn = {
+                ret_Id: generateReturnId(),
                 userID: formData.userID,
-                od_status: "Pending",
-                pay_status: "New",
-                od_date: new Date(formData.od_date),
-                overdue_date: null,
+                pay_status: "Return",
+                ret_date: new Date(formData.ret_date),
                 od_items: formData.od_items.map(item => ({
                     manufacturingID: item.manufacturingID,
                     qty: Number(item.qty)
                 }))
             };
             
-            const response = await axios.post("http://localhost:5000/api/Orders", newOrder);
+            const response = await axios.post("http://localhost:5000/api/returns", newReturn);
             if (response.status === 201) {
-                alert("Order created successfully!");
-                onSubmit(); // Notify parent component
+                alert("Return created successfully!");
+                onSubmit(); // Notify parent component to refetch returns
                 onClose(); // Close modal
                 setFormData({
-                    od_date: new Date().toISOString().split('T')[0],
+                    ret_date: new Date().toISOString().split('T')[0],
                     userID: '',
                     customerName: '',
                     od_items: [{ manufacturingID: '', productName: '', qty: 1 }]
                 });
             }
         } catch (error) {
-            console.error("Error adding order:", error);
-            alert(`Failed to create order: ${error.response?.data?.message || error.message}`);
+            console.error("Error adding return:", error);
+            alert(`Failed to create return: ${error.response?.data?.message || error.message}`);
         }
     };
 
@@ -266,7 +261,7 @@ const AddOrderModal = ({ isOpen, onClose, onSubmit, users, products, orders }) =
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
-                            <h2 className="text-2xl font-bold text-white">Add New Order</h2>
+                            <h2 className="text-2xl font-bold text-white">Add New Return</h2>
                             <button 
                                 onClick={onClose}
                                 className="text-gray-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
@@ -281,20 +276,20 @@ const AddOrderModal = ({ isOpen, onClose, onSubmit, users, products, orders }) =
                         <form onSubmit={handleSubmit} className="space-y-5">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-1">Order ID</label>
+                                    <label className="block text-sm font-medium text-gray-300 mb-1">Return ID</label>
                                     <input
                                         type="text"
-                                        value={generateOrderId()}
+                                        value={generateReturnId()}
                                         disabled
                                         className="w-full rounded-md border border-gray-700 bg-gray-800 p-2 text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-1">Order Date</label>
+                                    <label className="block text-sm font-medium text-gray-300 mb-1">Return Date</label>
                                     <input
                                         type="date"
-                                        name="od_date"
-                                        value={formData.od_date}
+                                        name="ret_date"
+                                        value={formData.ret_date}
                                         onChange={handleInputChange}
                                         className="w-full rounded-md border border-gray-700 bg-gray-800 p-2 text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                         required
@@ -343,7 +338,7 @@ const AddOrderModal = ({ isOpen, onClose, onSubmit, users, products, orders }) =
                                 <label className="block text-sm font-medium text-gray-300 mb-1">Payment Status</label>
                                 <input
                                     type="text"
-                                    value="New"
+                                    value="Return"
                                     disabled
                                     className="w-full rounded-md border border-gray-700 bg-gray-800 p-2 text-gray-300"
                                 />
@@ -351,7 +346,7 @@ const AddOrderModal = ({ isOpen, onClose, onSubmit, users, products, orders }) =
                             
                             <div>
                                 <div className="flex justify-between items-center mb-2">
-                                    <label className="block text-sm font-medium text-gray-300">Order Items</label>
+                                    <label className="block text-sm font-medium text-gray-300">Return Items</label>
                                     <button
                                         type="button"
                                         onClick={addItem}
@@ -457,7 +452,7 @@ const AddOrderModal = ({ isOpen, onClose, onSubmit, users, products, orders }) =
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                     </svg>
-                                    Create Order
+                                    Create Return
                                 </button>
                             </div>
                         </form>
@@ -468,4 +463,4 @@ const AddOrderModal = ({ isOpen, onClose, onSubmit, users, products, orders }) =
     );
 };
 
-export default AddOrderModal;
+export default AddReturnModal;
