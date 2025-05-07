@@ -49,48 +49,43 @@ const Header = () => {
                     <h1 className="text-xl font-bold">NexaBiz Admin</h1>
                 </div>
 
-                {/* Conditional rendering: Show navigation buttons for products tab, search bar for others */}
+                {/* Conditional rendering: Show navigation text for products tab, search bar for others */}
                 {isProductsTab ? (
                     <div className="ml-6 w-full max-w-md">
-                        <nav className="flex space-x-4">
-                            <NavLink
-                                to="/admin/products/add"
-                                className={({ isActive }) =>
-                                    `px-4 py-2 text-sm font-medium rounded-md shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-                                        isActive
-                                            ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                            : 'bg-gray-600 text-white hover:bg-gray-500'
-                                    }`
-                                }
-                            >
-                                Add Product
-                            </NavLink>
-                            <NavLink
-                                to="/admin/products/all"
-                                className={({ isActive }) =>
-                                    `px-4 py-2 text-sm font-medium rounded-md shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-                                        isActive
-                                            ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                            : 'bg-gray-600 text-white hover:bg-gray-500'
-                                    }`
-                                }
-                            >
-                                View Products
-                            </NavLink>
-                            <NavLink
-                                to="/admin/products/stock"
-                                className={({ isActive }) =>
-                                    `px-4 py-2 text-sm font-medium rounded-md shadow-sm transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-                                        isActive
-                                            ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                            : 'bg-gray-600 text-white hover:bg-gray-500'
-                                    }`
-                                }
-                            >
-                                Stock Levels
-                            </NavLink>
-                        </nav>
-                    </div>
+                    <nav className="flex space-x-8">
+                      <NavLink
+                        to="/admin/products/add"
+                        className={({ isActive }) =>
+                          `text-lg  transition-opacity duration-200 ${
+                            isActive ? 'text-blue-500 font-bold opacity-100' : 'text-gray-300 opacity-75'
+                          }`
+                        }
+                      >
+                        Add Product
+                      </NavLink>
+                      <NavLink
+                        to="/admin/products/all"
+                        className={({ isActive }) =>
+                          `text-lg transition-opacity duration-200 ${
+                            isActive ? 'text-blue-500 font-bold opacity-100' : 'text-gray-300 opacity-75'
+                          }`
+                        }
+                      >
+                        View Products
+                      </NavLink>
+                      <NavLink
+                        to="/admin/products/stock"
+                        className={({ isActive }) =>
+                          `text-lg transition-opacity duration-200 ${
+                            isActive ? 'text-blue-500 font-bold opacity-100' : 'text-gray-300 opacity-75'
+                          }`
+                        }
+                      >
+                        Stock Levels
+                      </NavLink>
+                    </nav>
+                  </div>
+
                 ) : (
                     <form onSubmit={handleSearch} className="ml-6 w-full max-w-md">
                         <input
