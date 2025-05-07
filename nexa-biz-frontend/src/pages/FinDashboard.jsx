@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import DashboardCard from "../components/DashboardCard";
-import { FaMoneyBillWave, FaClipboardList, FaFileExport } from "react-icons/fa"; // Added FaFileExport
+import { FaMoneyBillWave, FaClipboardList, FaFileExport } from "react-icons/fa";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import SetOverdue from "../modal/SetOverdue";
@@ -19,7 +19,8 @@ const FinDashboard = () => {
     const [orders, setOrders] = useState([]);
     const [payments, setPayments] = useState([]);
     const [products, setProducts] = useState([]);
-    const [users, setUsers] = useState([]); // Added state for users
+    const [returns, setReturns] = useState([]);
+    const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("all");
     const [selectedPayment, setSelectedPayment] = useState(null);
@@ -30,16 +31,19 @@ const FinDashboard = () => {
     const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
     const [filteredOrders, setFilteredOrders] = useState([]);
     const [filteredPayments, setFilteredPayments] = useState([]);
-    const [exportType, setExportType] = useState(''); // State for export type modal
-    const [showExportOptions, setShowExportOptions] = useState(false); // State to control export options dropdown
+    const [exportType, setExportType] = useState('');
+    const [showExportOptions, setShowExportOptions] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [allFilteredData, setAllFilteredData] = useState({orders: [],payments: []});
+    const [allFilteredData, setAllFilteredData] = useState({orders: [], payments: []});
+    const [dateFilteredOrders, setDateFilteredOrders] = useState([]);
+    const [dateFilteredPayments, setDateFilteredPayments] = useState([]);
 
     useEffect(() => {
         fetchOrders();
         fetchPayments();
         fetchProducts();
-        fetchUsers(); // Added function call to fetch users
+        fetchUsers();
+        fetchReturns();
     }, []);
 
     const fetchUsers = async () => {
@@ -48,6 +52,15 @@ const FinDashboard = () => {
             setUsers(response.data);
         } catch (error) {
             console.error("Error fetching users:", error);
+        }
+    };
+
+    const fetchReturns = async () => {
+        try {
+            const response = await axios.get("http://localhost:5000/api/returns");
+            setReturns(response.data);
+        } catch (error) {
+            console.error("Error fetching returns:", error);
         }
     };
 
@@ -100,15 +113,8 @@ const FinDashboard = () => {
             setOrders(enrichedOrders);
         }
     }, [users, orders]);
-    
 
-    // Separate states for date-filtered and tab-filtered data
-    const [dateFilteredOrders, setDateFilteredOrders] = useState([]);
-    const [dateFilteredPayments, setDateFilteredPayments] = useState([]);
-    
-    // Apply date filter to orders and payments
     useEffect(() => {
-        // Filter orders based on date
         let tempFilteredOrders = orders;
         if (dateFilter.startDate || dateFilter.endDate) {
             tempFilteredOrders = orders.filter(order => {
@@ -122,7 +128,6 @@ const FinDashboard = () => {
                 
                 if (dateFilter.endDate) {
                     const endDate = new Date(dateFilter.endDate);
-                    // Set time to end of day for inclusive filtering
                     endDate.setHours(23, 59, 59, 999);
                     passesFilter = passesFilter && orderDate <= endDate;
                 }
@@ -131,10 +136,8 @@ const FinDashboard = () => {
             });
         }
         
-        // Store date-filtered orders (before tab filtering)
         setDateFilteredOrders(tempFilteredOrders);
         
-        // Filter payments based on date
         let tempFilteredPayments = payments;
         if (dateFilter.startDate || dateFilter.endDate) {
             tempFilteredPayments = payments.filter(payment => {
@@ -148,7 +151,6 @@ const FinDashboard = () => {
                 
                 if (dateFilter.endDate) {
                     const endDate = new Date(dateFilter.endDate);
-                    // Set time to end of day for inclusive filtering
                     endDate.setHours(23, 59, 59, 999);
                     passesFilter = passesFilter && paymentDate <= endDate;
                 }
@@ -157,13 +159,10 @@ const FinDashboard = () => {
             });
         }
         
-        // Store date-filtered payments
         setDateFilteredPayments(tempFilteredPayments);
     }, [orders, payments, dateFilter]);
-    
-    // Apply tab filter after date filter
+
     useEffect(() => {
-        // Apply tab filter to the date-filtered orders
         const tabFilteredOrders = dateFilteredOrders.filter(order => {
             if (activeTab === "paid") return order.pay_status === "Paid";
             if (activeTab === "new") return order.pay_status === "New";
@@ -175,21 +174,16 @@ const FinDashboard = () => {
                       overdueDate && 
                       overdueDate <= currentDate;
             }
-            return true; // For "all" tab
+            return true;
         });
         
         setFilteredOrders(tabFilteredOrders);
-        
-        // Update filteredPayments when activeTab changes
-        // This is the fix: We need to set filteredPayments when tab changes to "allp"
         setFilteredPayments(dateFilteredPayments);
     }, [dateFilteredOrders, dateFilteredPayments, activeTab]);
 
-    // Function to generate export data
     const exportData = (format) => {
-        setShowExportOptions(false); // Close dropdown after selection
+        setShowExportOptions(false);
         
-        // Determine which data to export based on active tab
         let dataToExport = [];
         let filename = "";
         let headers = [];
@@ -205,11 +199,18 @@ const FinDashboard = () => {
                 "Date": new Date(payment.createdAt).toLocaleDateString(),
                 "Amount": `$${payment.paymentAmount.toFixed(2)}`
             }));
-        } else {
-            // For order tabs
-            filename = `order_report_${activeTab}_${new Date().toISOString().split('T')[0]}`;
+        } else if (activeTab === "Return") {
+            filename = `return_report_${new Date().toISOString().split('T')[0]}`;
+            headers = ["Return ID", "User ID", "Payment Status", "Total Amount"];
             
-            // Determine headers based on activeTab
+            dataToExport = returns.map(ret => ({
+                "Return ID": ret.ret_Id,
+                "User ID": ret.userID,
+                "Payment Status": ret.pay_status,
+                "Total Amount": `$${calculateReturnTotal(ret).toFixed(2)}`
+            }));
+        } else {
+            filename = `order_report_${activeTab}_${new Date().toISOString().split('T')[0]}`;
             headers = ["Order ID", "Company Name", "Order Status"];
             
             if (activeTab !== "Pending" && activeTab !== "overdue") {
@@ -226,7 +227,6 @@ const FinDashboard = () => {
                 headers.push("Overdue Date");
             }
             
-            // Map order data based on the tab
             dataToExport = filteredOrders.map(order => {
                 const data = {
                     "Order ID": order.od_Id,
@@ -252,31 +252,25 @@ const FinDashboard = () => {
             });
         }
         
-        // Export based on selected format
         if (format === "csv") {
             exportToCSV(dataToExport, headers, filename);
         } else if (format === "pdf") {
             exportToPDF(dataToExport, headers, filename);
         }
     };
-    
-    // Function to export data as CSV
+
     const exportToCSV = (data, headers, filename) => {
-        // Create CSV content
         let csvContent = headers.join(",") + "\n";
         
         data.forEach(item => {
             const row = headers.map(header => {
-                // Wrap values in quotes to handle commas in the data
                 let value = item[header] || "";
-                // Escape quotes by doubling them
                 value = String(value).replace(/"/g, '""');
                 return `"${value}"`;
             });
             csvContent += row.join(",") + "\n";
         });
         
-        // Create blob and download
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
@@ -286,16 +280,10 @@ const FinDashboard = () => {
         link.click();
         document.body.removeChild(link);
     };
-    
-    // Function to export data as PDF
+
     const exportToPDF = (data, headers, filename) => {
-        // For PDF export, we'll use a simple approach that works in the browser
-        // In a real-world scenario, you might want to use a library like jsPDF or pdfmake
-        
-        // Create a printable HTML page
         const printWindow = window.open('', '_blank');
         
-        // Create PDF content as an HTML table
         let htmlContent = `
             <html>
             <head>
@@ -323,7 +311,6 @@ const FinDashboard = () => {
                     <tbody>
         `;
         
-        // Add data rows
         data.forEach(item => {
             htmlContent += '<tr>';
             headers.forEach(header => {
@@ -332,7 +319,6 @@ const FinDashboard = () => {
             htmlContent += '</tr>';
         });
         
-        // Close the table and add print instructions
         htmlContent += `
                     </tbody>
                 </table>
@@ -344,7 +330,6 @@ const FinDashboard = () => {
             </html>
         `;
         
-        // Write to the new window and trigger print
         printWindow.document.open();
         printWindow.document.write(htmlContent);
         printWindow.document.close();
@@ -380,8 +365,6 @@ const FinDashboard = () => {
     };
 
     const getPaidAmountForOrder = (orderId) => {
-        // Use date-filtered payments when calculating paid amount
-        // This ensures consistent values regardless of tab selection
         const orderPayments = dateFilteredPayments.filter(payment => payment.orderId === orderId);
         const totalPaidAmount = orderPayments.reduce((sum, payment) => sum + payment.paymentAmount, 0);
         return totalPaidAmount;
@@ -391,6 +374,16 @@ const FinDashboard = () => {
         if (!products || !Array.isArray(order.od_items)) return 0;
     
         return order.od_items.reduce((sum, item) => {
+            const product = products.find(p => p.manufacturingID === item.manufacturingID);
+            const price = product?.sellingPrice || 0;
+            return sum + price * item.qty;
+        }, 0);
+    };
+
+    const calculateReturnTotal = (ret) => {
+        if (!products || !Array.isArray(ret.od_items)) return 0;
+    
+        return ret.od_items.reduce((sum, item) => {
             const product = products.find(p => p.manufacturingID === item.manufacturingID);
             const price = product?.sellingPrice || 0;
             return sum + price * item.qty;
@@ -423,7 +416,6 @@ const FinDashboard = () => {
         }
     }, [dateFilteredPayments, activeTab]);
     
-    // Enhance date-filtered orders with paid amount information
     useEffect(() => {
         setDateFilteredOrders(prevOrders =>
             prevOrders.map(order => ({
@@ -433,81 +425,68 @@ const FinDashboard = () => {
         );
     }, [dateFilteredPayments]);
 
-
-
-
-        // First, update allFilteredData when dateFilteredOrders or dateFilteredPayments change
-        useEffect(() => {
-            // Only update reference data when date filters change, not during search
-            if (!searchQuery) {
-                setAllFilteredData({
-                    orders: dateFilteredOrders,
-                    payments: dateFilteredPayments
-                });
-            }
-        }, [dateFilteredOrders, dateFilteredPayments, searchQuery]);
+    useEffect(() => {
+        if (!searchQuery) {
+            setAllFilteredData({
+                orders: dateFilteredOrders,
+                payments: dateFilteredPayments
+            });
+        }
+    }, [dateFilteredOrders, dateFilteredPayments, searchQuery]);
         
-        // Separate effect for managing filtered data based on search and tabs
-        useEffect(() => {
-            if (!searchQuery) {
-                // If no search query, apply only tab filters to date-filtered data
-                setFilteredOrders(
-                    dateFilteredOrders.filter(order => {
-                        if (activeTab === "paid") return order.pay_status === "Paid";
-                        if (activeTab === "new") return order.pay_status === "New";
-                        if (activeTab === "Pending") return order.pay_status === "Pending";
-                        if (activeTab === "overdue") {
-                            const currentDate = new Date();
-                            const overdueDate = order.overdue_date ? new Date(order.overdue_date) : null;
-                            return order.pay_status === "Pending" && 
-                                overdueDate && 
-                                overdueDate <= currentDate;
-                        }
-                        return true; // For "all" tab
-                    })
-                );
-                setFilteredPayments(dateFilteredPayments);
-            } else {
-                // Apply search filter to orders
-                const matchingOrders = allFilteredData.orders.filter(order => {
-                    // Filter by customer name
-                    const customerNameMatch = order.company_name && 
-                        order.company_name.toLowerCase().includes(searchQuery.toLowerCase());
-                    
-                    // Apply tab filters
-                    let tabCondition = true;
-                    if (activeTab === "paid") tabCondition = order.pay_status === "Paid";
-                    if (activeTab === "new") tabCondition = order.pay_status === "New";
-                    if (activeTab === "Pending") tabCondition = order.pay_status === "Pending";
+    useEffect(() => {
+        if (!searchQuery) {
+            setFilteredOrders(
+                dateFilteredOrders.filter(order => {
+                    if (activeTab === "paid") return order.pay_status === "Paid";
+                    if (activeTab === "new") return order.pay_status === "New";
+                    if (activeTab === "Pending") return order.pay_status === "Pending";
                     if (activeTab === "overdue") {
                         const currentDate = new Date();
                         const overdueDate = order.overdue_date ? new Date(order.overdue_date) : null;
-                        tabCondition = order.pay_status === "Pending" && 
+                        return order.pay_status === "Pending" && 
                             overdueDate && 
                             overdueDate <= currentDate;
                     }
-                    
-                    return customerNameMatch && (activeTab === "all" || tabCondition);
-                });
+                    return true;
+                })
+            );
+            setFilteredPayments(dateFilteredPayments);
+        } else {
+            const matchingOrders = allFilteredData.orders.filter(order => {
+                const customerNameMatch = order.company_name && 
+                    order.company_name.toLowerCase().includes(searchQuery.toLowerCase());
                 
-                // Find related order IDs to filter payments
-                const matchingOrderIds = new Set(matchingOrders.map(order => order.od_Id));
+                let tabCondition = true;
+                if (activeTab === "paid") tabCondition = order.pay_status === "Paid";
+                if (activeTab === "new") tabCondition = order.pay_status === "New";
+                if (activeTab === "Pending") tabCondition = order.pay_status === "Pending";
+                if (activeTab === "overdue") {
+                    const currentDate = new Date();
+                    const overdueDate = order.overdue_date ? new Date(order.overdue_date) : null;
+                    tabCondition = order.pay_status === "Pending" && 
+                        overdueDate && 
+                        overdueDate <= currentDate;
+                }
                 
-                // Apply search filter to payments based on related orders
-                const matchingPayments = allFilteredData.payments.filter(payment => 
-                    matchingOrderIds.has(payment.orderId)
-                );
-                
-                setFilteredOrders(matchingOrders);
-                setFilteredPayments(matchingPayments);
-            }
-        }, [searchQuery, activeTab, allFilteredData]);
+                return customerNameMatch && (activeTab === "all" || tabCondition);
+            });
+            
+            const matchingOrderIds = new Set(matchingOrders.map(order => order.od_Id));
+            
+            const matchingPayments = allFilteredData.payments.filter(payment => 
+                matchingOrderIds.has(payment.orderId)
+            );
+            
+            setFilteredOrders(matchingOrders);
+            setFilteredPayments(matchingPayments);
+        }
+    }, [searchQuery, activeTab, allFilteredData]);
 
     const handleSearch = (query) => {
         setSearchQuery(query);
     };
 
-    // Count overdue orders based on date-filtered data (not tab-filtered)
     const overdueOrdersCount = dateFilteredOrders.filter(order => {
         const currentDate = new Date();
         const overdueDate = order.overdue_date ? new Date(order.overdue_date) : null;
@@ -516,8 +495,6 @@ const FinDashboard = () => {
               overdueDate <= currentDate;
     }).length;
 
-    // Calculate metrics based on date-filtered data (not tab-filtered)
-    // This ensures consistent dashboard metrics regardless of active tab
     const totalSales = dateFilteredOrders.reduce((sum, order) => sum + calculateOrderTotal(order), 0);
     const totalIncome = dateFilteredPayments.reduce((sum, p) => sum + p.paymentAmount, 0);
     const totalExpense = dateFilteredOrders.reduce((sum, order) => sum + calculateExpenseTotal(order), 0);
@@ -537,285 +514,259 @@ const FinDashboard = () => {
                 isResizable={false}
             >
                 <div key="1" data-grid={{ x: 0, y: 0, w: 1, h: 1.4 }}>
-                <DashboardCard
-                    title="Total Sales"
-                    value={`$${totalSales.toFixed(2)}`}
-                />
+                    <DashboardCard title="Total Sales" value={`$${totalSales.toFixed(2)}`} />
                 </div>
                 <div key="2" data-grid={{ x: 1, y: 0, w: 1, h: 1 }}>
-                    <DashboardCard
-                        title="Profit"
-                        value={`$${profit.toFixed(2)}`}
-                    />
+                    <DashboardCard title="Profit" value={`$${profit.toFixed(2)}`} />
                 </div>
                 <div key="3" data-grid={{ x: 2, y: 0, w: 1, h: 1 }}>
-                    <DashboardCard
-                        title="Amount due"
-                        value={`$${amountDue.toFixed(2)}`}
-                    />
+                    <DashboardCard title="Amount due" value={`$${amountDue.toFixed(2)}`} />
                 </div>
                 <div key="4" data-grid={{ x: 3, y: 0, w: 1, h: 1 }}>
-                    <DashboardCard
-                        title="Overdue Orders"
-                        value={overdueOrdersCount}
-                        disableCurrencyFormatting={true} 
-                    />
+                    <DashboardCard title="Overdue Orders" value={overdueOrdersCount} disableCurrencyFormatting={true} />
                 </div>
                 <div key="5" data-grid={{ x: 4, y: 0, w: 2, h: 4 }}>
-                    <PaymentReminderCard 
-                        orders={dateFilteredOrders} 
-                        calculateOrderTotal={calculateOrderTotal}
-                    />
+                    <PaymentReminderCard orders={dateFilteredOrders} calculateOrderTotal={calculateOrderTotal} />
                 </div>
                 <div key="6" data-grid={{ x: 0, y: 1, w: 1, h: 1.3 }}>
-                    <DashboardCard
-                        title="Total Income"
-                        value={`$${totalIncome.toFixed(2)}`}
-                    />
+                    <DashboardCard title="Total Income" value={`$${totalIncome.toFixed(2)}`} />
                 </div>
                 <div key="7" data-grid={{ x: 0, y: 2, w: 1, h: 1.3 }}>
-                    <DashboardCard
-                        title="Total Expense"
-                        value={`$${totalExpense.toFixed(2)}`}
-                    />
+                    <DashboardCard title="Total Expense" value={`$${totalExpense.toFixed(2)}`} />
                 </div>
                 <div key="8" data-grid={{ x: 1, y: 1, w: 3, h: 3 }}>
                     <DashboardCard
                         chart={
                             <div className="h-full w-full">
-                                <CashFlowChart 
-                                    payments={dateFilteredPayments} 
-                                    orders={dateFilteredOrders} 
-                                    products={products} 
-                                />
+                                <CashFlowChart payments={dateFilteredPayments} orders={dateFilteredOrders} products={products} />
                             </div>
                         }
                     />
                 </div>
             </ResponsiveGridLayout>
 
-        <div className="mt-4 w-full mx-auto font-roboto bg-gray-800 text-white p-6 rounded-lg shadow-lg">
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-white">Payment Records</h2>
-
-                 {/* Search Bar */}
-            <div className="mb-4 flex justify-center">
-                <FinSearchBar 
-                    data={[...orders, ...payments]} 
-                    onSearch={handleSearch} 
-                    placeholder="Search by customer name..."
-                />
-            </div>
-                <div className="flex items-center">
-                    {(dateFilter.startDate || dateFilter.endDate) && (
-                        <div className="mr-4 px-3 py-1 bg-blue-500 rounded text-sm flex items-center">
-                            <span>
-                                {dateFilter.startDate ? new Date(dateFilter.startDate).toLocaleDateString() : 'Any'} - 
-                                {dateFilter.endDate ? new Date(dateFilter.endDate).toLocaleDateString() : 'Any'}
-                            </span>
-                        </div>
-                    )}
+            <div className="mt-4 w-full mx-auto font-roboto bg-gray-800 text-white p-6 rounded-lg shadow-lg">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold text-white">Payment Records</h2>
                     <div className="flex items-center">
-                        <DateRangeFilter onFilterChange={handleDateFilterChange} />
-                        
-                        {/* Export Button and Dropdown */}
-                        <div className="relative ml-2">
-                            <button 
-                                onClick={() => setShowExportOptions(!showExportOptions)}
-                                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center"
-                            >
-                                <FaFileExport className="mr-2" /> Export
-                            </button>
-                            
-                            {/* Export Options Dropdown */}
-                            {showExportOptions && (
-                                <div className="absolute right-0 mt-2 w-48 bg-gray-700 rounded-md shadow-lg z-10">
-                                    <ul className="py-1">
-                                        <li>
-                                            <button 
-                                                onClick={() => exportData("csv")}
-                                                className="block px-4 py-2 text-sm text-white hover:bg-gray-600 w-full text-left"
-                                            >
-                                                Export as CSV
-                                            </button>
-                                        </li>
-                                        <li>
-                                            <button 
-                                                onClick={() => exportData("pdf")}
-                                                className="block px-4 py-2 text-sm text-white hover:bg-gray-600 w-full text-left"
-                                            >
-                                                Export as PDF
-                                            </button>
-                                        </li>
-                                    </ul>
-                                </div>
-                            )}
+                        <div className="mb-4 flex justify-center mr-4">
+                            <FinSearchBar 
+                                data={[...orders, ...payments, ...returns]} 
+                                onSearch={handleSearch} 
+                                placeholder="Search by customer name..."
+                            />
+                        </div>
+                        {(dateFilter.startDate || dateFilter.endDate) && (
+                            <div className="mr-4 px-3 py-1 bg-blue-500 rounded text-sm flex items-center">
+                                <span>
+                                    {dateFilter.startDate ? new Date(dateFilter.startDate).toLocaleDateString() : 'Any'} - 
+                                    {dateFilter.endDate ? new Date(dateFilter.endDate).toLocaleDateString() : 'Any'}
+                                </span>
+                            </div>
+                        )}
+                        <div className="flex items-center">
+                            <DateRangeFilter onFilterChange={handleDateFilterChange} />
+                            <div className="relative ml-2">
+                                <button 
+                                    onClick={() => setShowExportOptions(!showExportOptions)}
+                                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center"
+                                >
+                                    <FaFileExport className="mr-2" /> Export
+                                </button>
+                                {showExportOptions && (
+                                    <div className="absolute right-0 mt-2 w-48 bg-gray-700 rounded-md shadow-lg z-10">
+                                        <ul className="py-1">
+                                            <li>
+                                                <button 
+                                                    onClick={() => exportData("csv")}
+                                                    className="block px-4 py-2 text-sm text-white hover:bg-gray-600 w-full text-left"
+                                                >
+                                                    Export as CSV
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button 
+                                                    onClick={() => exportData("pdf")}
+                                                    className="block px-4 py-2 text-sm text-white hover:bg-gray-600 w-full text-left"
+                                                >
+                                                    Export as PDF
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-           
-            {/* Tabs */}
-            <div className="flex mb-4 border-b border-gray-600 overflow-x-auto">
-            {["all", "allp", "new", "paid", "Pending", "overdue"].map((tab) => (
-            <button
-                key={tab}
-                className={`py-2 px-4 ml-2 whitespace-nowrap ${
-                activeTab === tab ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-400"
-                }`}
-                onClick={() => setActiveTab(tab)}
-            >
-                {tab === "all"
-                ? "All Orders"
-                : tab === "allp"
-                ? "All Payments"
-                : tab === "new"
-                ? "New Orders"
-                : tab === "paid"
-                ? "Paid Orders"
-                : tab === "Pending"
-                ? "To be Paid Orders"
-                : "Overdue Payments"}
-            </button>
-            ))}
-            </div>
+                <div className="flex mb-4 border-b border-gray-600 overflow-x-auto">
+                    {["all", "allp", "new", "paid", "Pending", "overdue", "Return"].map((tab) => (
+                        <button
+                            key={tab}
+                            className={`py-2 px-4 ml-2 whitespace-nowrap ${
+                                activeTab === tab ? "border-b-2 border-blue-500 text-blue-500" : "text-gray-400"
+                            }`}
+                            onClick={() => setActiveTab(tab)}
+                        >
+                            {tab === "all"
+                                ? "All Orders"
+                                : tab === "allp"
+                                ? "All Payments"
+                                : tab === "new"
+                                ? "New Orders"
+                                : tab === "paid"
+                                ? "Paid Orders"
+                                : tab === "Pending"
+                                ? "To be Paid Orders"
+                                : tab === "overdue"
+                                ? "Overdue Payments"
+                                : "Refund Payments"}
+                        </button>
+                    ))}
+                </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto p-4">
-                {activeTab === "allp" ? (
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="border-b border-gray-700 text-gray-400 uppercase text-sm text-center">
-                                <th className="py-3 px-4">Payment ID</th>
-                                <th className="py-3 px-4">Order ID</th>
-                                <th className="py-3 px-4">Method</th>    
-                                <th className="py-3 px-4">Date</th>
-                                <th className="py-3 px-4">Amount</th>
-                                <th className="py-3 px-4">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredPayments.map(payment => (
-                                <tr key={payment.paymentId} className="border-b border-gray-700 hover:bg-gray-800 text-center">
-                                    <td className="py-3 px-4 font-medium text-white">{payment.paymentId}</td>
-                                    <td className="py-3 px-4 text-gray-300">{payment.orderId}</td>
-                                    <td className="py-3 px-4 text-gray-300">{payment.paymentMethod}</td>
-                                    <td className="py-3 px-4 text-gray-300">{new Date(payment.createdAt).toLocaleDateString()}</td>
-                                    <td className="py-3 px-4 text-gray-300">${payment.paymentAmount.toFixed(2)}</td>
-                                    <td className="py-3 px-4">
-                                        <button
-                                            onClick={() => handlePaymentActionClick(payment)}
-                                            className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
-                                            View
-                                        </button>
-                                    </td>
+                <div className="overflow-x-auto p-4">
+                    {activeTab === "allp" ? (
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-gray-700 text-gray-400 uppercase text-sm text-center">
+                                    <th className="py-3 px-4">Payment ID</th>
+                                    <th className="py-3 px-4">Order ID</th>
+                                    <th className="py-3 px-4">Method</th>    
+                                    <th className="py-3 px-4">Date</th>
+                                    <th className="py-3 px-4">Amount</th>
+                                    <th className="py-3 px-4">Action</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                ) : (
-                    <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-gray-700 text-gray-400 uppercase text-sm text-center">
-                        <th className="py-3 px-4">Order ID</th>
-                        <th className="py-3 px-4">Company Name</th>
-                        <th className="py-3 px-4">Order Status</th>
-                  
-                        {/* Payment Status only for tabs other than Pending and Overdue */}
-                        {activeTab !== "Pending" && activeTab !== "overdue" && (
-                          <th className="py-3 px-4">Payment Status</th>
-                        )}
-                  
-                        <th className="py-3 px-4">Total Amount</th>
-                  
-                        {/* Show Paid Amount for both Pending and Overdue */}
-                        {(activeTab === "Pending" || activeTab === "overdue") && (
-                          <th className="py-3 px-4">Paid Amount</th>
-                        )}
+                            </thead>
+                            <tbody>
+                                {filteredPayments.map(payment => (
+                                    <tr key={payment.paymentId} className="border-b border-gray-700 hover:bg-gray-800 text-center">
+                                        <td className="py-3 px-4 font-medium text-white">{payment.paymentId}</td>
+                                        <td className="py-3 px-4 text-gray-300">{payment.orderId}</td>
+                                        <td className="py-3 px-4 text-gray-300">{payment.paymentMethod}</td>
+                                        <td className="py-3 px-4 text-gray-300">{new Date(payment.createdAt).toLocaleDateString()}</td>
+                                        <td className="py-3 px-4 text-gray-300">${payment.paymentAmount.toFixed(2)}</td>
+                                        <td className="py-3 px-4">
+                                            <button
+                                                onClick={() => handlePaymentActionClick(payment)}
+                                                className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded">
+                                                View
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    ) : activeTab === "Return" ? (
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-gray-700 text-gray-400 uppercase text-sm text-center">
+                                    <th className="py-3 px-4">Return ID</th>
+                                    <th className="py-3 px-4">User ID</th>
+                                    <th className="py-3 px-4">Payment Status</th>
+                                    <th className="py-3 px-4">Total Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {returns.map(ret => (
+                                    <tr key={ret.ret_Id} className="border-b border-gray-700 hover:bg-gray-800 text-center">
+                                        <td className="py-3 px-4 font-medium text-white">{ret.ret_Id}</td>
+                                        <td className="py-3 px-4 text-gray-300">{ret.userID}</td>
+                                        <td className="py-3 px-4">
+                                            <span
+                                                className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${
+                                                    ret.pay_status === "Refunded" ? "bg-green-600" : "bg-red-600"
+                                                } text-white`}
+                                            >
+                                                {ret.pay_status}
+                                            </span>
+                                        </td>
+                                        <td className="py-3 px-4 text-gray-300">${calculateReturnTotal(ret).toFixed(2)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-gray-700 text-gray-400 uppercase text-sm text-center">
+                                    <th className="py-3 px-4">Order ID</th>
+                                    <th className="py-3 px-4">Company Name</th>
+                                    <th className="py-3 px-4">Order Status</th>
+                                    {activeTab !== "Pending" && activeTab !== "overdue" && (
+                                        <th className="py-3 px-4">Payment Status</th>
+                                    )}
+                                    <th className="py-3 px-4">Total Amount</th>
+                                    {(activeTab === "Pending" || activeTab === "overdue") && (
+                                        <th className="py-3 px-4">Paid Amount</th>
+                                    )}
+                                    {activeTab === "overdue" && (
+                                        <th className="py-3 px-4">Overdue Date</th>
+                                    )}
+                                    <th className="py-3 px-4">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredOrders.map(order => (
+                                    <tr key={order.od_Id} className="border-b border-gray-700 hover:bg-gray-800 text-center">
+                                        <td className="py-3 px-4 text-white">{order.od_Id}</td>
+                                        <td className="py-3 px-4 text-gray-300">{order.company_name}</td>
+                                        <td className="py-3 px-4">
+                                            <span
+                                                className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${
+                                                    order.od_status === "Completed" ? "bg-green-600" : "bg-yellow-600"
+                                                } text-white`}
+                                            >
+                                                {order.od_status}
+                                            </span>
+                                        </td>
+                                        {activeTab !== "Pending" && activeTab !== "overdue" && (
+                                            <td className="py-3 px-4">
+                                                <span
+                                                    className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${
+                                                        order.pay_status === "Paid" ? "bg-green-600" : "bg-red-600"
+                                                    } text-white`}
+                                                >
+                                                    {order.pay_status}
+                                                </span>
+                                            </td>
+                                        )}
+                                        <td className="py-3 px-4 text-gray-300">${calculateOrderTotal(order).toFixed(2)}</td>
+                                        {(activeTab === "Pending" || activeTab === "overdue") && (
+                                            <td className="py-3 px-4 text-gray-300">${getPaidAmountForOrder(order.od_Id).toFixed(2)}</td>
+                                        )}
+                                        {activeTab === "overdue" && (
+                                            <td className="py-3 px-4 text-gray-300">
+                                                {order.overdue_date ? new Date(order.overdue_date).toLocaleDateString() : "N/A"}
+                                            </td>
+                                        )}
+                                        <td className="py-3 px-4">
+                                            {order.pay_status !== "Paid" ? (
+                                                <button
+                                                    onClick={() =>
+                                                        activeTab === "new"
+                                                            ? handleViewClick(order)
+                                                            : handlePayClick(order)
+                                                    }
+                                                    className={`${
+                                                        activeTab === "new" ? "bg-purple-500 hover:bg-purple-700" : "bg-blue-500 hover:bg-blue-700"
+                                                    } text-white font-bold py-2 px-4 rounded`}
+                                                >
+                                                    {activeTab === "new" ? "View" : "Pay"}
+                                                </button>
+                                            ) : (
+                                                <span className="text-gray-400">Paid</span>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
+            </div>    
 
-                        {/* Show Overdue Date only for overdue tab */}
-                        {activeTab === "overdue" && (
-                          <th className="py-3 px-4">Overdue Date</th>
-                        )}
-                  
-                        <th className="py-3 px-4">Action</th>
-                      </tr>
-                    </thead>
-                  
-                    <tbody>
-                      {filteredOrders.map(order => (
-                        <tr key={order.od_Id} className="border-b border-gray-700 hover:bg-gray-800 text-center">
-                          <td className="py-3 px-4 font-medium text-white">{order.od_Id}</td>
-                          <td className="py-3 px-4 text-gray-300">{order.company_name}</td>
-                          <td className="py-3 px-4">
-                            <span
-                              className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${
-                                order.od_status === "Completed" ? "bg-green-600" : "bg-yellow-600"
-                              } text-white`}
-                            >
-                              {order.od_status}
-                            </span>
-                          </td>
-                  
-                          {/* Payment Status hidden for Pending and Overdue */}
-                          {activeTab !== "Pending" && activeTab !== "overdue" && (
-                            <td className="py-3 px-4">
-                              <span
-                                className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${
-                                  order.pay_status === "Paid" ? "bg-green-600" : "bg-red-600"
-                                } text-white`}
-                              >
-                                {order.pay_status}
-                              </span>
-                            </td>
-                          )}
-                  
-                          <td className="py-3 px-4 text-gray-300">
-                            ${calculateOrderTotal(order).toFixed(2)}
-                          </td>
-                  
-                          {/* Show Paid Amount for both Pending and Overdue */}
-                          {(activeTab === "Pending" || activeTab === "overdue") && (
-                            <td className="py-3 px-4 text-gray-300">
-                              ${getPaidAmountForOrder(order.od_Id).toFixed(2)}
-                            </td>
-                          )}
-
-                          {/* Show Overdue Date only for overdue tab */}
-                          {activeTab === "overdue" && (
-                            <td className="py-3 px-4 text-gray-300">
-                              {order.overdue_date ? new Date(order.overdue_date).toLocaleDateString() : "N/A"}
-                            </td>
-                          )}
-                  
-                          <td className="py-3 px-4">
-                            {order.pay_status !== "Paid" ? (
-                              <button
-                                onClick={() =>
-                                  activeTab === "new"
-                                    ? handleViewClick(order)
-                                    : handlePayClick(order)
-                                }
-                                className={`${
-                                  activeTab === "new" ? "bg-purple-500 hover:bg-purple-700" : "bg-blue-500 hover:bg-blue-700"
-                                } text-white font-bold py-2 px-4 rounded`}
-                              >
-                                {activeTab === "new" ? "View" : "Pay"}
-                              </button>
-                            ) : (
-                              <span className="text-gray-400">Paid</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-            </div>
-        </div>    
-
-            {/* Modals */}
             <SetOverdue 
                 order={selectedOrder} 
                 isOpen={isModalOpen} 
@@ -838,11 +789,10 @@ const FinDashboard = () => {
                 onClose={() => setIsPaymentDetailsModalOpen(false)}
                 order={orders.find(o => o.od_Id === selectedPayment?.orderId)} 
                 onDelete={async () => {
-                    await fetchPayments();  // Refresh payments list
-                    await fetchOrders();    // Refresh orders so pay_status updates in UI
+                    await fetchPayments();
+                    await fetchOrders();
                 }}
             />
-
         </div>
     );
 };

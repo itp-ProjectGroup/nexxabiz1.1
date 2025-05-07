@@ -20,7 +20,8 @@ const MainDashboard = () => {
     const [orders, setOrders] = useState([]);
     const [payments, setPayments] = useState([]);
     const [products, setProducts] = useState([]);
-    const [users, setUsers] = useState([]); // Added state for users
+    const [users, setUsers] = useState([]); 
+    const [returns, setReturns] = useState([]); 
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("all");
     const [selectedPayment, setSelectedPayment] = useState(null);
@@ -40,7 +41,8 @@ const MainDashboard = () => {
         fetchOrders();
         fetchPayments();
         fetchProducts();
-        fetchUsers(); // Added function call to fetch users
+        fetchUsers(); 
+        fetchReturns();
     }, []);
 
     const fetchUsers = async () => {
@@ -49,6 +51,15 @@ const MainDashboard = () => {
             setUsers(response.data);
         } catch (error) {
             console.error("Error fetching users:", error);
+        }
+    };
+
+    const fetchReturns = async () => {
+        try {
+            const response = await axios.get("http://localhost:5000/api/returns");
+            setReturns(response.data); // Changed from setUsers to setReturns
+        } catch (error) {
+            console.error("Error fetching returns:", error);
         }
     };
 
@@ -568,7 +579,7 @@ const MainDashboard = () => {
                 <div key="14" data-grid={{ x: 3, y: 0, w: 1, h: 1 }}>
                     <DashboardCard
                         title="Return"
-                        value={0}
+                        value={returns.length}
                         disableCurrencyFormatting={true} 
                     />
                 </div>
