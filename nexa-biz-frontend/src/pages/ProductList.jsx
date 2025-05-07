@@ -18,6 +18,7 @@ const ProductList = () => {
         const fetchProducts = async () => {
             try {
                 const response = await axios.get('http://localhost:5000/api/products');
+                console.log('API Response:', response.data); // Debug the response
                 setProducts(response.data);
                 setLoading(false);
                 setFilteredProducts(response.data);
@@ -226,7 +227,7 @@ const ProductList = () => {
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Manufacturing Cost</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Selling Price</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Low Stock Level</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Images</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Quantity</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
@@ -242,20 +243,7 @@ const ProductList = () => {
                                     <td className="px-6 py-4 whitespace-nowrap text-blue-400">${product.sellingPrice}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-amber-400">{product.lowStockLevel}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        {product.images && product.images.length > 0 ? (
-                                            <div className="flex space-x-1">
-                                                {product.images.map((image, index) => (
-                                                    <img
-                                                        key={index}
-                                                        src={image}
-                                                        alt={`Product ${index}`}
-                                                        className="h-10 w-10 object-cover rounded-md border border-gray-700"
-                                                    />
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <span className="text-gray-500 italic">No images</span>
-                                        )}
+                                    {product.quantity}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex space-x-2">

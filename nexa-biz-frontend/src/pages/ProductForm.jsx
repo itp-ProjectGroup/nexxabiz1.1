@@ -88,7 +88,7 @@ const ProductForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) {
-      setMessage({ text: 'Please fix the errors in the form', type: "error" });
+      setMessage({ text: 'Product add fail', type: "error" });
       setTimeout(() => setMessage(null), 3000);
       return;
     }
@@ -153,7 +153,7 @@ const ProductForm = () => {
       {/* Tab Navigation */}
       <div className="flex border-b border-gray-700 mb-6">
         <button
-          type="button" 
+          type="button"
           className={`py-2 px-4 font-medium text-sm ${activeTab === 'details' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-white'}`}
           onClick={() => setActiveTab('details')}
         >
