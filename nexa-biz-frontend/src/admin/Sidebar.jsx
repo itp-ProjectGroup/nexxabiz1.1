@@ -66,7 +66,9 @@ const Sidebar = () => {
             {/* Logo section - only shown when expanded */}
             <div className="flex justify-center mb-6">
                 {!isCollapsed && (
-                    <img src="/logo.png" alt="NexaBiz Logo" className="h-28 w-auto" />
+                    <Link to="/">
+                        <img src="/logo.png" alt="NexaBiz Logo" className="h-28 w-auto cursor-pointer" />
+                    </Link>
                 )}
             </div>
             

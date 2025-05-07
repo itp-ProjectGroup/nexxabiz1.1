@@ -59,7 +59,15 @@ const DashboardCard = ({ title, value, chart, disableCurrencyFormatting = false 
       ) : (
         <>
           <h3 className="text-lg font-semibold mb-2 text-gray-300 truncate">{title}</h3>
-          <div className="text-2xl md:text-3xl font-bold text-blue-400 break-words">{formattedValue}</div>
+          <div
+  className={`text-2xl md:text-3xl font-bold break-words ${
+            (typeof value === 'string' && value.includes('-')) || (typeof value === 'number' && value < 0)
+              ? 'text-red-500'
+              : 'text-blue-400'
+          }`}
+        >
+          {formattedValue}
+        </div>
         </>
       )}
     </div>

@@ -9,6 +9,7 @@ import HeroSection from "./pages/HeroSection";
 import AdminLayout from "./admin/adminLayout";
 import ProductForm from "./pages/ProductForm";
 import ProductList from "./pages/ProductList";
+import MainDashboard from "./pages/MainDashboard";
 import Stock from "./pages/Stock";
 
 
@@ -24,7 +25,7 @@ const App = () => {
                 
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminLayout />}>
-                    <Route index element={<div>Admin Dashboard</div>} />
+                    <Route index element={<MainDashboard />} />
                     <Route path="customers" element={<CustomerList />} />
                     <Route path="products" element={<ProductForm />} />
                     <Route path="/admin/products/add" element={<ProductForm />} />
