@@ -38,6 +38,7 @@ const OrderList = () => {
     const [newOrder, setNewOrder] = useState({
         orderId: "",
         companyName: "",
+        userId: "",
         items: [{ name: "", quantity: 1, price: 0 }],
     });
     
@@ -46,6 +47,7 @@ const OrderList = () => {
     const [returnOrder, setReturnOrder] = useState({
         orderId: "",
         companyName: "",
+        userId: "",
         items: [{ name: "", quantity: 1, price: 0 }],
     });
 
@@ -70,7 +72,10 @@ const OrderList = () => {
                 companyName: order.company_name,
                 items: order.items || [],
                 totalAmount: order.od_Tamount,
-                type: "current"
+                od_status: order.od_status,
+                pay_status: order.pay_status,
+                // Check if the order ID starts with 'RT' to determine if it's a return order
+                type: order.od_Id.startsWith('RT') ? "return" : "current"
             })));
             setLoading(false);
         })
@@ -196,7 +201,7 @@ const OrderList = () => {
     const handleAddOrderChange = (e, index, field) => {
         const { value } = e.target;
         
-        if (field === 'orderId' || field === 'companyName') {
+        if (field === 'orderId' || field === 'companyName' || field === 'userId') {
             setNewOrder({ ...newOrder, [field]: value });
         } else {
             const updatedItems = [...newOrder.items];
@@ -212,7 +217,7 @@ const OrderList = () => {
     const handleReturnOrderChange = (e, index, field) => {
         const { value } = e.target;
         
-        if (field === 'orderId' || field === 'companyName') {
+        if (field === 'orderId' || field === 'companyName' || field === 'userId') {
             setReturnOrder({ ...returnOrder, [field]: value });
         } else {
             const updatedItems = [...returnOrder.items];
@@ -238,15 +243,41 @@ const OrderList = () => {
         return newId;
     };
 
+    // Function to generate a unique Return Order ID
+    const generateReturnOrderId = () => {
+        const existingIds = orders.map(order => order.od_Id);
+        let newId;
+        let counter = 1;
+        
+        do {
+            newId = `RT${String(counter).padStart(3, '0')}`;
+            counter++;
+        } while (existingIds.includes(newId));
+        
+        return newId;
+    };
+
     // Reset form and error when opening/closing modal
     const handleOpenAddOrderForm = () => {
         setError("");
         setNewOrder({
             orderId: generateOrderId(),
             companyName: "",
+            userId: "",
             items: [{ name: "", quantity: 1, price: 0 }],
         });
         setShowAddOrderForm(true);
+    };
+
+    // Handle opening return order form
+    const handleOpenReturnOrderForm = () => {
+        setReturnOrder({
+            orderId: generateReturnOrderId(),
+            companyName: "",
+            userId: "",
+            items: [{ name: "", quantity: 1, price: 0 }],
+        });
+        setShowReturnOrderForm(true);
     };
 
     // Submit Add Order form
@@ -259,6 +290,7 @@ const OrderList = () => {
         const orderData = {
             od_Id: newOrder.orderId,
             company_name: newOrder.companyName,
+            "user ID": newOrder.userId,
             od_status: "Processing",
             pay_status: "Pending",
             od_Tamount: totalAmount,
@@ -280,6 +312,7 @@ const OrderList = () => {
             setOrderDetails(prevDetails => [...prevDetails, {
                 orderId: newOrderData.od_Id,
                 companyName: newOrderData.company_name,
+                userId: newOrderData["user ID"],
                 items: newOrderData.items,
                 totalAmount: newOrderData.od_Tamount,
                 od_status: newOrderData.od_status,
@@ -291,6 +324,7 @@ const OrderList = () => {
             setNewOrder({
                 orderId: generateOrderId(),
                 companyName: "",
+                userId: "",
                 items: [{ name: "", quantity: 1, price: 0 }]
             });
             setShowAddOrderForm(false);
@@ -314,6 +348,7 @@ const OrderList = () => {
         const orderData = {
             od_Id: returnOrder.orderId,
             company_name: returnOrder.companyName,
+            "user ID": returnOrder.userId,
             od_status: "Processing",
             pay_status: "Pending",
             od_Tamount: totalAmount,
@@ -334,19 +369,23 @@ const OrderList = () => {
             // Update orders state
             setOrders(prevOrders => [...prevOrders, newOrderData]);
             
-            // Update orderDetails state
+            // Update orderDetails state with type set to "return"
             setOrderDetails(prevDetails => [...prevDetails, {
                 orderId: newOrderData.od_Id,
                 companyName: newOrderData.company_name,
+                userId: newOrderData["user ID"],
                 items: newOrderData.items,
                 totalAmount: newOrderData.od_Tamount,
+                od_status: newOrderData.od_status,
+                pay_status: newOrderData.pay_status,
                 type: "return"
             }]);
             
             // Reset form and close popup
             setReturnOrder({
-                orderId: "",
+                orderId: generateReturnOrderId(),
                 companyName: "",
+                userId: "",
                 items: [{ name: "", quantity: 1, price: 0 }]
             });
             setShowReturnOrderForm(false);
@@ -606,6 +645,20 @@ const OrderList = () => {
                             </div>
                             
                             <div className="mb-4">
+                                <label className="block text-gray-300 mb-1">User ID</label>
+                                <input 
+                                    type="text" 
+                                    value={newOrder.userId} 
+                                    onChange={(e) => handleAddOrderChange(e, null, 'userId')} 
+                                    className="w-full p-2 rounded bg-gray-700 text-white" 
+                                    placeholder="UID00000"
+                                    pattern="UID\d{5}"
+                                    title="User ID must be in format UID00000"
+                                    required 
+                                />
+                            </div>
+                            
+                            <div className="mb-4">
                                 <label className="block text-gray-300 mb-1">Company Name</label>
                                 <input 
                                     type="text" 
@@ -710,6 +763,21 @@ const OrderList = () => {
                                     value={returnOrder.orderId} 
                                     onChange={(e) => handleReturnOrderChange(e, null, 'orderId')} 
                                     className="w-full p-2 rounded bg-gray-700 text-white" 
+                                    required 
+                                    disabled
+                                />
+                            </div>
+                            
+                            <div className="mb-4">
+                                <label className="block text-gray-300 mb-1">User ID</label>
+                                <input 
+                                    type="text" 
+                                    value={returnOrder.userId} 
+                                    onChange={(e) => handleReturnOrderChange(e, null, 'userId')} 
+                                    className="w-full p-2 rounded bg-gray-700 text-white" 
+                                    placeholder="UID00000"
+                                    pattern="UID\d{5}"
+                                    title="User ID must be in format UID00000"
                                     required 
                                 />
                             </div>
@@ -833,7 +901,7 @@ const OrderList = () => {
                 <div className="h-36">
                     <div 
                         className="bg-gray-800 text-white p-4 rounded-lg shadow-lg h-full cursor-pointer hover:bg-gray-700 transition-all"
-                        onClick={() => setShowReturnOrderForm(true)}
+                        onClick={handleOpenReturnOrderForm}
                     >
                         <h3 className="text-xl font-bold mb-2">Return Orders</h3>
                         <p className="text-gray-300">Process customer returns and refunds</p>
@@ -845,7 +913,7 @@ const OrderList = () => {
             </div>
             
             {/* Statistics Cards */}
-            <div className="flex flex-col mb-6">
+            <div className="flex flex-col mb-10">
                 <div className="flex gap-6 mb-0">
                     <div className="w-45 h-38">
                         <DashboardCard
@@ -873,7 +941,7 @@ const OrderList = () => {
                     </div>
                 </div>
 
-                <div className="w-98 h-36 -mt-40">
+                <div className="w-98 h-44 -mt-48">
                     <DashboardCard
                         title="Success Rate"
                         value={`${((calculateTotalOrders() - calculateReturnOrders()) / calculateTotalOrders() * 100).toFixed(1)}%`}
@@ -952,7 +1020,7 @@ const OrderList = () => {
                                 <tr key={index} className="border-b border-gray-700 hover:bg-gray-800 text-center">
                                     {editingOrder === detail.orderId ? (
                                         <>
-                                            <td className="py-3 px-4">
+                                    <td className="py-3 px-4">
                                                 <input
                                                     type="text"
                                                     value={editFormData.orderId}
@@ -1076,18 +1144,18 @@ const OrderList = () => {
                                                     "bg-orange-600 text-white"
                                                 }`}>
                                                     {detail.od_status}
-                                                </span>
-                                            </td>
-                                            <td className="py-3 px-4">
+                                        </span>
+                                    </td>
+                                    <td className="py-3 px-4">
                                                 <span className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${
                                                     detail.pay_status === "Paid" ? "bg-green-600 text-white" : 
                                                     "bg-red-600 text-white"
                                                 }`}>
                                                     {detail.pay_status}
-                                                </span>
-                                            </td>
+                                        </span>
+                                    </td>
                                             <td className="py-3 px-4 text-gray-300">${detail.totalAmount.toFixed(2)}</td>
-                                            <td className="py-3 px-4">
+                                    <td className="py-3 px-4">
                                                 <div className="flex justify-center gap-2">
                                                     <button
                                                         onClick={() => handleEditClick(detail)}
@@ -1102,7 +1170,7 @@ const OrderList = () => {
                                                         Delete
                                                     </button>
                                                 </div>
-                                            </td>
+                                    </td>
                                         </>
                                     )}
                                 </tr>
@@ -1120,7 +1188,7 @@ const OrderList = () => {
                     </table>
                 </div>
             </div>
-
+            
             {/* Payment Records Section */}
             <div className="max-w-7xl mx-auto mt-10 font-roboto bg-gray-800 text-white p-6 rounded-lg shadow-lg">
                 <h2 className="text-xl font-bold text-white mb-4">Payment Records</h2>

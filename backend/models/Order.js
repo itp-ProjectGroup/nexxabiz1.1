@@ -9,6 +9,16 @@ const OrderItemSchema = new mongoose.Schema({
 const OrderSchema = new mongoose.Schema({
   od_Id: { type: String, required: true, unique: true },
   company_name: { type: String, required: true },
+  "user ID": { 
+    type: String, 
+    required: true,
+    validate: {
+      validator: function(v) {
+        return /^UID\d{5}$/.test(v);
+      },
+      message: props => `${props.value} is not a valid User ID! Must be in format UID00000`
+    }
+  },
   od_status: { 
     type: String, 
     required: true, 
