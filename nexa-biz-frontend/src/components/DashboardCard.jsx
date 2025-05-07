@@ -40,7 +40,14 @@ const formatLargeNumber = (value) => {
   return `${sign}$${absValue.toFixed(2)}`;
 };
 
-const DashboardCard = ({ title, value, chart, disableCurrencyFormatting = false }) => {
+const DashboardCard = ({ 
+  title, 
+  value, 
+  chart, 
+  icon, 
+  description,
+  disableCurrencyFormatting = false 
+}) => {
   let formattedValue = value;
 
   if (!disableCurrencyFormatting && (

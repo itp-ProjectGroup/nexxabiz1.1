@@ -1,13 +1,24 @@
 import mongoose from "mongoose";
 
 const OrderItemSchema = new mongoose.Schema({
-  manufacturingID: { type: String, required: true },
-  qty: { type: Number, required: true, min: 1 },
+  name: { type: String, required: true },
+  quantity: { type: Number, required: true, min: 1 },
+  price: { type: Number, required: true, min: 0 }
 });
 
 const OrderSchema = new mongoose.Schema({
   od_Id: { type: String, required: true, unique: true },
   company_name: { type: String, required: true },
+  "user ID": { 
+    type: String, 
+    required: true,
+    validate: {
+      validator: function(v) {
+        return /^UID\d{5}$/.test(v);
+      },
+      message: props => `${props.value} is not a valid User ID! Must be in format UID00000`
+    }
+  },
   od_status: { 
     type: String, 
     required: true, 
