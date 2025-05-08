@@ -1,12 +1,12 @@
 import express from "express";
-import { 
-    getOrders, 
-    getOrderById, 
-    updateOverdueDate, 
-    updateOrderPaymentStatus, 
+import {
+    getOrders,
+    getOrderById,
+    updateOverdueDate,
+    updateOrderPaymentStatus,
     createOrder,
     deleteOrder,
-    updateOrder 
+    updateOrder
 } from "../controllers/orderController.js";
 
 const router = express.Router();
