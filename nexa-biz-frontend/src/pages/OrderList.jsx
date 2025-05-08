@@ -8,98 +8,132 @@ import "react-resizable/css/styles.css";
 import SetOverdue from "../modal/SetOverdue";
 import PaymentGateway from "../modal/PaymentGateway";
 import PaymentDetails from "../modal/PaymentDetails";
-import CashFlowChart from "../components/CashFlowChart";
 import FinSearchBar from "../components/FinSearchBar";
 import { User } from "lucide-react";
 import AddOrderModal from "../modal/AddOrderModal";
 import AddReturnModal from "../modal/AddReturnModal";
+import UpdateOrderModal from "../modal/UpdateOrderModal";
+import UpdateReturnModal from "../modal/UpdateReturnModal";
+import BarChartComponent from "../components/BarChart";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
 const OrderList = () => {
+    // Data states
     const [orders, setOrders] = useState([]);
     const [payments, setPayments] = useState([]);
     const [products, setProducts] = useState([]);
     const [returns, setReturns] = useState([]);
     const [users, setUsers] = useState([]);
+    // Status options
+    const orderStatusOptions = ["Pending", "Processing", "Completed", "Cancelled"];
+    const paymentStatusOptions = ["New", "Paid", "Overdue"];
+    // UI states
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [activeTab, setActiveTab] = useState("all");
+    const [searchQuery, setSearchQuery] = useState('');
+    const [showExportOptions, setShowExportOptions] = useState(false);
+    // Modal states
     const [selectedPayment, setSelectedPayment] = useState(null);
     const [isPaymentDetailsModalOpen, setIsPaymentDetailsModalOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [isAddOrderModalOpen, setIsAddOrderModalOpen] = useState(false);
+    const [isAddReturnModalOpen, setIsAddReturnModalOpen] = useState(false);
+    const [isUpdateDetailsModalOpen, setIsUpdateDetailsModalOpen] = useState(false);
+    const [isUpdateReturnModalOpen, setIsUpdateReturnModalOpen] = useState(false);
+    const [selectedReturn, setSelectedReturn] = useState(null);
+    // Filter states
     const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
     const [filteredOrders, setFilteredOrders] = useState([]);
     const [filteredPayments, setFilteredPayments] = useState([]);
     const [filteredReturns, setFilteredReturns] = useState([]);
-    const [showExportOptions, setShowExportOptions] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [allFilteredData, setAllFilteredData] = useState({ orders: [], payments: [] });
     const [dateFilteredOrders, setDateFilteredOrders] = useState([]);
     const [dateFilteredPayments, setDateFilteredPayments] = useState([]);
     const [dateFilteredReturns, setDateFilteredReturns] = useState([]);
-    const [isAddReturnModalOpen, setIsAddReturnModalOpen] = useState(false);
+    const [allFilteredData, setAllFilteredData] = useState({ orders: [], payments: [] });
+    // Calculated states
+    const [totalReturnAmount, setTotalReturnAmount] = useState(0);
+    const [editingCell, setEditingCell] = useState(null);
+    const [editValue, setEditValue] = useState('');
 
+    // Fetch initial data
     useEffect(() => {
-        fetchOrders();
-        fetchPayments();
-        fetchProducts();
-        fetchUsers();
-        fetchReturns();
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                await Promise.all([
+                    fetchOrders(),
+                    fetchPayments(),
+                    fetchProducts(),
+                    fetchUsers(),
+                    fetchReturns(),
+                ]);
+            } catch (err) {
+                setError("Failed to load data. Please try again.");
+                console.error("Fetch error:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
     }, []);
 
     const fetchUsers = async () => {
         try {
             const response = await axios.get("http://localhost:5000/api/users");
-            setUsers(response.data);
+            setUsers(response.data || []);
         } catch (error) {
             console.error("Error fetching users:", error);
+            throw error;
         }
     };
 
     const fetchReturns = async () => {
         try {
             const response = await axios.get("http://localhost:5000/api/returns");
-            console.log("Fetched returns:", response.data); // Debug return data
-            setReturns(response.data);
-            setDateFilteredReturns(response.data);
+            setReturns(response.data || []);
+            setDateFilteredReturns(response.data || []);
         } catch (error) {
             console.error("Error fetching returns:", error);
+            throw error;
         }
     };
 
     const fetchProducts = async () => {
         try {
             const response = await axios.get("http://localhost:5000/api/products");
-            console.log("Fetched products:", response.data); // Debug product data
-            setProducts(response.data);
+            setProducts(response.data || []);
         } catch (error) {
             console.error("Error fetching products:", error);
+            throw error;
         }
     };
 
     const fetchPayments = async () => {
         try {
             const response = await axios.get("http://localhost:5000/api/payments");
-            setPayments(response.data);
+            setPayments(response.data || []);
         } catch (error) {
             console.error("Error fetching payments:", error);
+            throw error;
         }
     };
 
     const fetchOrders = async () => {
         try {
             const response = await axios.get("http://localhost:5000/api/Orders");
-            setOrders(response.data);
-            setLoading(false);
+            setOrders(response.data || []);
         } catch (error) {
             console.error("Error fetching orders:", error);
-            setLoading(false);
+            throw error;
         }
     };
 
+    // Enrich orders with user company names
     useEffect(() => {
         if (orders.length > 0 && users.length > 0) {
             const shouldUpdate = orders.some(order => {
@@ -113,7 +147,7 @@ const OrderList = () => {
                 const associatedUser = users.find(user => user.userID === order.userID);
                 return {
                     ...order,
-                    company_name: associatedUser?.u_companyName || order.company_name
+                    company_name: associatedUser?.u_companyName || order.company_name || '',
                 };
             });
 
@@ -121,6 +155,7 @@ const OrderList = () => {
         }
     }, [users, orders]);
 
+    // Apply date filters and calculate total return amount
     useEffect(() => {
         let tempFilteredOrders = orders;
         let tempFilteredPayments = payments;
@@ -185,8 +220,13 @@ const OrderList = () => {
         setDateFilteredOrders(tempFilteredOrders);
         setDateFilteredPayments(tempFilteredPayments);
         setDateFilteredReturns(tempFilteredReturns);
+
+        // Calculate total return amount for date-filtered returns
+        const total = tempFilteredReturns.reduce((sum, ret) => sum + calculateReturnTotal(ret), 0);
+        setTotalReturnAmount(total);
     }, [orders, payments, returns, dateFilter]);
 
+    // Apply tab filters
     useEffect(() => {
         let tabFilteredOrders = dateFilteredOrders;
         let tabFilteredReturns = [];
@@ -203,11 +243,12 @@ const OrderList = () => {
         setFilteredReturns(tabFilteredReturns);
     }, [dateFilteredOrders, dateFilteredPayments, dateFilteredReturns, activeTab]);
 
+    // Apply search filters
     useEffect(() => {
         if (!searchQuery) {
             setAllFilteredData({
                 orders: dateFilteredOrders,
-                payments: dateFilteredPayments
+                payments: dateFilteredPayments,
             });
             setFilteredOrders(dateFilteredOrders);
             setFilteredPayments(dateFilteredPayments);
@@ -238,6 +279,93 @@ const OrderList = () => {
         }
     }, [searchQuery, activeTab, dateFilteredOrders, dateFilteredPayments, dateFilteredReturns, users]);
 
+    // Update paid amounts for orders
+    useEffect(() => {
+        setDateFilteredOrders(prevOrders =>
+            prevOrders.map(order => ({
+                ...order,
+                paidAmount: getPaidAmountForOrder(order.od_Id),
+            }))
+        );
+    }, [dateFilteredPayments]);
+
+    // Calculations
+    const calculateOrderTotal = (order) => {
+        if (!products || !order || !Array.isArray(order.od_items)) return 0;
+        return order.od_items.reduce((sum, item) => {
+            const product = products.find(p => p.manufacturingID === item.manufacturingID);
+            const price = product?.sellingPrice || 0;
+            return sum + price * item.qty;
+        }, 0);
+    };
+
+    const calculateExpenseTotal = (order) => {
+        if (!products || !order || !Array.isArray(order.od_items)) return 0;
+        return order.od_items.reduce((sum, item) => {
+            const product = products.find(p => p.manufacturingID === item.manufacturingID);
+            const price = product?.ManufacturingCost || 0;
+            return sum + price * item.qty;
+        }, 0);
+    };
+
+    const calculateReturnTotal = (ret) => {
+        if (!products || !ret || !Array.isArray(ret.od_items)) return 0;
+        return ret.od_items.reduce((sum, item) => {
+            const product = products.find(p => p.manufacturingID === item.manufacturingID);
+            const price = product?.sellingPrice || 0;
+            return sum + price * item.qty;
+        }, 0);
+    };
+
+    const getPaidAmountForOrder = (orderId) => {
+        const orderPayments = dateFilteredPayments.filter(payment => payment.orderId === orderId);
+        return orderPayments.reduce((sum, payment) => sum + (payment.paymentAmount || 0), 0);
+    };
+
+    const totalSales = dateFilteredOrders.reduce((sum, order) => sum + calculateOrderTotal(order), 0);
+    const totalIncome = dateFilteredPayments.reduce((sum, p) => sum + (p.paymentAmount || 0), 0);
+    const totalExpense = dateFilteredOrders.reduce((sum, order) => sum + calculateExpenseTotal(order), 0);
+    const profit = totalIncome - totalExpense;
+
+    // Handlers
+    const handleSearch = (query) => {
+        setSearchQuery(query);
+    };
+
+    const handleDateFilterChange = (filter) => {
+        setDateFilter(filter);
+    };
+
+    const handlePaymentActionClick = (payment) => {
+        setSelectedPayment(payment);
+        setIsPaymentDetailsModalOpen(true);
+    };
+
+    const handleViewClick = (order) => {
+        setSelectedOrder(order);
+        setIsModalOpen(true);
+    };
+
+    const handlePayClick = (order) => {
+        setSelectedOrder(order);
+        setIsPaymentModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setSelectedOrder(null);
+        setIsModalOpen(false);
+    };
+
+    const handleClosePaymentModal = () => {
+        setSelectedOrder(null);
+        setIsPaymentModalOpen(false);
+    };
+
+    const handlePaymentSuccess = () => {
+        fetchPayments();
+        fetchOrders();
+    };
+
     const exportData = (format) => {
         setShowExportOptions(false);
 
@@ -249,20 +377,20 @@ const OrderList = () => {
             filename = `return_report_${new Date().toISOString().split('T')[0]}`;
             headers = ["Return ID", "User ID", "Payment Status", "Total Amount"];
             dataToExport = filteredReturns.map(ret => ({
-                "Return ID": ret.ret_Id,
-                "User ID": ret.userID,
-                "Payment Status": ret.pay_status,
-                "Total Amount": `$${calculateReturnTotal(ret).toFixed(2)}`
+                "Return ID": ret.ret_Id || '',
+                "User ID": ret.userID || '',
+                "Payment Status": ret.pay_status || '',
+                "Total Amount": `$${calculateReturnTotal(ret).toFixed(2)}`,
             }));
         } else {
             filename = `order_report_${activeTab}_${new Date().toISOString().split('T')[0]}`;
             headers = ["Order ID", "Company Name", "Order Status", "Payment Status", "Total Amount"];
             dataToExport = filteredOrders.map(order => ({
-                "Order ID": order.od_Id,
-                "Company Name": order.company_name,
-                "Order Status": order.od_status,
-                "Payment Status": order.pay_status,
-                "Total Amount": `$${calculateOrderTotal(order).toFixed(2)}`
+                "Order ID": order.od_Id || '',
+                "Company Name": order.company_name || '',
+                "Order Status": order.od_status || '',
+                "Payment Status": order.pay_status || '',
+                "Total Amount": `$${calculateOrderTotal(order).toFixed(2)}`,
             }));
         }
 
@@ -349,100 +477,74 @@ const OrderList = () => {
         printWindow.document.close();
     };
 
-    const handleSearch = (query) => {
-        setSearchQuery(query);
-    };
-
-    const handleDateFilterChange = (filter) => {
-        setDateFilter(filter);
-    };
-
-    const handlePaymentActionClick = (payment) => {
-        setSelectedPayment(payment);
-        setIsPaymentDetailsModalOpen(true);
-    };
-
-    const handleViewClick = (order) => {
-        setSelectedOrder(order);
-        setIsModalOpen(true);
-    };
-
-    const handlePayClick = (order) => {
-        setSelectedOrder(order);
-        setIsPaymentModalOpen(true);
-    };
-
-    const handleCloseModal = () => {
-        setSelectedOrder(null);
-        setIsModalOpen(false);
-    };
-
-    const handleClosePaymentModal = () => {
-        setSelectedOrder(null);
-        setIsPaymentModalOpen(false);
-    };
-
-    const getPaidAmountForOrder = (orderId) => {
-        const orderPayments = dateFilteredPayments.filter(payment => payment.orderId === orderId);
-        return orderPayments.reduce((sum, payment) => sum + payment.paymentAmount, 0);
-    };
-
-    const calculateOrderTotal = (order) => {
-        if (!products || !Array.isArray(order.od_items)) return 0;
-        return order.od_items.reduce((sum, item) => {
-            const product = products.find(p => p.manufacturingID === item.manufacturingID);
-            const price = product?.sellingPrice || 0;
-            return sum + price * item.qty;
-        }, 0);
-    };
-
-    const calculateExpenseTotal = (order) => {
-        if (!products || !Array.isArray(order.od_items)) return 0;
-        return order.od_items.reduce((sum, item) => {
-            const product = products.find(p => p.manufacturingID === item.manufacturingID);
-            const price = product?.ManufacturingCost || 0;
-            return sum + price * item.qty;
-        }, 0);
-    };
-
-    const calculateReturnTotal = (ret) => {
-        if (!products || !Array.isArray(ret.od_items)) {
-            console.log("Return object:", ret); // Debug return object
-            return 0;
+    // Add new function to handle all field updates
+    const handleFieldUpdate = async (orderId, field, newValue) => {
+        try {
+            const response = await axios.put(`http://localhost:5000/api/Orders/${orderId}`, {
+                [field]: newValue
+            });
+            
+            if (response.data) {
+                // Update local state
+                setOrders(prevOrders => 
+                    prevOrders.map(order => 
+                        order.od_Id === orderId 
+                            ? { ...order, [field]: newValue }
+                            : order
+                    )
+                );
+                setEditingCell(null);
+                setEditValue('');
+            }
+        } catch (error) {
+            console.error(`Error updating ${field}:`, error);
+            // You might want to add error handling UI feedback here
         }
-        return ret.od_items.reduce((sum, item) => {
-            const product = products.find(p => p.manufacturingID === item.manufacturingID);
-            const price = product?.sellingPrice || 0;
-            console.log("Return item:", item, "Matched product:", product, "Price:", price); // Debug item calculation
-            return sum + price * item.qty;
-        }, 0);
     };
 
-    const totalCapital = products.reduce((sum, product) => {
-        const cost = product.ManufacturingCost ?? 0;
-        const qty = product.quantity ?? 0;
-        return sum + (cost * qty);
-    }, 0);
-
-    const handlePaymentSuccess = () => {
-        fetchPayments();
-        fetchOrders();
+    const handleCellClick = (orderId, field, value) => {
+        setEditingCell({ orderId, field });
+        setEditValue(value || '');
     };
 
-    useEffect(() => {
-        setDateFilteredOrders(prevOrders =>
-            prevOrders.map(order => ({
-                ...order,
-                paidAmount: getPaidAmountForOrder(order.od_Id),
-            }))
-        );
-    }, [dateFilteredPayments]);
+    const handleEditSubmit = (e) => {
+        e.preventDefault();
+        if (editingCell) {
+            handleFieldUpdate(editingCell.orderId, editingCell.field, editValue);
+        }
+    };
 
-    const totalSales = dateFilteredOrders.reduce((sum, order) => sum + calculateOrderTotal(order), 0);
-    const totalIncome = dateFilteredPayments.reduce((sum, p) => sum + p.paymentAmount, 0);
-    const totalExpense = dateFilteredOrders.reduce((sum, order) => sum + calculateExpenseTotal(order), 0);
-    const profit = totalIncome - totalExpense;
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            handleEditSubmit(e);
+        } else if (e.key === 'Escape') {
+            setEditingCell(null);
+            setEditValue('');
+        }
+    };
 
+    const handleUpdateDetailsClick = (order) => {
+        setSelectedOrder(order);
+        setIsUpdateDetailsModalOpen(true);
+    };
+
+    const handleCloseUpdateDetailsModal = () => {
+        setSelectedOrder(null);
+        setIsUpdateDetailsModalOpen(false);
+    };
+
+    const handleUpdateReturnClick = (returnOrder) => {
+        setSelectedReturn(returnOrder);
+        setIsUpdateReturnModalOpen(true);
+    };
+
+    const handleCloseUpdateReturnModal = () => {
+        setSelectedReturn(null);
+        setIsUpdateReturnModalOpen(false);
+    };
+
+    // Render
+    if (error) return <p className="text-center text-red-500">{error}</p>;
     if (loading) return <p className="text-center text-gray-500">Loading...</p>;
 
     return (
@@ -484,8 +586,9 @@ const OrderList = () => {
                 </div>
                 <div key="16" data-grid={{ x: 0, y: 1, w: 2, h: 1.2 }}>
                     <DashboardCard
-                        title="Capital"
-                        value={`$${totalCapital.toFixed(2)}`}
+                        title="Return Amount"
+                        value={`$${totalReturnAmount.toFixed(2)}`}
+                        valueClassName="text-red-600"
                     />
                 </div>
                 <div key="17" data-grid={{ x: 0, y: 2, w: 2, h: 1.6 }}>
@@ -496,24 +599,24 @@ const OrderList = () => {
                 </div>
                 <div key="18" data-grid={{ x: 2, y: 1, w: 2, h: 3 }}>
                     <DashboardCard
+                        title="Order and Return Overview"
                         chart={
                             <div className="h-full w-full">
-                                <CashFlowChart
-                                    payments={dateFilteredPayments}
+                                <BarChartComponent
                                     orders={dateFilteredOrders}
-                                    products={products}
+                                    returns={dateFilteredReturns}
                                 />
                             </div>
                         }
                     />
                 </div>
                 <div key="27" data-grid={{ x: 4, y: 5, w: 2, h: 2 }}>
-                <DashboardCard
-                    title="Add Return"
-                    onClick={() => setIsAddReturnModalOpen(true)}
-                    className="cursor-pointer hover:bg-gray-100"
-                />
-            </div>
+                    <DashboardCard
+                        title="Add Return"
+                        onClick={() => setIsAddReturnModalOpen(true)}
+                        className="cursor-pointer hover:bg-gray-100"
+                    />
+                </div>
             </ResponsiveGridLayout>
 
             <div className="mt-4 w-full mx-auto font-roboto bg-gray-800 text-white p-6 rounded-lg shadow-lg">
@@ -583,23 +686,32 @@ const OrderList = () => {
                                     <th className="py-3 px-4">User ID</th>
                                     <th className="py-3 px-4">Payment Status</th>
                                     <th className="py-3 px-4">Total Amount</th>
+                                    <th className="py-3 px-4">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredReturns.map(ret => (
                                     <tr key={ret.ret_Id} className="border-b border-gray-700 hover:bg-gray-800 text-center">
-                                        <td className="py-3 px-4 font-medium text-white">{ret.ret_Id}</td>
-                                        <td className="py-3 px-4 text-gray-300">{ret.userID}</td>
+                                        <td className="py-3 px-4 font-medium text-white">{ret.ret_Id || ''}</td>
+                                        <td className="py-3 px-4 text-gray-300">{ret.userID || ''}</td>
                                         <td className="py-3 px-4">
                                             <span
                                                 className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${
                                                     ret.pay_status === "Refunded" ? "bg-green-600" : "bg-red-600"
                                                 } text-white`}
                                             >
-                                                {ret.pay_status}
+                                                {ret.pay_status || ''}
                                             </span>
                                         </td>
                                         <td className="py-3 px-4 text-gray-300">${calculateReturnTotal(ret).toFixed(2)}</td>
+                                        <td className="py-3 px-4">
+                                            <button
+                                                onClick={() => handleUpdateReturnClick(ret)}
+                                                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                                            >
+                                                Update Details
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -619,41 +731,98 @@ const OrderList = () => {
                             <tbody>
                                 {filteredOrders.map(order => (
                                     <tr key={order.od_Id} className="border-b border-gray-700 hover:bg-gray-800 text-center">
-                                        <td className="py-3 px-4 text-white">{order.od_Id}</td>
-                                        <td className="py-3 px-4 text-gray-300">{order.company_name}</td>
+                                        <td className="py-3 px-4 text-white">{order.od_Id || ''}</td>
+                                        <td className="py-3 px-4 text-gray-300">
+                                            {editingCell?.orderId === order.od_Id && editingCell?.field === 'company_name' ? (
+                                                <form onSubmit={handleEditSubmit} className="flex items-center">
+                                                    <input
+                                                        type="text"
+                                                        value={editValue}
+                                                        onChange={(e) => setEditValue(e.target.value)}
+                                                        onKeyDown={handleKeyPress}
+                                                        onBlur={handleEditSubmit}
+                                                        className="w-full px-2 py-1 text-gray-900 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                        autoFocus
+                                                    />
+                                                </form>
+                                            ) : (
+                                                <div 
+                                                    onClick={() => handleCellClick(order.od_Id, 'company_name', order.company_name)}
+                                                    className="cursor-pointer hover:bg-gray-700 px-2 py-1 rounded"
+                                                >
+                                                    {order.company_name || ''}
+                                                </div>
+                                            )}
+                                        </td>
                                         <td className="py-3 px-4">
-                                            <span
-                                                className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${
-                                                    order.od_status === "Completed" ? "bg-green-600" : "bg-yellow-600"
-                                                } text-white`}
+                                            <select
+                                                value={order.od_status || ''}
+                                                onChange={(e) => handleFieldUpdate(order.od_Id, 'od_status', e.target.value)}
+                                                className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                                    order.od_status === "Completed" ? "bg-green-600" : 
+                                                    order.od_status === "Cancelled" ? "bg-red-600" :
+                                                    order.od_status === "Processing" ? "bg-blue-600" : "bg-yellow-600"
+                                                } text-white border-none focus:ring-2 focus:ring-blue-500`}
                                             >
-                                                {order.od_status}
-                                            </span>
+                                                {orderStatusOptions.map(status => (
+                                                    <option key={status} value={status}>{status}</option>
+                                                ))}
+                                            </select>
                                         </td>
                                         <td className="py-3 px-4">
                                             <span
                                                 className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${
-                                                    order.pay_status === "Paid" ? "bg-green-600" : "bg-red-600"
+                                                    order.pay_status === "Paid" ? "bg-green-600" : 
+                                                    order.pay_status === "Overdue" ? "bg-red-600" : "bg-yellow-600"
                                                 } text-white`}
                                             >
-                                                {order.pay_status}
+                                                {order.pay_status || 'New'}
                                             </span>
                                         </td>
-                                        <td className="py-3 px-4 text-gray-300">${calculateOrderTotal(order).toFixed(2)}</td>
+                                        <td className="py-3 px-4 text-gray-300">
+                                            {editingCell?.orderId === order.od_Id && editingCell?.field === 'total_amount' ? (
+                                                <form onSubmit={handleEditSubmit} className="flex items-center">
+                                                    <input
+                                                        type="number"
+                                                        value={editValue}
+                                                        onChange={(e) => setEditValue(e.target.value)}
+                                                        onKeyDown={handleKeyPress}
+                                                        onBlur={handleEditSubmit}
+                                                        className="w-full px-2 py-1 text-gray-900 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                        autoFocus
+                                                    />
+                                                </form>
+                                            ) : (
+                                                <div 
+                                                    onClick={() => handleCellClick(order.od_Id, 'total_amount', calculateOrderTotal(order))}
+                                                    className="cursor-pointer hover:bg-gray-700 px-2 py-1 rounded"
+                                                >
+                                                    ${calculateOrderTotal(order).toFixed(2)}
+                                                </div>
+                                            )}
+                                        </td>
                                         <td className="py-3 px-4">
                                             {order.pay_status !== "Paid" ? (
-                                                <button
-                                                    onClick={() =>
-                                                        activeTab === "new"
-                                                            ? handleViewClick(order)
-                                                            : handlePayClick(order)
-                                                    }
-                                                    className={`${
-                                                        activeTab === "new" ? "bg-purple-500 hover:bg-purple-700" : "bg-blue-500 hover:bg-blue-700"
-                                                    } text-white font-bold py-2 px-4 rounded`}
-                                                >
-                                                    {activeTab === "new" ? "View" : "Pay"}
-                                                </button>
+                                                <div className="flex gap-2 justify-center">
+                                                    <button
+                                                        onClick={() =>
+                                                            activeTab === "new"
+                                                                ? handleViewClick(order)
+                                                                : handlePayClick(order)
+                                                        }
+                                                        className={`${
+                                                            activeTab === "new" ? "bg-purple-500 hover:bg-purple-700" : "bg-blue-500 hover:bg-blue-700"
+                                                        } text-white font-bold py-2 px-4 rounded`}
+                                                    >
+                                                        {activeTab === "new" ? "View" : "Pay"}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleUpdateDetailsClick(order)}
+                                                        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+                                                    >
+                                                        Update Details
+                                                    </button>
+                                                </div>
                                             ) : (
                                                 <span className="text-gray-400">Paid</span>
                                             )}
@@ -698,7 +867,6 @@ const OrderList = () => {
                 products={products}
                 orders={orders}
             />
-
             <AddReturnModal
                 isOpen={isAddReturnModalOpen}
                 onClose={() => setIsAddReturnModalOpen(false)}
@@ -706,6 +874,22 @@ const OrderList = () => {
                 users={users}
                 products={products}
                 returns={returns}
+            />
+            <UpdateOrderModal
+                isOpen={isUpdateDetailsModalOpen}
+                onClose={handleCloseUpdateDetailsModal}
+                onSubmit={fetchOrders}
+                users={users}
+                products={products}
+                order={selectedOrder}
+            />
+            <UpdateReturnModal
+                isOpen={isUpdateReturnModalOpen}
+                onClose={handleCloseUpdateReturnModal}
+                onSubmit={fetchReturns}
+                users={users}
+                products={products}
+                returnOrder={selectedReturn}
             />
         </div>
     );
