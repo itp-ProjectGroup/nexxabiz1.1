@@ -15,6 +15,8 @@ import AddReturnModal from "../modal/AddReturnModal";
 import UpdateOrderModal from "../modal/UpdateOrderModal";
 import UpdateReturnModal from "../modal/UpdateReturnModal";
 import BarChartComponent from "../components/BarChart";
+import { Plus } from "lucide-react";
+import { Line } from "react-chartjs-2";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -578,11 +580,28 @@ const OrderList = () => {
                     />
                 </div>
                 <div key="15" data-grid={{ x: 4, y: 0, w: 2, h: 2 }}>
-                    <DashboardCard
-                        title="Add Order"
+                    <div 
                         onClick={() => setIsAddOrderModalOpen(true)}
-                        className="cursor-pointer hover:bg-gray-100"
-                    />
+                        className="h-full bg-gradient-to-br from-blue-800 to-blue-900 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group relative overflow-hidden"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-blue-800/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(30,64,175,0.3),rgba(255,255,255,0))]" />
+                        <div className="relative z-10 flex flex-col h-full">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-xl font-bold text-white">Add Order</h3>
+                                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all duration-300">
+                                    <Plus className="text-white" size={24} />
+                                </div>
+                            </div>
+                            <p className="text-blue-100/90 text-sm mb-4">Create a new order with detailed information</p>
+                            <div className="mt-auto">
+                                <div className="flex items-center gap-2 text-blue-100/90 text-sm">
+                                    <span className="px-2 py-1 rounded-full bg-white/10">Quick Add</span>
+                                    <span className="px-2 py-1 rounded-full bg-white/10">Multiple Items</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div key="16" data-grid={{ x: 0, y: 1, w: 2, h: 1.2 }}>
                     <DashboardCard
@@ -592,30 +611,152 @@ const OrderList = () => {
                     />
                 </div>
                 <div key="17" data-grid={{ x: 0, y: 2, w: 2, h: 1.6 }}>
-                    <DashboardCard
-                        title="Profit"
-                        value={`$${profit.toFixed(2)}`}
-                    />
-                </div>
-                <div key="18" data-grid={{ x: 2, y: 1, w: 2, h: 3 }}>
-                    <DashboardCard
-                        title="Order and Return Overview"
-                        chart={
-                            <div className="h-full w-full">
-                                <BarChartComponent
-                                    orders={dateFilteredOrders}
-                                    returns={dateFilteredReturns}
+                    <div className="h-full bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 shadow-lg relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5" />
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(59,130,246,0.1),rgba(255,255,255,0))]" />
+                        <div className="relative z-10 flex flex-col h-full">
+                            <div className="flex items-center justify-between mb-2">
+                                <div>
+                                    <h3 className="text-xl font-bold text-white">Success Rate</h3>
+                                    <p className="text-2xl font-bold text-blue-500 mt-1">
+                                        {((orders.filter(order => order.od_status === 'Completed').length / orders.length) * 100).toFixed(1)}%
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex-1 min-h-0 h-[calc(100%-80px)]">
+                                <Line 
+                                    data={{
+                                        labels: Array.from({ length: 6 }, (_, i) => {
+                                            const date = new Date();
+                                            date.setMonth(date.getMonth() - (5 - i));
+                                            return date.toLocaleString('default', { month: 'short' });
+                                        }),
+                                        datasets: [{
+                                            label: 'Success Rate',
+                                            data: Array.from({ length: 6 }, (_, i) => {
+                                                const date = new Date();
+                                                date.setMonth(date.getMonth() - (5 - i));
+                                                const monthOrders = orders.filter(order => {
+                                                    const orderDate = new Date(order.od_date);
+                                                    return orderDate.getMonth() === date.getMonth() && 
+                                                           orderDate.getFullYear() === date.getFullYear();
+                                                });
+                                                const monthCompleted = monthOrders.filter(order => order.od_status === 'Completed').length;
+                                                return monthOrders.length > 0 ? (monthCompleted / monthOrders.length) * 100 : 0;
+                                            }),
+                                            fill: true,
+                                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                            borderColor: 'rgba(59, 130, 246, 1)',
+                                            tension: 0.4,
+                                            pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                                            pointBorderColor: '#fff',
+                                            pointBorderWidth: 2,
+                                            pointRadius: 4,
+                                            pointHoverRadius: 6,
+                                        }]
+                                    }}
+                                    options={{
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: {
+                                                display: false
+                                            },
+                                            tooltip: {
+                                                backgroundColor: 'rgba(17, 24, 39, 0.8)',
+                                                titleColor: '#fff',
+                                                bodyColor: '#fff',
+                                                borderColor: 'rgba(59, 130, 246, 0.5)',
+                                                borderWidth: 1,
+                                                padding: 10,
+                                                displayColors: false,
+                                                callbacks: {
+                                                    label: function(context) {
+                                                        return `Success Rate: ${context.parsed.y.toFixed(1)}%`;
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        scales: {
+                                            x: {
+                                                grid: {
+                                                    display: false
+                                                },
+                                                ticks: {
+                                                    color: '#9CA3AF'
+                                                }
+                                            },
+                                            y: {
+                                                beginAtZero: true,
+                                                max: 100,
+                                                grid: {
+                                                    color: 'rgba(75, 85, 99, 0.1)'
+                                                },
+                                                ticks: {
+                                                    color: '#9CA3AF',
+                                                    callback: function(value) {
+                                                        return value + '%';
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }}
                                 />
                             </div>
-                        }
-                    />
+                        </div>
+                    </div>
+                </div>
+                <div key="18" data-grid={{ x: 2, y: 1, w: 2, h: 3 }}>
+                    <div className="h-full bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 shadow-lg relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5" />
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(59,130,246,0.1),rgba(255,255,255,0))]" />
+                        <div className="relative z-10 flex flex-col h-full">
+                            <div className="flex justify-end mb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                                        <span className="text-sm text-gray-300">Orders</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                        <span className="text-sm text-gray-300">Returns</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex-1 min-h-0">
+                                <div className="h-full w-full">
+                                    <BarChartComponent
+                                        orders={dateFilteredOrders}
+                                        returns={dateFilteredReturns}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div key="27" data-grid={{ x: 4, y: 5, w: 2, h: 2 }}>
-                    <DashboardCard
-                        title="Add Return"
+                    <div 
                         onClick={() => setIsAddReturnModalOpen(true)}
-                        className="cursor-pointer hover:bg-gray-100"
-                    />
+                        className="h-full bg-gradient-to-br from-red-800 to-red-900 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group relative overflow-hidden"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-br from-red-600/20 to-red-800/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(153,27,27,0.3),rgba(255,255,255,0))]" />
+                        <div className="relative z-10 flex flex-col h-full">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-xl font-bold text-white">Add Return</h3>
+                                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-all duration-300">
+                                    <Plus className="text-white" size={24} />
+                                </div>
+                            </div>
+                            <p className="text-red-100/90 text-sm mb-4">Process a return with item details and refund information</p>
+                            <div className="mt-auto">
+                                <div className="flex items-center gap-2 text-red-100/90 text-sm">
+                                    <span className="px-2 py-1 rounded-full bg-white/10">Quick Return</span>
+                                    <span className="px-2 py-1 rounded-full bg-white/10">Refund Process</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </ResponsiveGridLayout>
 
