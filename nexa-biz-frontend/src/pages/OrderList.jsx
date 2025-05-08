@@ -588,7 +588,7 @@ const OrderList = () => {
                     <DashboardCard
                         title="Return Amount"
                         value={`$${totalReturnAmount.toFixed(2)}`}
-                        valueClassName="text-red-600"
+                        valueClassName="text-red-500"
                     />
                 </div>
                 <div key="17" data-grid={{ x: 0, y: 2, w: 2, h: 1.6 }}>
@@ -804,18 +804,6 @@ const OrderList = () => {
                                         <td className="py-3 px-4">
                                             {order.pay_status !== "Paid" ? (
                                                 <div className="flex gap-2 justify-center">
-                                                    <button
-                                                        onClick={() =>
-                                                            activeTab === "new"
-                                                                ? handleViewClick(order)
-                                                                : handlePayClick(order)
-                                                        }
-                                                        className={`${
-                                                            activeTab === "new" ? "bg-purple-500 hover:bg-purple-700" : "bg-blue-500 hover:bg-blue-700"
-                                                        } text-white font-bold py-2 px-4 rounded`}
-                                                    >
-                                                        {activeTab === "new" ? "View" : "Pay"}
-                                                    </button>
                                                     <button
                                                         onClick={() => handleUpdateDetailsClick(order)}
                                                         className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
