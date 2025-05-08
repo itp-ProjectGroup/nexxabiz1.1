@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { Responsive, WidthProvider } from "react-grid-layout";
 import DashboardCard from "../components/DashboardCard";
-import { FaMoneyBillWave, FaClipboardList, FaFileExport } from "react-icons/fa"; // Added FaFileExport
+import { FaMoneyBillWave, FaClipboardList, FaFileExport } from "react-icons/fa";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import SetOverdue from "../modal/SetOverdue";
@@ -13,6 +13,10 @@ import PaymentReminderCard from "../components/PaymentReminderCard";
 import DateRangeFilter from "../components/DateRangeFilter";
 import FinSearchBar from "../components/FinSearchBar";
 import { User } from "lucide-react";
+import { Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, Title } from 'chart.js';
+
+ChartJS.register(ArcElement, Tooltip, Legend, Title);
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -32,8 +36,8 @@ const MainDashboard = () => {
     const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
     const [filteredOrders, setFilteredOrders] = useState([]);
     const [filteredPayments, setFilteredPayments] = useState([]);
-    const [exportType, setExportType] = useState(''); // State for export type modal
-    const [showExportOptions, setShowExportOptions] = useState(false); // State to control export options dropdown
+    const [exportType, setExportType] = useState('');
+    const [showExportOptions, setShowExportOptions] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [allFilteredData, setAllFilteredData] = useState({orders: [],payments: []});
 
@@ -57,7 +61,7 @@ const MainDashboard = () => {
     const fetchReturns = async () => {
         try {
             const response = await axios.get("http://localhost:5000/api/returns");
-            setReturns(response.data); // Changed from setUsers to setReturns
+            setReturns(response.data);
         } catch (error) {
             console.error("Error fetching returns:", error);
         }
@@ -114,13 +118,10 @@ const MainDashboard = () => {
     }, [users, orders]);
     
 
-    // Separate states for date-filtered and tab-filtered data
     const [dateFilteredOrders, setDateFilteredOrders] = useState([]);
     const [dateFilteredPayments, setDateFilteredPayments] = useState([]);
     
-    // Apply date filter to orders and payments
     useEffect(() => {
-        // Filter orders based on date
         let tempFilteredOrders = orders;
         if (dateFilter.startDate || dateFilter.endDate) {
             tempFilteredOrders = orders.filter(order => {
@@ -134,7 +135,6 @@ const MainDashboard = () => {
                 
                 if (dateFilter.endDate) {
                     const endDate = new Date(dateFilter.endDate);
-                    // Set time to end of day for inclusive filtering
                     endDate.setHours(23, 59, 59, 999);
                     passesFilter = passesFilter && orderDate <= endDate;
                 }
@@ -143,10 +143,8 @@ const MainDashboard = () => {
             });
         }
         
-        // Store date-filtered orders (before tab filtering)
         setDateFilteredOrders(tempFilteredOrders);
         
-        // Filter payments based on date
         let tempFilteredPayments = payments;
         if (dateFilter.startDate || dateFilter.endDate) {
             tempFilteredPayments = payments.filter(payment => {
@@ -160,7 +158,6 @@ const MainDashboard = () => {
                 
                 if (dateFilter.endDate) {
                     const endDate = new Date(dateFilter.endDate);
-                    // Set time to end of day for inclusive filtering
                     endDate.setHours(23, 59, 59, 999);
                     passesFilter = passesFilter && paymentDate <= endDate;
                 }
@@ -169,13 +166,10 @@ const MainDashboard = () => {
             });
         }
         
-        // Store date-filtered payments
         setDateFilteredPayments(tempFilteredPayments);
     }, [orders, payments, dateFilter]);
     
-    // Apply tab filter after date filter
     useEffect(() => {
-        // Apply tab filter to the date-filtered orders
         const tabFilteredOrders = dateFilteredOrders.filter(order => {
             if (activeTab === "paid") return order.pay_status === "Paid";
             if (activeTab === "new") return order.pay_status === "New";
@@ -187,21 +181,16 @@ const MainDashboard = () => {
                       overdueDate && 
                       overdueDate <= currentDate;
             }
-            return true; // For "all" tab
+            return true;
         });
         
         setFilteredOrders(tabFilteredOrders);
-        
-        // Update filteredPayments when activeTab changes
-        // This is the fix: We need to set filteredPayments when tab changes to "allp"
         setFilteredPayments(dateFilteredPayments);
     }, [dateFilteredOrders, dateFilteredPayments, activeTab]);
 
-    // Function to generate export data
     const exportData = (format) => {
-        setShowExportOptions(false); // Close dropdown after selection
+        setShowExportOptions(false);
         
-        // Determine which data to export based on active tab
         let dataToExport = [];
         let filename = "";
         let headers = [];
@@ -218,10 +207,7 @@ const MainDashboard = () => {
                 "Amount": `$${payment.paymentAmount.toFixed(2)}`
             }));
         } else {
-            // For order tabs
             filename = `order_report_${activeTab}_${new Date().toISOString().split('T')[0]}`;
-            
-            // Determine headers based on activeTab
             headers = ["Order ID", "Company Name", "Order Status"];
             
             if (activeTab !== "Pending" && activeTab !== "overdue") {
@@ -238,7 +224,6 @@ const MainDashboard = () => {
                 headers.push("Overdue Date");
             }
             
-            // Map order data based on the tab
             dataToExport = filteredOrders.map(order => {
                 const data = {
                     "Order ID": order.od_Id,
@@ -264,7 +249,6 @@ const MainDashboard = () => {
             });
         }
         
-        // Export based on selected format
         if (format === "csv") {
             exportToCSV(dataToExport, headers, filename);
         } else if (format === "pdf") {
@@ -272,23 +256,18 @@ const MainDashboard = () => {
         }
     };
     
-    // Function to export data as CSV
     const exportToCSV = (data, headers, filename) => {
-        // Create CSV content
         let csvContent = headers.join(",") + "\n";
         
         data.forEach(item => {
             const row = headers.map(header => {
-                // Wrap values in quotes to handle commas in the data
                 let value = item[header] || "";
-                // Escape quotes by doubling them
                 value = String(value).replace(/"/g, '""');
                 return `"${value}"`;
             });
             csvContent += row.join(",") + "\n";
         });
         
-        // Create blob and download
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
@@ -299,15 +278,9 @@ const MainDashboard = () => {
         document.body.removeChild(link);
     };
     
-    // Function to export data as PDF
     const exportToPDF = (data, headers, filename) => {
-        // For PDF export, we'll use a simple approach that works in the browser
-        // In a real-world scenario, you might want to use a library like jsPDF or pdfmake
-        
-        // Create a printable HTML page
         const printWindow = window.open('', '_blank');
         
-        // Create PDF content as an HTML table
         let htmlContent = `
             <html>
             <head>
@@ -335,7 +308,6 @@ const MainDashboard = () => {
                     <tbody>
         `;
         
-        // Add data rows
         data.forEach(item => {
             htmlContent += '<tr>';
             headers.forEach(header => {
@@ -344,7 +316,6 @@ const MainDashboard = () => {
             htmlContent += '</tr>';
         });
         
-        // Close the table and add print instructions
         htmlContent += `
                     </tbody>
                 </table>
@@ -356,7 +327,6 @@ const MainDashboard = () => {
             </html>
         `;
         
-        // Write to the new window and trigger print
         printWindow.document.open();
         printWindow.document.write(htmlContent);
         printWindow.document.close();
@@ -392,8 +362,6 @@ const MainDashboard = () => {
     };
 
     const getPaidAmountForOrder = (orderId) => {
-        // Use date-filtered payments when calculating paid amount
-        // This ensures consistent values regardless of tab selection
         const orderPayments = dateFilteredPayments.filter(payment => payment.orderId === orderId);
         const totalPaidAmount = orderPayments.reduce((sum, payment) => sum + payment.paymentAmount, 0);
         return totalPaidAmount;
@@ -420,7 +388,6 @@ const MainDashboard = () => {
     };
 
     const totalCapital = products.reduce((sum, product) => {
-        // Use nullish coalescing to handle undefined values
         const cost = product.ManufacturingCost ?? 0;
         const qty = product.quantity ?? 0;
         return sum + (cost * qty);
@@ -443,7 +410,6 @@ const MainDashboard = () => {
         }
     }, [dateFilteredPayments, activeTab]);
     
-    // Enhance date-filtered orders with paid amount information
     useEffect(() => {
         setDateFilteredOrders(prevOrders =>
             prevOrders.map(order => ({
@@ -453,81 +419,68 @@ const MainDashboard = () => {
         );
     }, [dateFilteredPayments]);
 
-
-
-
-        // First, update allFilteredData when dateFilteredOrders or dateFilteredPayments change
-        useEffect(() => {
-            // Only update reference data when date filters change, not during search
-            if (!searchQuery) {
-                setAllFilteredData({
-                    orders: dateFilteredOrders,
-                    payments: dateFilteredPayments
-                });
-            }
-        }, [dateFilteredOrders, dateFilteredPayments, searchQuery]);
+    useEffect(() => {
+        if (!searchQuery) {
+            setAllFilteredData({
+                orders: dateFilteredOrders,
+                payments: dateFilteredPayments
+            });
+        }
+    }, [dateFilteredOrders, dateFilteredPayments, searchQuery]);
         
-        // Separate effect for managing filtered data based on search and tabs
-        useEffect(() => {
-            if (!searchQuery) {
-                // If no search query, apply only tab filters to date-filtered data
-                setFilteredOrders(
-                    dateFilteredOrders.filter(order => {
-                        if (activeTab === "paid") return order.pay_status === "Paid";
-                        if (activeTab === "new") return order.pay_status === "New";
-                        if (activeTab === "Pending") return order.pay_status === "Pending";
-                        if (activeTab === "overdue") {
-                            const currentDate = new Date();
-                            const overdueDate = order.overdue_date ? new Date(order.overdue_date) : null;
-                            return order.pay_status === "Pending" && 
-                                overdueDate && 
-                                overdueDate <= currentDate;
-                        }
-                        return true; // For "all" tab
-                    })
-                );
-                setFilteredPayments(dateFilteredPayments);
-            } else {
-                // Apply search filter to orders
-                const matchingOrders = allFilteredData.orders.filter(order => {
-                    // Filter by customer name
-                    const customerNameMatch = order.company_name && 
-                        order.company_name.toLowerCase().includes(searchQuery.toLowerCase());
-                    
-                    // Apply tab filters
-                    let tabCondition = true;
-                    if (activeTab === "paid") tabCondition = order.pay_status === "Paid";
-                    if (activeTab === "new") tabCondition = order.pay_status === "New";
-                    if (activeTab === "Pending") tabCondition = order.pay_status === "Pending";
+    useEffect(() => {
+        if (!searchQuery) {
+            setFilteredOrders(
+                dateFilteredOrders.filter(order => {
+                    if (activeTab === "paid") return order.pay_status === "Paid";
+                    if (activeTab === "new") return order.pay_status === "New";
+                    if (activeTab === "Pending") return order.pay_status === "Pending";
                     if (activeTab === "overdue") {
                         const currentDate = new Date();
                         const overdueDate = order.overdue_date ? new Date(order.overdue_date) : null;
-                        tabCondition = order.pay_status === "Pending" && 
+                        return order.pay_status === "Pending" && 
                             overdueDate && 
                             overdueDate <= currentDate;
                     }
-                    
-                    return customerNameMatch && (activeTab === "all" || tabCondition);
-                });
+                    return true;
+                })
+            );
+            setFilteredPayments(dateFilteredPayments);
+        } else {
+            const matchingOrders = allFilteredData.orders.filter(order => {
+                const customerNameMatch = order.company_name && 
+                    order.company_name.toLowerCase().includes(searchQuery.toLowerCase());
                 
-                // Find related order IDs to filter payments
-                const matchingOrderIds = new Set(matchingOrders.map(order => order.od_Id));
+                let tabCondition = true;
+                if (activeTab === "paid") tabCondition = order.pay_status === "Paid";
+                if (activeTab === "new") tabCondition = order.pay_status === "New";
+                if (activeTab === "Pending") tabCondition = order.pay_status === "Pending";
+                if (activeTab === "overdue") {
+                    const currentDate = new Date();
+                    const overdueDate = order.overdue_date ? new Date(order.overdue_date) : null;
+                    tabCondition = order.pay_status === "Pending" && 
+                        overdueDate && 
+                        overdueDate <= currentDate;
+                }
                 
-                // Apply search filter to payments based on related orders
-                const matchingPayments = allFilteredData.payments.filter(payment => 
-                    matchingOrderIds.has(payment.orderId)
-                );
-                
-                setFilteredOrders(matchingOrders);
-                setFilteredPayments(matchingPayments);
-            }
-        }, [searchQuery, activeTab, allFilteredData]);
+                return customerNameMatch && (activeTab === "all" || tabCondition);
+            });
+            
+            const matchingOrderIds = new Set(matchingOrders.map(order => order.od_Id));
+            
+            const matchingPayments = allFilteredData.payments.filter(payment => 
+                matchingOrderIds.has(payment.orderId)
+            );
+            
+            setFilteredOrders(matchingOrders);
+            setFilteredPayments(matchingPayments);
+        }
+    }, [searchQuery, activeTab, allFilteredData]);
 
     const handleSearch = (query) => {
         setSearchQuery(query);
     };
 
-    // Count overdue orders based on date-filtered data (not tab-filtered)
     const overdueOrdersCount = dateFilteredOrders.filter(order => {
         const currentDate = new Date();
         const overdueDate = order.overdue_date ? new Date(order.overdue_date) : null;
@@ -536,13 +489,77 @@ const MainDashboard = () => {
               overdueDate <= currentDate;
     }).length;
 
-    // Calculate metrics based on date-filtered data (not tab-filtered)
-    // This ensures consistent dashboard metrics regardless of active tab
     const totalSales = dateFilteredOrders.reduce((sum, order) => sum + calculateOrderTotal(order), 0);
     const totalIncome = dateFilteredPayments.reduce((sum, p) => sum + p.paymentAmount, 0);
     const totalExpense = dateFilteredOrders.reduce((sum, order) => sum + calculateExpenseTotal(order), 0);
     const profit = totalIncome - totalExpense;
     const amountDue = totalSales - totalIncome;
+
+    const pieChartData = {
+        labels: ['Orders', 'Returns'],
+        datasets: [
+            {
+                data: [orders.length, returns.length],
+                backgroundColor: ['#4F46E5', '#EF4444'],
+                hoverBackgroundColor: ['#6366F1', '#F87171'],
+                borderColor: '#1F2937',
+                borderWidth: 2,
+            },
+        ],
+    };
+
+    const pieChartOptions = {
+        maintainAspectRatio: false,
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    color: '#D1D5DB',
+                    font: {
+                        size: 14,
+                        family: 'Roboto, sans-serif',
+                    },
+                    padding: 20,
+                },
+            },
+            title: {
+                display: true,
+                text: 'Order Summary',
+                color: '#F3F4F6',
+                font: {
+                    size: 18,
+                    weight: 'bold',
+                    family: 'Roboto, sans-serif',
+                },
+                padding: {
+                    top: 10,
+                    bottom: 20,
+                },
+            },
+            tooltip: {
+                backgroundColor: '#1F2937',
+                titleColor: '#F3F4F6',
+                bodyColor: '#D1D5DB',
+                borderColor: '#4B5563',
+                borderWidth: 1,
+                cornerRadius: 8,
+                callbacks: {
+                    label: (context) => {
+                        const label = context.label || '';
+                        const value = context.raw || 0;
+                        const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return `${label}: ${value} (${percentage}%)`;
+                    },
+                },
+            },
+        },
+        animation: {
+            animateScale: true,
+            animateRotate: true,
+        },
+    };
 
     if (loading) return <p className="text-center text-gray-500">Loading...</p>;
 
@@ -557,16 +574,16 @@ const MainDashboard = () => {
                 isResizable={false}
             >
                 <div key="11" data-grid={{ x: 0, y: 0, w: 1, h: 1.4 }}>
-                <DashboardCard
-                    title="Total Sales"
-                    value={`$${totalSales.toFixed(2)}`}
-                />
+                    <DashboardCard
+                        title="Total Sales"
+                        value={`$${totalSales.toFixed(2)}`}
+                    />
                 </div>
                 <div key="12" data-grid={{ x: 1, y: 0, w: 1, h: 1 }}>
                     <DashboardCard
                         title="Customers"
                         value={users.length}
-                        disableCurrencyFormatting={true} 
+                        disableCurrencyFormatting={true}
                     />
                 </div>
                 <div key="13" data-grid={{ x: 2, y: 0, w: 1, h: 1 }}>
@@ -580,13 +597,19 @@ const MainDashboard = () => {
                     <DashboardCard
                         title="Return"
                         value={returns.length}
-                        disableCurrencyFormatting={true} 
+                        disableCurrencyFormatting={true}
                     />
                 </div>
                 <div key="15" data-grid={{ x: 4, y: 0, w: 2, h: 4 }}>
-                    <PaymentReminderCard 
-                        orders={dateFilteredOrders} 
-                        calculateOrderTotal={calculateOrderTotal}
+                    <DashboardCard
+                        title="Order Summary"
+                        chart={
+                            <div className="h-full w-full flex items-center justify-center">
+                                <div className="relative" style={{ height: '80%', width: '80%' }}>
+                                    <Pie data={pieChartData} options={pieChartOptions} />
+                                </div>
+                            </div>
+                        }
                     />
                 </div>
                 <div key="16" data-grid={{ x: 0, y: 1, w: 1, h: 1.3 }}>
@@ -616,81 +639,73 @@ const MainDashboard = () => {
                 </div>
             </ResponsiveGridLayout>
 
-        <div className="mt-4 w-full mx-auto font-roboto bg-gray-800 text-white p-6 rounded-lg shadow-lg">
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-white">New Orders</h2>   
-            </div>
-
-           
-            
-
-            <table className="w-full text-left border-collapse">
-                <thead>
-                    <tr className="border-b border-gray-700 text-gray-400 uppercase text-sm text-center">
-                    <th className="py-3 px-4">Order ID</th>
-                    <th className="py-3 px-4">Company Name</th>
-                    <th className="py-3 px-4">Order Status</th>
-                    <th className="py-3 px-4">Payment Status</th>
-                    <th className="py-3 px-4">Total Amount</th>
-                    <th className="py-3 px-4">Action</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {/* Filter orders where pay_status is "New" */}
-                    {filteredOrders
-                    .filter(order => order.pay_status === "New")
-                    .map(order => (
-                        <tr key={order.od_Id} className="border-b border-gray-700 hover:bg-gray-800 text-center">
-                        <td className="py-3 px-4 font-medium text-white">{order.od_Id}</td>
-                        <td className="py-3 px-4 text-gray-300">{order.company_name}</td>
-                        <td className="py-3 px-4">
-                            <span
-                            className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${
-                                order.od_status === "Completed" ? "bg-green-600" : "bg-yellow-600"
-                            } text-white`}
-                            >
-                            {order.od_status}
-                            </span>
-                        </td>
-                        <td className="py-3 px-4">
-                            <span
-                            className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${
-                                order.pay_status === "Paid" ? "bg-green-600" : "bg-red-600"
-                            } text-white`}
-                            >
-                            {order.pay_status}
-                            </span>
-                        </td>
-
-                        <td className="py-3 px-4 text-gray-300">
-                            ${calculateOrderTotal(order).toFixed(2)}
-                        </td>
-                        <td className="py-3 px-4">
-                            {order.pay_status !== "Paid" ? (
-                            <button
-                                onClick={() =>
-                                activeTab === "new"
-                                    ? handleViewClick(order)
-                                    : handlePayClick(order)
-                                }
-                                className={`${
-                                activeTab === "new" ? "bg-purple-500 hover:bg-purple-700" : "bg-blue-500 hover:bg-blue-700"
-                                } text-white font-bold py-2 px-4 rounded`}
-                            >
-                                {activeTab === "new" ? "View" : "Pay"}
-                            </button>
-                            ) : (
-                            <span className="text-gray-400">Paid</span>
-                            )}
-                        </td>
+            <div className="mt-4 w-full mx-auto font-roboto bg-gray-800 text-white p-6 rounded-lg shadow-lg">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold text-white">New Orders</h2>   
+                </div>
+                <table className="w-full text-left border-collapse">
+                    <thead>
+                        <tr className="border-b border-gray-700 text-gray-400 uppercase text-sm text-center">
+                            <th className="py-3 px-4">Order ID</th>
+                            <th className="py-3 px-4">Company Name</th>
+                            <th className="py-3 px-4">Order Status</th>
+                            <th className="py-3 px-4">Payment Status</th>
+                            <th className="py-3 px-4">Total Amount</th>
+                            <th className="py-3 px-4">Action</th>
                         </tr>
-                    ))}
-                </tbody>
+                    </thead>
+                    <tbody>
+                        {filteredOrders
+                            .filter(order => order.pay_status === "New")
+                            .map(order => (
+                                <tr key={order.od_Id} className="border-b border-gray-700 hover:bg-gray-800 text-center">
+                                    <td className="py-3 px-4 font-medium text-white">{order.od_Id}</td>
+                                    <td className="py-3 px-4 text-gray-300">{order.company_name}</td>
+                                    <td className="py-3 px-4">
+                                        <span
+                                            className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font[\n]                                            font-medium ${
+                                                order.od_status === "Completed" ? "bg-green-600" : "bg-yellow-600"
+                                            } text-white`}
+                                        >
+                                            {order.od_status}
+                                        </span>
+                                    </td>
+                                    <td className="py-3 px-4">
+                                        <span
+                                            className={`px-3 py-1 inline-flex justify-center items-center w-24 rounded-full text-sm font-medium ${
+                                                order.pay_status === "Paid" ? "bg-green-600" : "bg-red-600"
+                                            } text-white`}
+                                        >
+                                            {order.pay_status}
+                                        </span>
+                                    </td>
+                                    <td className="py-3 px-4 text-gray-300">
+                                        ${calculateOrderTotal(order).toFixed(2)}
+                                    </td>
+                                    <td className="py-3 px-4">
+                                        {order.pay_status !== "Paid" ? (
+                                            <button
+                                                onClick={() =>
+                                                    activeTab === "new"
+                                                        ? handleViewClick(order)
+                                                        : handlePayClick(order)
+                                                }
+                                                className={`${
+                                                    activeTab === "new" ? "bg-purple-500 hover:bg-purple-700" : "bg-blue-500 hover:bg-blue-700"
+                                                } text-white font-bold py-2 px-4 rounded`}
+                                            >
+                                                {activeTab === "new" ? "View" : "Pay"}
+                                            </button>
+                                        ) : (
+                                            <span className="text-gray-400">Paid</span>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                    </tbody>
                 </table>
-        </div>    
+            </div>    
 
-            {/* Modals */}
             <SetOverdue 
                 order={selectedOrder} 
                 isOpen={isModalOpen} 
@@ -713,11 +728,10 @@ const MainDashboard = () => {
                 onClose={() => setIsPaymentDetailsModalOpen(false)}
                 order={orders.find(o => o.od_Id === selectedPayment?.orderId)} 
                 onDelete={async () => {
-                    await fetchPayments();  // Refresh payments list
-                    await fetchOrders();    // Refresh orders so pay_status updates in UI
+                    await fetchPayments();
+                    await fetchOrders();
                 }}
             />
-
         </div>
     );
 };
